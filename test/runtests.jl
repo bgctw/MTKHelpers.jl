@@ -1,6 +1,15 @@
 using MTKHelpers
 using Test
 
-@testset "MTKHelpers.jl" begin
-    # Write your tests here.
+using DifferentialEquations, ModelingToolkit
+using StaticArrays, LabelledArrays
+using ForwardDiff
+
+@testset "ProblemParSetter" begin
+    include("problemparsetter.jl")
 end
+
+@testset "utilities" begin
+    include("test_utils.jl")
+end
+
