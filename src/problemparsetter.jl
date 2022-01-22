@@ -157,30 +157,31 @@ end
 
 """
     get_paropt(ps::ProblemParSetter, prob::ODEProblem; kwargs...)
-    get_paropt(ps::ProblemParSetter, u0, p; label=false)
+    get_paropt(ps::ProblemParSetter, u0, p; label=Val(false))
 
 Extract the initial states and parameters corresponding to the positions
 that are optimized.    
 If both u0 and p are vectors, the result is a vector, otherwise the result
 is a Tuple.
 
-If `label=true`, then `label_paropt` (see [`label_state`](@ref)) is called on 
+If `label=Val(true)`, then `label_paropt` (see [`label_state`](@ref)) is called on 
 the return value.
-The default is `label=false` to return plain Vectors to work smoothly with Optimizers.
+The default is `label=Val(false)` to return plain Vectors to work smoothly with Optimizers.
 """
 function get_paropt(ps::ProblemParSetter, prob::ODEProblem; kwargs...)
     get_paropt(ps, prob.u0, prob.p; kwargs...)
 end
 
-function get_paropt(ps::ProblemParSetter, u0, p; label=false)
-    t = NTuple{count_paropt(ps)}(((first(t) == :par) ? p[last(t)] : u0[last(t)] 
-        for t in ps.optinfo))
-    label ? label_paropt(ps,t) : t
+# used value type, otherwise result is not type stable
+function get_paropt(ps::ProblemParSetter, u0::Vector, p::Vector; label::Val{LABEL}=Val(false)) where LABEL
+    v = [(first(t) == :par) ? p[last(t)] : u0[last(t)] for t in ps.optinfo]
+    LABEL ? label_paropt(ps,v) : v
 end
 
-function get_paropt(ps::ProblemParSetter, u0::Vector, p::Vector; label=false)
-    v = [(first(t) == :par) ? p[last(t)] : u0[last(t)] for t in ps.optinfo]
-    label ? label_paropt(ps,v) : v
+function get_paropt(ps::ProblemParSetter, u0, p; label::Val{LABEL}=Val(false)) where LABEL
+    t = NTuple{count_paropt(ps)}(((first(t) == :par) ? p[last(t)] : u0[last(t)] 
+        for t in ps.optinfo))
+    LABEL ? label_paropt(ps,t) : t
 end
 
 """

@@ -32,11 +32,11 @@ popt = SLVector(m₊x=0.1, m₊p1=2.1)
 ps = ProblemParSetter(sys, keys(popt))
 
 # extract optimized 
-get_paropt(ps, prob; label=true)
+get_paropt(ps, prob; label=Val(true))
 
 # update states and parameters
 prob2 = update_statepar(ps, popt, prob)
-get_paropt(ps, prob2; label=true) == popt
+get_paropt(ps, prob2; label=Val(true)) == popt
 ```
 
 ## ProblemParSetter

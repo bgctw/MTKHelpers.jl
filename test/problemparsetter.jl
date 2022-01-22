@@ -34,7 +34,7 @@ end;
     @test label_par(ps, SVector(Tuple(p1))) == SLVector(p1)
 end;
 
-#@testset "update_statepar and get_paropt" begin
+@testset "update_statepar and get_paropt" begin
     u0o, po = @inferred update_statepar(ps, popt, u1, p1)
     #@btime update_statepar($ps, $popt, $u1, $p1) # zero allocations
     @test collect(u0o) == [10.1]
@@ -47,11 +47,11 @@ end;
     #using BenchmarkTools
     #@btime get_paropt($ps, $u0o, $po)
     #
-    popt2n = get_paropt(ps, u0o, po; label=true)
+    # no @inferred because labelling causes type instability
+    popt2n = get_paropt(ps, u0o, po; label=Val(true))
     @test popt2n == NamedTuple(popt)
     #
-    popt2m = get_paropt(ps, collect(u0o), collect(po); label=true)
-    @test popt2m == LArray(NamedTuple(popt))
+    popt2m = get_paropt(ps, collect(u0o), collect(po); label=Val(true))
     @test popt2m == LArray(popt)
 end;
 
@@ -70,8 +70,9 @@ end;
     #using BenchmarkTools
     #@btime get_paropt($ps, $u0o, $po)
     #
-    popt2n = get_paropt(ps, u0o, po; label=true)
-    @test popt2n == NamedTuple(popt)
+    # no @inferred because labelling ist not type stable
+    popt2n = get_paropt(ps, u0o, po; label=Val(true))
+    @test popt2n == LArray(popt)
 end;
 
 @testset "merge: create a mofified popt vector" begin
@@ -110,7 +111,7 @@ end;
     @test prob2.p[2] == popt.p2
     #
     # get_paropt
-    @test get_paropt(ps, prob2; label=true) == popt # NamedTuple
+    @test get_paropt(ps, prob2; label=Val(true)) == popt # NamedTuple
     @test get_paropt(ps, prob2) == Tuple(popt)
     @test label_par(ps, prob.p) == SLVector(p)
 end;
