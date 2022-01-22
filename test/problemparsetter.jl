@@ -11,7 +11,7 @@ ps = @inferred ProblemParSetter(keys(u1),keys(p1),keys(popt), Val(false))
     par_syms = keys(p1)
     popt_syms = (:L, :k_L, :M1, :M2)
     NO = length(popt_syms)
-    psw = @test_warn "missing" ProblemParSetter(state_syms, par_syms, popt_syms)
+    psw = @test_logs (:warn,r"missing optimization parameters") ProblemParSetter(state_syms, par_syms, popt_syms)
 end;
 
 @testset "access symbols" begin
@@ -41,7 +41,8 @@ end;
     @test collect(po) == [1.1,1/20.1,2.0]
     #
     # retrieve popt again
-    #@code_warntype get_paropt(ps, u0o, po)
+    # using Cthulhu
+    # @descend_code_warntype get_paropt(ps, u0o, po)
     popt2 = @inferred get_paropt(ps, u0o, po)
     @test all(popt2 .== popt)
     #using BenchmarkTools

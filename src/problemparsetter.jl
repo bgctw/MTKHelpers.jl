@@ -178,10 +178,12 @@ function get_paropt(ps::ProblemParSetter, u0::Vector, p::Vector; label::Val{LABE
     LABEL ? label_paropt(ps,v) : v
 end
 
-function get_paropt(ps::ProblemParSetter, u0, p; label::Val{LABEL}=Val(false)) where LABEL
-    t = NTuple{count_paropt(ps)}(((first(t) == :par) ? p[last(t)] : u0[last(t)] 
+function get_paropt(ps::ProblemParSetter{NS,NP,NO}, u0, p; label::Val{LABEL}=Val(false)) where {NS,NP,NO,LABEL}
+    t0 = NTuple{NO}(((first(t) == :par) ? p[last(t)] : u0[last(t)] 
         for t in ps.optinfo))
-    LABEL ? label_paropt(ps,t) : t
+    # need to explicitly assure full type for julia 1.6 for type stability
+    t1 = t0::NTuple{NO,eltype(t0)} 
+    LABEL ? label_paropt(ps,t1) : t1
 end
 
 """
