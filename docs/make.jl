@@ -16,6 +16,8 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Update parameters" => "problemparsetter.md",
+        "Embedding a system" => "embed_system.md",
+        "index" => "zindex.md",
     ],
 )
 

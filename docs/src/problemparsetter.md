@@ -44,7 +44,7 @@ get_paropt(ps, prob2; label=Val(true)) == popt
 The following type stores the necessary information, that can be queried.
 ```@docs
 ProblemParSetter
-statesyms
+statesyms(::ProblemParSetter)
 count_states
 ```
 
