@@ -1,10 +1,22 @@
-function samplesystem(;name) 
-    @variables t 
-    D = Differential(t) 
-    sts = @variables x(t) RHS(t)  # RHS is observed
-    ps = @parameters τ       # parameters
-    ODESystem([ RHS  ~ (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)
-end                     
+@testset "statesyms ODE" begin
+    @named m = samplesystem()
+    @test statesyms(m) == [:x, :RHS]   
+    @test parsyms(m) == [ :τ]   
+end
+
+@testset "symbol" begin
+    @named m = samplesystem()
+    @test symbol(m.x) == :m₊x # calls Num which calls Par
+    @test symbol(m.τ) == :m₊τ 
+end;
+
+@testset "strip_namespace" begin
+    @test strip_namespace(:x) == :x
+    @test strip_namespace(:m₊x) == :x
+    @test strip_namespace(:s₊m₊x) == :x
+    @test strip_namespace("s.m.x") == "x"
+end;
+
 
 @testset "embed with name different than m" begin
     @named m2 = samplesystem()
@@ -14,3 +26,4 @@ end
     @test first(sol[m2.x]) == 0.0
     #plot(sol, vars=[m2.x,m2.RHS])    
 end
+

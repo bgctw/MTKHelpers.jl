@@ -14,10 +14,14 @@ ps = @inferred ProblemParSetter(keys(u1),keys(p1),keys(popt), Val(false))
     psw = @test_logs (:warn,r"missing optimization parameters") ProblemParSetter(state_syms, par_syms, popt_syms)
 end;
 
-@testset "access symbols" begin
+@testset "access symbols and counts" begin
     @test (@inferred statesyms(ps)) == keys(u1)
     @test (@inferred parsyms(ps)) == keys(p1)
     @test (@inferred paroptsyms(ps)) == keys(popt)
+    #
+    @test (@inferred count_states(ps)) == length(u1)
+    @test (@inferred count_par(ps)) == length(p1)
+    @test (@inferred count_paropt(ps)) == length(popt)
 end;
 
 # ps.statemap
@@ -27,11 +31,14 @@ end;
     # not type stable, because names are not parameters of ps
     @test label_paropt(ps, Tuple(popt)) == NamedTuple(popt)
     @test label_paropt(ps, SVector(popt)) == popt
+    @test label_paropt(ps, collect(popt)) == LArray(popt)
     #
     @test label_state(ps, Tuple(u1)) == u1
     @test label_par(ps, Tuple(p1)) == p1
     @test label_state(ps, SVector(Tuple(u1))) == SLVector(u1)
     @test label_par(ps, SVector(Tuple(p1))) == SLVector(p1)
+    @test label_state(ps, collect(u1)) == LVector(u1)
+    @test label_par(ps, collect(p1)) == LVector(p1)
 end;
 
 @testset "update_statepar and get_paropt" begin
@@ -147,6 +154,19 @@ end;
     poptv = collect(popt)
     fcost(poptv)
     @test typeof(ForwardDiff.gradient(fcost, poptv)) == typeof(poptv)
+end;
+
+@testset "construct from ODESystem" begin
+    @named m = samplesystem()
+    popt_names = (:RHS, :τ)
+    ps1 = ProblemParSetter(m, popt_names)
+    @test statesyms(ps1) == (:x, :RHS)
+    @test parsyms(ps1) == (:τ,)
+    @test paroptsyms(ps1) == popt_names
+    ps1 = ProblemParSetter(m, popt_names; strip=true)
+    @test statesyms(ps1) == (:x, :RHS)
+    @test parsyms(ps1) == (:τ,)
+    @test paroptsyms(ps1) == popt_names
 end;
 
 
