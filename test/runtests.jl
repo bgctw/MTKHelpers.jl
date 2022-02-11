@@ -16,3 +16,7 @@ end
     include("test_utils.jl")
 end
 
+@testset "smoothstep" begin
+    include("test_smoothstep.jl")
+end
+

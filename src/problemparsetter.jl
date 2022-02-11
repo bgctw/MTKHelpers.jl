@@ -157,33 +157,46 @@ end
 
 """
     get_paropt(ps::ProblemParSetter, prob::ODEProblem; kwargs...)
-    get_paropt(ps::ProblemParSetter, u0, p; label=Val(false))
+    get_paropt(ps::ProblemParSetter, u0, p)
+
+    get_paropt_labeled(ps::ProblemParSetter, prob::ODEProblem; kwargs...)
+    get_paropt_labeled(ps::ProblemParSetter, u0, p)
 
 Extract the initial states and parameters corresponding to the positions
 that are optimized.    
 If both u0 and p are vectors, the result is a vector, otherwise the result
 is a Tuple.
 
-If `label=Val(true)`, then `label_paropt` (see [`label_state`](@ref)) is called on 
-the return value.
-The default is `label=Val(false)` to return plain Vectors to work smoothly with Optimizers.
+The _lebeled versions additionally call `label_paropt` (see [`label_state`](@ref)) 
+on the return value.
 """
 function get_paropt(ps::ProblemParSetter, prob::ODEProblem; kwargs...)
     get_paropt(ps, prob.u0, prob.p; kwargs...)
 end
-
-# used value type, otherwise result is not type stable
-function get_paropt(ps::ProblemParSetter, u0::Vector, p::Vector; label::Val{LABEL}=Val(false)) where LABEL
-    v = [(first(t) == :par) ? p[last(t)] : u0[last(t)] for t in ps.optinfo]
-    LABEL ? label_paropt(ps,v) : v
+function get_paropt_labeled(ps::ProblemParSetter, prob::ODEProblem; kwargs...)
+    get_paropt_labeled(ps, prob.u0, prob.p; kwargs...)
 end
 
-function get_paropt(ps::ProblemParSetter{NS,NP,NO}, u0, p; label::Val{LABEL}=Val(false)) where {NS,NP,NO,LABEL}
+function get_paropt(ps::ProblemParSetter, u0::Vector, p::Vector) 
+    v = [(first(t) == :par) ? p[last(t)] : u0[last(t)] for t in ps.optinfo]
+end
+
+function get_paropt_labeled(ps::ProblemParSetter, u0::Vector, p::Vector) 
+    v = get_paropt(ps, u0, p)
+    label_paropt(ps,v)
+end
+
+
+function get_paropt(ps::ProblemParSetter{NS,NP,NO}, u0, p) where {NS,NP,NO}
     t0 = NTuple{NO}(((first(t) == :par) ? p[last(t)] : u0[last(t)] 
         for t in ps.optinfo))
     # need to explicitly assure full type for julia 1.6 for type stability
     t1 = t0::NTuple{NO,eltype(t0)} 
-    LABEL ? label_paropt(ps,t1) : t1
+end
+
+function get_paropt_labeled(ps::ProblemParSetter{NS,NP,NO}, u0, p) where {NS,NP,NO}
+    t1 = get_paropt(ps,u0,p)
+    label_paropt(ps,t1)
 end
 
 """

@@ -56,10 +56,10 @@ end;
     #@btime get_paropt($ps, $u0o, $po)
     #
     # no @inferred because labelling causes type instability
-    popt2n = get_paropt(ps, u0o, po; label=Val(true))
+    popt2n = get_paropt_labeled(ps, u0o, po)
     @test popt2n == NamedTuple(popt)
     #
-    popt2m = get_paropt(ps, collect(u0o), collect(po); label=Val(true))
+    popt2m = get_paropt_labeled(ps, collect(u0o), collect(po))
     @test popt2m == LArray(popt)
 end;
 
@@ -79,7 +79,7 @@ end;
     #@btime get_paropt($ps, $u0o, $po)
     #
     # no @inferred because labelling ist not type stable
-    popt2n = get_paropt(ps, u0o, po; label=Val(true))
+    popt2n = get_paropt_labeled(ps, u0o, po)
     @test popt2n == LArray(popt)
 end;
 
@@ -119,7 +119,7 @@ end;
     @test prob2.p[2] == popt.p2
     #
     # get_paropt
-    @test get_paropt(ps, prob2; label=Val(true)) == popt # NamedTuple
+    @test get_paropt_labeled(ps, prob2) == popt # NamedTuple
     @test get_paropt(ps, prob2) == Tuple(popt)
     @test label_par(ps, prob.p) == SLVector(p)
 end;

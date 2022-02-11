@@ -1,3 +1,10 @@
+"""
+    cm2inch(x)
+
+Convert length in cm to inch units: 1 inch = 2.54 cm.
+"""
+cm2inch(x) = x/2.54
+
 
 """
     embed_system(m;name)

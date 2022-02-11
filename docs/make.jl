@@ -4,7 +4,7 @@ using Documenter
 DocMeta.setdocmeta!(MTKHelpers, :DocTestSetup, :(using MTKHelpers); recursive=true)
 
 makedocs(;
-    modules=[MTKHelpers],
+    #modules=[MTKHelpers], # do not check for not included docstrings
     authors="Thomas Wutzler <twutz@bgc-jena.mpg.de> and contributors",
     repo="https://github.com/bgctw/MTKHelpers.jl/blob/{commit}{path}#{line}",
     sitename="MTKHelpers.jl",
@@ -17,6 +17,7 @@ makedocs(;
         "Home" => "index.md",
         "Update parameters" => "problemparsetter.md",
         "Embedding a system" => "embed_system.md",
+        "Smooth steps" => "smoothstep.md",
         "index" => "zindex.md",
     ],
 )
