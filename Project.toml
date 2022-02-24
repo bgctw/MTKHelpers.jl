@@ -10,7 +10,6 @@ LabelledArrays = "2ee39098-c373-598a-b85f-a56591580800"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
-Suppressor = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
 
 [compat]
 DiffEqBase = "6"
