@@ -1,7 +1,5 @@
 @info "MTKHelpers: loading CairoMakie utils"
-# using Suppressor 
-# @suppress_err using CairoMakie # suppress warning of missing using Suppressor, fails on github with Documenter
-using CairoMakie 
+using .CairoMakie # syntax by Requires.jl otherwise warning
 using DiffEqBase: AbstractODESolution
 
 """
