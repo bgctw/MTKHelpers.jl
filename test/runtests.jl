@@ -20,3 +20,10 @@ end
     include("test_smoothstep.jl")
 end
 
+@testset "cairomakie" begin
+    include("test_cairomakie.jl")
+end
+
+
+
+

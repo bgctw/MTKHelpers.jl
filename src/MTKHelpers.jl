@@ -5,7 +5,7 @@ using StaticArrays, LabelledArrays
 using Requires: @require 
 
 
-export symbol, statesyms, parsyms, strip_namespace, embed_system
+export symbol, statesyms, parsyms, strip_namespace, embed_system, cm2inch
 
 export ProblemParSetter, count_states, count_par, count_paropt, 
     paroptsyms, statesyms, parsyms,

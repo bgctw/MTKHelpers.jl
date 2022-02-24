@@ -6,6 +6,6 @@ ps = @parameters τ=0.3      # parameters
 @named m = ODESystem([ RHS  ~ (1 - x)/τ, D(x) ~ RHS ], t, sts, ps)
 ms = structural_simplify(m)
 prob = ODEProblem(ms, [x => 1.1], (0.0,1.0), [])
-sol = solve(prob)
+sol = solve(prob, Tsit5())
 
 sol(0.3, idxs=[RHS])                                                                                                                                                                     

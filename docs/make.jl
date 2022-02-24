@@ -1,4 +1,5 @@
 using MTKHelpers
+using CairoMakie # to load cairomakie functions
 using Documenter
 
 DocMeta.setdocmeta!(MTKHelpers, :DocTestSetup, :(using MTKHelpers); recursive=true)
@@ -18,6 +19,7 @@ makedocs(;
         "Update parameters" => "problemparsetter.md",
         "Embedding a system" => "embed_system.md",
         "Smooth steps" => "smoothstep.md",
+        "CairoMakie Helpers" => "cairomakie.md",
         "index" => "zindex.md",
     ],
 )

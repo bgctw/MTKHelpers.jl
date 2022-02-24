@@ -1,22 +1,14 @@
 using CairoMakie
 
-i_tmp = () -> begin
+@testset "series_sol" begin
     @named m = samplesystem()
     @named me = embed_system(m)
     prob = ODEProblem(me, [m.x => 1.1], (0.0,1.0), [])
-    sol = solve(prob)
-    fig,ax = pdf_figure();
+    sol = solve(prob,Tsit5())
+    fig,ax = pdf_figure(xlabel = "time (yr)");
     series_sol!(ax, sol, [m.x, m.RHS])
-
-    ms = structural_simplify(m)
-    @parameters t
-    @variables x(t), RHS(t)
-    prob = ODEProblem(ms, [x => 1.1], (0.0,1.0), [])
-    sol = solve(prob)
-    fig,ax = pdf_figure();
-    series_sol!(ax, sol, [x])
-
-    #using Plots
-    Plots.plot(sol, vars=[x, RHS])
-    sol(0.3, idxs=[RHS])
-end
+    #axislegend(ax, unique=true, position=:lb)
+    fig[1,2] = Legend(fig, ax, unique=true)
+    #display(fig)
+    @test true
+end;

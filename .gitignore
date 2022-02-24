@@ -5,5 +5,7 @@
 /docs/build/
 docs/Manifest.toml
 docs/Manifest.toml
-/tmp/
+tmp
+
+dosc/Manifest.toml
 
