@@ -126,34 +126,21 @@ function update_statepar(ps::ProblemParSetter, popt, u0::TU, p::TP) where {TU,TP
     # need to convert to new type
     u00 = map(x -> x * zero(eltype(popt)), u0)
     u0g = (ps.statemap[i] == 0 ? u0[i] : popt[ps.statemap[i]] for i in 1:length(u0))
-    u0new = typeof(u00)(u0g)
+    u0new = typed_from_generator(TU, u00, u0g)
+    #u0new = typeof(u00)(u0g)
     #
     p0 = map(x -> x * zero(eltype(popt)), p)
     # pg = (ps.parmap[i] == 0 ? p[i] : popt[ps.parmap[i]] for i in 1:length(p))
     # pnew = convert(typeof(p0), p0 .+ pg)::typeof(p0)
     pg = (ps.parmap[i] == 0 ? p[i] : popt[ps.parmap[i]] for i in 1:length(p))
-    pnew = typeof(p0)(pg)
+    pnew = typed_from_generator(TP, p0, pg)
+    #pnew = typeof(p0)(pg)
     #
     (u0new, pnew)
 end
 
-function update_statepar(ps::ProblemParSetter, popt, u0::Vector{T}, p::Vector{T}) where T
-    @assert length(popt) == count_paropt(ps) "expected $(count_paropt(ps)) parameters for "
-    #u2 = [ps.statemap[i] == 0 ? u0[i] : popt[ps.statemap[i]] for i in 1:length(u0)]
-    #p2 = [ps.parmap[i] == 0 ? p[i] : popt[ps.parmap[i]] for i in 1:length(p)]
-    # take care that popt might be of different type, like FowwardDiff
-    # need to convert to new type
-    u00 = map(x -> x * zero(eltype(popt)), u0)
-    u0g = (ps.statemap[i] == 0 ? u0[i] : popt[ps.statemap[i]] for i in axes(u0,1))
-    u0new = convert(typeof(u00), u00 .+ u0g)::typeof(u00)
-    #
-    p0 = map(x -> x * zero(eltype(popt)), p)
-    pg = (ps.parmap[i] == 0 ? p[i] : popt[ps.parmap[i]] for i in axes(p,1))
-    pnew = convert(typeof(p0), p0 .+ pg)::typeof(p0)
-    #
-    (u0new, pnew)
-end
-
+typed_from_generator(::Type, v0, vgen) where T = typeof(v0)(vgen)
+typed_from_generator(::Type{Vector{T}}, v0, vgen) where T = convert(typeof(v0), v0 .+ vgen)::typeof(v0)
 
 """
     get_paropt(ps::ProblemParSetter, prob::ODEProblem; kwargs...)

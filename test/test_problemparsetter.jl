@@ -83,6 +83,25 @@ end;
     @test popt2n == LArray(popt)
 end;
 
+@testset "update_statepar and get_paropt for p only vector" begin
+    p1vec = collect(p1)
+    u0o, po = @inferred update_statepar(ps, popt, u1, p1vec)
+    #@btime update_statepar($ps, $popt, $u1, $p1) # zero allocations
+    @test collect(u0o) == [10.1]
+    @test collect(po) == [1.1,1/20.1,2.0]
+    #
+    # retrieve popt again
+    #@code_warntype get_paropt(ps, u0o, po)
+    popt2 = @inferred get_paropt(ps, u0o, po)
+    @test all(popt2 .== popt)
+    #using BenchmarkTools
+    #@btime get_paropt($ps, $u0o, $po)
+    #
+    # no @inferred because labelling ist not type stable
+    popt2n = get_paropt_labeled(ps, u0o, po)
+    @test popt2n == NamedTuple(popt) #u0o is NamedTuple
+end;
+
 @testset "merge: create a mofified popt vector" begin
     popt3 = @inferred merge(popt, (k_L = 1.2,))
     @test length(popt3) == length(popt)
