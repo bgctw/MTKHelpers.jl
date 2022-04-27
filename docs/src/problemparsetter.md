@@ -12,6 +12,10 @@ and `popt` is a sequence of optimized parameters, which may include initial stat
 the following class helps updating the corresponding positions in 
 an ODEProblem.
 
+Currently, parameters to optimize must be of the form `u0...,p...`, i.e. the position of
+all states to optimize must be first, before the parameters to optimize.
+Initial states and parameters must have different names.
+
 ```@example doc
 # setting up a simple example composite system and problem
 using ModelingToolkit, DifferentialEquations, LabelledArrays
