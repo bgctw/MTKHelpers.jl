@@ -48,11 +48,13 @@ function ProblemParSetter(
     # @show optinfo
     # @show statemap
     # @show parmap
-    if allow_missing_popt
-        NO != length(optinfo) && @warn(
-        "missing optimization parameters in system: " * join(
-        setdiff(par_syms, getindex.(optinfo,2))
-        ,", "))
+    popt_syms_in = popt_syms
+    if allow_missing_popt && (NO != length(optinfo))
+        optinfo_psyms = getindex.(optinfo,2)
+        miss = setdiff(popt_syms, optinfo_psyms)
+        @warn(
+            "missing optimization parameters in system: " * join(miss,", "))
+        popt_syms_in = filter((x -> !isnothing(findfirst(==(x), optinfo_psyms))), popt_syms)
         ps = ProblemParSetter{NS,NP,length(optinfo),IT}(
             optinfo, statemap, parmap, state_syms, par_syms,)     
     else
@@ -60,6 +62,10 @@ function ProblemParSetter(
         ps = ProblemParSetter{NS,NP,NO,IT}(
             optinfo, statemap, parmap, state_syms, par_syms,)     
     end
+    # make sure that states go first: smalles p position > highest u position            
+    paroptsyms(ps) == popt_syms_in || error(
+        "Expected states to optimize before parameters to optimize. But got $popt_syms_in.")
+    ps
 end
 
 function ProblemParSetter(state_names,par_names,popt_names) 

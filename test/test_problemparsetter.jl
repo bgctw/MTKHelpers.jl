@@ -6,12 +6,17 @@ popt = SLVector(L = 10.1, k_L = 1.1, k_R = 1/20.1)
 # use allow_missing_opt = false for type stability
 ps = @inferred ProblemParSetter(keys(u1),keys(p1),keys(popt), Val(false))
 
+
 @testset "warning on missing symbols" begin
     state_syms = keys(u1)
     par_syms = keys(p1)
     popt_syms = (:L, :k_L, :M1, :M2)
     NO = length(popt_syms)
     psw = @test_logs (:warn,r"missing optimization parameters") ProblemParSetter(state_syms, par_syms, popt_syms)
+end;
+
+@testset "MethodError if missing symbols are not allowed" begin
+    @test_throws MethodError ps1 = ProblemParSetter((:x, :RHS), (:τ,), (:RHS, :τ, :M), Val(false))
 end;
 
 @testset "access symbols and counts" begin
@@ -187,5 +192,19 @@ end;
     @test parsyms(ps1) == (:τ,)
     @test paroptsyms(ps1) == popt_names
 end;
+
+@testset "error message on state not in front of parameters" begin
+    @named m = samplesystem()
+    popt_names = (:τ, :RHS) # note :RHS is a state and should be in fron to :τ
+    @test_throws ErrorException ps1 = ProblemParSetter(m, popt_names)
+    # @test paroptsyms(ps1) == popt_names # fails too
+    #
+    # in addition to missing parameters
+    popt_names = (:τ, :RHS, :M) # note :RHS is a state and should be in fron to :τ
+    @test_throws ErrorException ps1 = ProblemParSetter(m, popt_names)
+end;
+
+
+
 
 
