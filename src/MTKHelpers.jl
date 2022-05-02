@@ -3,7 +3,7 @@ module MTKHelpers
 using ModelingToolkit, DifferentialEquations
 using StaticArrays, LabelledArrays
 using Requires: @require 
-
+#using Infiltrator
 
 export symbol, statesyms, parsyms, strip_namespace, embed_system, cm2inch
 

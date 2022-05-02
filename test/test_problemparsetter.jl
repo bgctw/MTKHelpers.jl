@@ -68,7 +68,7 @@ end;
     @test popt2m == LArray(popt)
 end;
 
-@testset "update_statepar and get_paropt for vector" begin
+@testset "update_statepar and get_paropt for Vector" begin
     u1vec = collect(u1)
     p1vec = collect(p1)
     u0o, po = @inferred update_statepar(ps, popt, u1vec, p1vec)
@@ -88,7 +88,28 @@ end;
     @test popt2n == LArray(popt)
 end;
 
-@testset "update_statepar and get_paropt for p only vector" begin
+@testset "upate_statepar and get_paropt for AxisArray" begin
+    # test with AbstractVector different from Vector
+    u1vec = AxisArray(collect(u1); row = keys(u1))
+    p1vec = collect(p1)
+    u0o, po = @inferred update_statepar(ps, popt, u1vec, p1vec)
+    #@btime update_statepar($ps, $popt, $u1, $p1) # zero allocations
+    @test collect(u0o) == [10.1]
+    @test collect(po) == [1.1,1/20.1,2.0]
+    #
+    # retrieve popt again
+    #@code_warntype get_paropt(ps, u0o, po)
+    popt2 = @inferred get_paropt(ps, u0o, po)
+    @test all(popt2 .== popt)
+    #using BenchmarkTools
+    #@btime get_paropt($ps, $u0o, $po)
+    #
+    # no @inferred because labelling ist not type stable
+    popt2n = get_paropt_labeled(ps, u0o, po)
+    @test popt2n == LArray(popt)
+end;
+
+@testset "update_statepar and get_paropt for p only AbstractVector" begin
     p1vec = collect(p1)
     u0o, po = @inferred update_statepar(ps, popt, u1, p1vec)
     #@btime update_statepar($ps, $popt, $u1, $p1) # zero allocations
@@ -107,7 +128,7 @@ end;
     @test popt2n == NamedTuple(popt) #u0o is NamedTuple
 end;
 
-@testset "merge: create a mofified popt vector" begin
+@testset "merge: create a mofified popt AbstractVector" begin
     popt3 = @inferred merge(popt, (k_L = 1.2,))
     @test length(popt3) == length(popt)
     @test popt3.k_L == 1.2
@@ -115,7 +136,7 @@ end;
     @test popt3.k_R == popt.k_R
 end;
 
-@testset "merge: create a mofified popt vector on LVector" begin
+@testset "merge: create a mofified popt AbstractVector on LVector" begin
     poptlv = LArray(popt)
     popt3 = @inferred merge(poptlv, (k_L = 1.2,))
     @test length(popt3) == length(popt)
@@ -143,9 +164,9 @@ end;
     @test prob2.p[2] == popt.p2
     #
     # get_paropt
-    @test get_paropt_labeled(ps, prob2) == popt # NamedTuple
-    @test get_paropt(ps, prob2) == Tuple(popt)
-    @test label_par(ps, prob.p) == SLVector(p)
+    @test get_paropt(ps, prob2) == collect(popt) #Tuple(popt) # Vector because provided p as SVector <: AbstractVector
+    @test get_paropt_labeled(ps, prob2) == LVector(popt) # LVector because provided p as SVector <: AbstractVector
+    @test label_par(ps, prob.p) == LVector(p)
 end;
 
 @testset "gradient with Tuple" begin
@@ -169,7 +190,7 @@ end;
     @test typeof(ForwardDiff.gradient(fcost, poptsv)) == typeof(poptsv)
 end;
 
-@testset "gradient with Vector" begin
+@testset "gradient with AbstractVector" begin
     fcost = (popt) -> begin
         u0, p = update_statepar(ps, popt, u1, p1)
         d = sum(get_paropt(ps, u0, p))

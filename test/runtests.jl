@@ -4,6 +4,8 @@ using Test
 using DifferentialEquations, ModelingToolkit
 using StaticArrays, LabelledArrays
 using ForwardDiff
+#push!(LOAD_PATH, expanduser("~/julia/turingtools/")) # access local package repo
+using AxisArrays
 
 #include("test/samplesystem.jl")
 include("samplesystem.jl")

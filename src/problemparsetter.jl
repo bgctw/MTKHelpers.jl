@@ -15,7 +15,7 @@ end
 Helps keeping track of a subset of initial states and paraemters to be optimized.
 
 # Arguments
-- `state_names`: Tuple or Vector of all the initial states of the problem
+- `state_names`: Tuple or AbstractVector of all the initial states of the problem
 - `par_names`: all the parameters of the problem
 - `popt_names`: the parameter/initial states to be optimized.
 
@@ -132,21 +132,37 @@ function update_statepar(ps::ProblemParSetter, popt, u0::TU, p::TP) where {TU,TP
     # need to convert to new type
     u00 = map(x -> x * zero(eltype(popt)), u0)
     u0g = (ps.statemap[i] == 0 ? u0[i] : popt[ps.statemap[i]] for i in 1:length(u0))
-    u0new = typed_from_generator(TU, u00, u0g)
+    #u0new = typed_from_generator(TU, u00, u0g)
+    u0new = typed_from_generator(u00, u0g)
     #u0new = typeof(u00)(u0g)
     #
     p0 = map(x -> x * zero(eltype(popt)), p)
     # pg = (ps.parmap[i] == 0 ? p[i] : popt[ps.parmap[i]] for i in 1:length(p))
     # pnew = convert(typeof(p0), p0 .+ pg)::typeof(p0)
     pg = (ps.parmap[i] == 0 ? p[i] : popt[ps.parmap[i]] for i in 1:length(p))
-    pnew = typed_from_generator(TP, p0, pg)
+    #pnew = typed_from_generator(TP, p0, pg)
+    pnew = typed_from_generator(p0, pg)
     #pnew = typeof(p0)(pg)
     #
     (u0new, pnew)
 end
 
-typed_from_generator(::Type, v0, vgen) where T = typeof(v0)(vgen)
-typed_from_generator(::Type{Vector{T}}, v0, vgen) where T = convert(typeof(v0), v0 .+ vgen)::typeof(v0)
+# function typed_from_generator(type::Type, v0, vgen) where T 
+#     if type <: AbstractArray
+#     end
+#     typeof(v0)(vgen)
+# end
+# # AbstractVector{T} is not more specific than ::Type, need to support all used concrete
+# #typed_from_generator(::Type{AbstractVector{T}}, v0, vgen) where T = convert(typeof(v0), v0 .+ vgen)::typeof(v0)
+# typed_from_generator(::Type{Vector{T}}, v0, vgen) where T = convert(typeof(v0), v0 .+ vgen)::typeof(v0)
+
+
+typed_from_generator(v0, vgen) = typeof(v0)(vgen)
+function typed_from_generator(v0::AbstractVector, vgen) 
+    # convert to std vector, because typeof(v0) does not contain all entries
+    T = Vector{eltype(v0)}  
+    convert(T, v0 .+ vgen)::T
+end
 
 """
     get_paropt(ps::ProblemParSetter, prob::ODEProblem; kwargs...)
@@ -157,8 +173,7 @@ typed_from_generator(::Type{Vector{T}}, v0, vgen) where T = convert(typeof(v0), 
 
 Extract the initial states and parameters corresponding to the positions
 that are optimized.    
-If both u0 and p are vectors, the result is a vector, otherwise the result
-is a Tuple.
+If both u0 and p are AbstractVectors, the result is a Vector, otherwise the result is a Tuple.
 
 The _lebeled versions additionally call `label_paropt` (see [`label_state`](@ref)) 
 on the return value.
@@ -170,11 +185,11 @@ function get_paropt_labeled(ps::ProblemParSetter, prob::ODEProblem; kwargs...)
     get_paropt_labeled(ps, prob.u0, prob.p; kwargs...)
 end
 
-function get_paropt(ps::ProblemParSetter, u0::Vector, p::Vector) 
+function get_paropt(ps::ProblemParSetter, u0::AbstractVector, p::AbstractVector) 
     v = [(first(t) == :par) ? p[last(t)] : u0[last(t)] for t in ps.optinfo]
 end
 
-function get_paropt_labeled(ps::ProblemParSetter, u0::Vector, p::Vector) 
+function get_paropt_labeled(ps::ProblemParSetter, u0::AbstractVector, p::AbstractVector) 
     v = get_paropt(ps, u0, p)
     label_paropt(ps,v)
 end
@@ -193,20 +208,20 @@ function get_paropt_labeled(ps::ProblemParSetter{NS,NP,NO}, u0, p) where {NS,NP,
 end
 
 """
-    label_state(ps, u::Vector) = LArray{statesyms(ps)}(u)
-    label_par(ps, par::Vector) = LArray{parsyms(ps)}(par)
-    label_paropt(ps, popt::Vector) = LArray{paroptsyms(ps)}(popt)
+    label_state(ps, u::AbstractVector) = LArray{statesyms(ps)}(u)
+    label_par(ps, par::AbstractVector) = LArray{parsyms(ps)}(par)
+    label_paropt(ps, popt::AbstractVector) = LArray{paroptsyms(ps)}(popt)
 
 Produce a labeled version of a sequence of initial states, parameters, or
 optimized parameters respectively.
 The return type differs given the input
 - SVector -> SLVector
 - NTuple -> NamedTuple
-- Vector -> LArray
+- AbstractVector -> LArray
 """
-function label_state(ps, u::Vector); LArray{statesyms(ps)}(u); end,
-function label_par(ps, par::Vector); LArray{parsyms(ps)}(par); end,
-function label_paropt(ps, popt::Vector); LArray{paroptsyms(ps)}(popt); end
+function label_state(ps, u::AbstractVector); LArray{statesyms(ps)}(u); end,
+function label_par(ps, par::AbstractVector); LArray{parsyms(ps)}(par); end,
+function label_paropt(ps, popt::AbstractVector); LArray{paroptsyms(ps)}(popt); end
 
 label_state(ps, u::SVector) = SLVector(label_state(ps, Tuple(u)))
 label_state(ps, u::NTuple) = NamedTuple{statesyms(ps)}(u)
