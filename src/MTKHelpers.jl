@@ -3,6 +3,7 @@ module MTKHelpers
 using ModelingToolkit, DifferentialEquations
 using StaticArrays, LabelledArrays
 using Requires: @require 
+using NamedArrays
 #using Infiltrator
 
 export symbol, statesyms, parsyms, strip_namespace, embed_system, cm2inch
@@ -15,6 +16,8 @@ export smoothstep
 
 export pdf_figure, series_sol!
 
+export getlast
+
 # extending 
 import Base: merge    
 
@@ -26,6 +29,7 @@ function __init__()
 include("util.jl")
 include("problemparsetter.jl")
 include("smoothstep.jl")
+include("solution.jl")
 
 
 

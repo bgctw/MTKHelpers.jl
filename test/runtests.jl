@@ -4,6 +4,7 @@ using Test
 using DifferentialEquations, ModelingToolkit
 using StaticArrays, LabelledArrays
 using ForwardDiff
+using NamedArrays
 #push!(LOAD_PATH, expanduser("~/julia/turingtools/")) # access local package repo
 using AxisArrays
 
@@ -24,6 +25,10 @@ end
 
 @testset "cairomakie" begin
     include("test_cairomakie.jl")
+end
+
+@testset "solution" begin
+    include("test_solution.jl")
 end
 
 

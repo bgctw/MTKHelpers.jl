@@ -17,6 +17,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Update parameters" => "problemparsetter.md",
+        "Solution handling" => "solution.md",
         "Embedding a system" => "embed_system.md",
         "Smooth steps" => "smoothstep.md",
         "CairoMakie Helpers" => "cairomakie.md",
