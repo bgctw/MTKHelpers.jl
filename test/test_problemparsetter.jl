@@ -235,6 +235,17 @@ end;
     @test names(xn)[1] == collect(symbols_state(ps))
     xn = @inferred name_par(ps, collect(1:count_par(ps)))
     @test names(xn)[1] == collect(symbols_par(ps))
+    #
+    frandsym = () -> begin
+        syms_arr = rand([:L,:k_L,:k_R],2)
+        ntuple(i -> syms_arr[i], 2)
+    end
+    #frandsym()
+    psr = @inferred ProblemParSetter(keys(u1),keys(p1),frandsym(), Val(false))
+    # cannot be inferred, because labels are not known at construction time
+    #xl = @inferred label_paropt(psr, collect(1:count_paropt(psr)))
+    # but NamedVector is ok
+    xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
 end;
 
 
