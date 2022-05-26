@@ -2,17 +2,7 @@
 using .CairoMakie # syntax by Requires.jl otherwise warning
 using DiffEqBase: AbstractODESolution
 
-"""
-    pdf_figure = (size_inches = cm2inch.((8.3,8.3/1.618)); fontsize=9, kwargs...)
-
-Creates a figure and Axis with specified resolution and fontsize 
-for given figure size. See also [`cm2inch`](@ref) and `save`.
-"""    
-pdf_figure = (size_inches = cm2inch.((8.3,8.3/1.618)); fontsize=9, kwargs...) -> begin
-    resolution = 72 .* size_inches # size_pt
-    fig = Figure(;resolution, fontsize)
-    fig, Axis(fig[1,1]; kwargs...)
-end
+# pdf_figure moved to TwPrototypes
 
 """
     series_sol!(ax, sol::AbstractODESolution, vars; tspan=extrema(sol.t), labels=string.(vars), nt=120, kwargs...)

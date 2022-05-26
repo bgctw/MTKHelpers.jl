@@ -1,7 +1,7 @@
 name = "MTKHelpers"
 uuid = "2725b469-bb7f-4d1a-ba58-ced332a70bc7"
 authors = ["Thomas Wutzler <twutz@bgc-jena.mpg.de> and contributors"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
