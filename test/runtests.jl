@@ -12,6 +12,7 @@ using AxisArrays
 include("samplesystem.jl")
 
 @testset "ProblemParSetter" begin
+    #include("test/test_problemparsetter.jl")
     include("test_problemparsetter.jl")
 end
 

@@ -42,10 +42,13 @@ length(dx2) == 3
 true
 ```
 """
-function embed_system(m;name)
+function embed_system(m;name, simplify=true)
     @named _sys_embed = ODESystem(Equation[], ModelingToolkit.get_iv(m))               
     sys = compose(_sys_embed, [m]; name)
-    structural_simplify(sys)
+    if simplify
+        sys = structural_simplify(sys)
+    end
+    sys
 end
 
 """
@@ -66,11 +69,11 @@ function strip_namespace(s::String); match(r"[^.₊]+$",s).match; end
 function strip_namespace(s::Symbol); Symbol(strip_namespace(string(s))); end
 
 """
-    statesyms(sys::ODYSystem)
-    parsyms(sys::ODYSystem)
+    symbols_state(sys::ODESystem)
+    symbols_par(sys::ODESystem)
 
 Extract the basic symbols without namespace of system states and system parameters.
 """
-function statesyms(sys::ODESystem); symbol.(states(sys)); end
-parsyms(sys::ODESystem) = symbol.(parameters(sys))
+function symbols_state(sys::ODESystem); symbol.(states(sys)); end
+symbols_par(sys::ODESystem) = symbol.(parameters(sys))
 

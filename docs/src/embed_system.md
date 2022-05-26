@@ -12,7 +12,7 @@ embed_system
 ```@docs
 symbol
 strip_namespace
-statesyms(::ODESystem)
+symbols_state(::ODESystem)
 cm2inch
 ```
 

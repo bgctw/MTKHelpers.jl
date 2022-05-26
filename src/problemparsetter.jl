@@ -63,7 +63,7 @@ function ProblemParSetter(
             optinfo, statemap, parmap, state_syms, par_syms,)     
     end
     # make sure that states go first: smalles p position > highest u position            
-    paroptsyms(ps) == popt_syms_in || error(
+    symbols_paropt(ps) == popt_syms_in || error(
         "Expected states to optimize before parameters to optimize. But got $popt_syms_in.")
     ps
 end
@@ -78,35 +78,42 @@ function ProblemParSetter(state_names,par_names,popt_names)
 end
 
 function ProblemParSetter(sys::ODESystem,popt_names; strip=false) 
-    state_names = strip ? strip_namespace.(statesyms(sys)) : statesyms(sys)
-    par_names = strip ? strip_namespace.(parsyms(sys)) : parsyms(sys)
+    ft = strip ? strip_namespace : identity
+    state_names = ft.(symbol.(states(sys)))
+    par_names = ft.(symbol.(parameters(sys)))
     ProblemParSetter(state_names, par_names, popt_names)
 end
 
 """
-    count_states(::ProblemParSetter) 
+    count_state(::ProblemParSetter) 
     count_par(::ProblemParSetter) 
     count_paropt(::ProblemParSetter) 
 
 Report the number of problem states, problem parameters and optimized parameters
 respectively.    
 """
-function count_states(::ProblemParSetter{NS}) where {NS}; NS; end,
+function count_state(::ProblemParSetter{NS}) where {NS}; NS; end,
 function count_par(::ProblemParSetter{NS,NP}) where {NS,NP}; NP; end,
 function count_paropt(::ProblemParSetter{NS,NP,NO}) where {NS,NP,NO}; NO; end
 
+@deprecate count_states(ps::ProblemParSetter)  count_state(ps)
+
+
+@deprecate statesyms(ps::ProblemParSetter) symbols_state(ps)
+@deprecate parsyms(ps::ProblemParSetter) symbols_par(ps)
+@deprecate paroptsyms(ps::ProblemParSetter) symbols_paropt(ps)
 
 """
-    statesyms(ps::ProblemParSetter)
-    parsyms(ps::ProblemParSetter)
-    paroptsyms(ps::ProblemParSetter)
+    symbols_state(ps::ProblemParSetter)
+    symbols_par(ps::ProblemParSetter)
+    symbols_paropt(ps::ProblemParSetter)
 
 Report the names, i.e. symbols of problem states, problem parameters and 
 optimized parameters respectively.    
 """
-function statesyms(ps::ProblemParSetter); ps.statesyms; end,
-function parsyms(ps::ProblemParSetter); ps.parsyms; end,
-function paroptsyms(ps::ProblemParSetter)
+function symbols_state(ps::ProblemParSetter); ps.statesyms; end,
+function symbols_par(ps::ProblemParSetter); ps.parsyms; end,
+function symbols_paropt(ps::ProblemParSetter)
     first.(Base.Iterators.drop.(ps.optinfo,1))
 end
 
@@ -209,8 +216,8 @@ end
 
 """
     label_state(ps, u::AbstractVector) = LArray{statesyms(ps)}(u)
-    label_par(ps, par::AbstractVector) = LArray{parsyms(ps)}(par)
-    label_paropt(ps, popt::AbstractVector) = LArray{paroptsyms(ps)}(popt)
+    label_par(ps, par::AbstractVector) = LArray{symbols_par(ps)}(par)
+    label_paropt(ps, popt::AbstractVector) = LArray{symbols_paropt(ps)}(popt)
 
 Produce a labeled version of a sequence of initial states, parameters, or
 optimized parameters respectively.
@@ -219,18 +226,18 @@ The return type differs given the input
 - NTuple -> NamedTuple
 - AbstractVector -> LArray
 """
-function label_state(ps, u::AbstractVector); LArray{statesyms(ps)}(u); end,
-function label_par(ps, par::AbstractVector); LArray{parsyms(ps)}(par); end,
-function label_paropt(ps, popt::AbstractVector); LArray{paroptsyms(ps)}(popt); end
+function label_state(ps, u::AbstractVector); LArray{symbols_state(ps)}(u); end,
+function label_par(ps, par::AbstractVector); LArray{symbols_par(ps)}(par); end,
+function label_paropt(ps, popt::AbstractVector); LArray{symbols_paropt(ps)}(popt); end
 
 label_state(ps, u::SVector) = SLVector(label_state(ps, Tuple(u)))
-label_state(ps, u::NTuple) = NamedTuple{statesyms(ps)}(u)
+label_state(ps, u::NTuple) = NamedTuple{symbols_state(ps)}(u)
 
 label_par(ps, par::SVector) = SLVector(label_par(ps, Tuple(par)))
-label_par(ps, par::NTuple) = NamedTuple{parsyms(ps)}(par)
+label_par(ps, par::NTuple) = NamedTuple{symbols_par(ps)}(par)
 
 label_paropt(ps, popt::SVector) = SLVector(label_paropt(ps, Tuple(popt)))
-label_paropt(ps, popt::NTuple) = NamedTuple{paroptsyms(ps)}(popt)
+label_paropt(ps, popt::NTuple) = NamedTuple{symbols_paropt(ps)}(popt)
 
 # extends Base.merge to work on SVector
 merge(x::T, y::NamedTuple) where T<:SLArray = T(merge(NamedTuple(x),y)...)
@@ -243,6 +250,18 @@ function merge(x::T, y::NamedTuple) where T<:LArray
     end
     xnew
 end
+
+"""
+    name_state(ps, u::AbstractVector) = LArray{statesyms(ps)}(u)
+    name_par(ps, par::AbstractVector) = LArray{symbols_par(ps)}(par)
+    name_paropt(ps, popt::AbstractVector) = LArray{symbols_paropt(ps)}(popt)
+
+Produce a `NamedVector` of given state, parameters, or optimized vars
+"""
+
+name_state(ps, state::AbstractVector) = NamedArray(state, (collect(symbols_state(ps)),))
+name_par(ps, par::AbstractVector) = NamedArray(par, (collect(symbols_par(ps)),))
+name_paropt(ps, paropt::AbstractVector) = NamedArray(paropt, (collect(symbols_paropt(ps)),))
 
 
 

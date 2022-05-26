@@ -20,11 +20,11 @@ end;
 end;
 
 @testset "access symbols and counts" begin
-    @test (@inferred statesyms(ps)) == keys(u1)
-    @test (@inferred parsyms(ps)) == keys(p1)
-    @test (@inferred paroptsyms(ps)) == keys(popt)
+    @test (@inferred symbols_state(ps)) == keys(u1)
+    @test (@inferred symbols_par(ps)) == keys(p1)
+    @test (@inferred symbols_paropt(ps)) == keys(popt)
     #
-    @test (@inferred count_states(ps)) == length(u1)
+    @test (@inferred count_state(ps)) == length(u1)
     @test (@inferred count_par(ps)) == length(p1)
     @test (@inferred count_paropt(ps)) == length(popt)
 end;
@@ -205,26 +205,56 @@ end;
     @named m = samplesystem()
     popt_names = (:RHS, :τ)
     ps1 = ProblemParSetter(m, popt_names)
-    @test statesyms(ps1) == (:x, :RHS)
-    @test parsyms(ps1) == (:τ,)
-    @test paroptsyms(ps1) == popt_names
-    ps1 = ProblemParSetter(m, popt_names; strip=true)
-    @test statesyms(ps1) == (:x, :RHS)
-    @test parsyms(ps1) == (:τ,)
-    @test paroptsyms(ps1) == popt_names
+    @test symbols_state(ps1) == (:x, :RHS)
+    @test symbols_par(ps1) == (:τ,)
+    @test symbols_paropt(ps1) == popt_names
+    em = embed_system(m;name=:m, simplify=false)
+    ps1 = ProblemParSetter(em, popt_names; strip=true)
+    @test symbols_state(ps1) == (:x, :RHS)
+    @test symbols_par(ps1) == (:τ,)
+    @test symbols_paropt(ps1) == popt_names
 end;
 
 @testset "error message on state not in front of parameters" begin
     @named m = samplesystem()
     popt_names = (:τ, :RHS) # note :RHS is a state and should be in fron to :τ
     @test_throws ErrorException ps1 = ProblemParSetter(m, popt_names)
-    # @test paroptsyms(ps1) == popt_names # fails too
+    # @test symbols_paropt(ps1) == popt_names # fails too
     #
     # in addition to missing parameters
     popt_names = (:τ, :RHS, :M) # note :RHS is a state and should be in fron to :τ
     @test_throws ErrorException ps1 = ProblemParSetter(m, popt_names)
 end;
 
+
+@testset "name_paropt" begin
+    xn = @inferred name_paropt(ps, collect(1:count_paropt(ps)))
+    @test names(xn)[1] == collect(symbols_paropt(ps))
+    @test xn[:k_R] == 3 
+    xn = @inferred name_state(ps, collect(1:count_state(ps)))
+    @test names(xn)[1] == collect(symbols_state(ps))
+    xn = @inferred name_par(ps, collect(1:count_par(ps)))
+    @test names(xn)[1] == collect(symbols_par(ps))
+    #
+    frandsym = () -> begin
+        syms_arr = rand([:L,:k_L,:k_R],2)
+        ntuple(i -> syms_arr[i], 2)
+        rand() > 0.5 ? (:L,:k_L,:k_R) : (:L,:k_L)
+    end
+    #frandsym()
+    psr = @inferred ProblemParSetter(keys(u1),keys(p1),frandsym(), Val(false))
+    # cannot be inferred, because labels are not known at construction time
+    #xl = @inferred label_paropt(psr, collect(1:count_paropt(psr)))
+    # but NamedVector is ok
+    xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
+    ftmp = () -> begin
+        psr = ProblemParSetter(keys(u1),keys(p1),frandsym(), Val(false))
+        xn = name_paropt(psr, collect(1:count_paropt(psr)))
+    end
+    # @code_warntype ftmp()  # all read!! number of parameters not known
+    # need different ProblemParSetter that does not store integers in type signature
+    # and hence will not support LabelledArrays
+end;
 
 
 

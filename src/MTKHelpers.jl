@@ -6,15 +6,16 @@ using Requires: @require
 using NamedArrays
 #using Infiltrator
 
-export symbol, statesyms, parsyms, strip_namespace, embed_system, cm2inch
+export symbol, symbols_state, symbols_par, strip_namespace, embed_system, cm2inch
 
-export ProblemParSetter, count_states, count_par, count_paropt, 
-    paroptsyms, statesyms, parsyms,
-    update_statepar, get_paropt, get_paropt_labeled, label_paropt, label_par, label_state
+export ProblemParSetter, count_state, count_par, count_paropt, 
+    symbols_paropt, symbols_state, symbols_par,
+    update_statepar, get_paropt, get_paropt_labeled, label_paropt, label_par, label_state,
+    name_paropt, name_par, name_state
 
 export smoothstep
 
-export pdf_figure, series_sol!
+export series_sol!
 
 export getlast
 

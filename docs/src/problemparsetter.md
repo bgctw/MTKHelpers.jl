@@ -48,8 +48,8 @@ get_paropt_labeled(ps, prob2) == popt
 The following type stores the necessary information, that can be queried.
 ```@docs
 ProblemParSetter
-statesyms(::ProblemParSetter)
-count_states
+symbols_state(::ProblemParSetter)
+count_state
 ```
 
 ## Updating a problem 

@@ -8,4 +8,20 @@ ms = structural_simplify(m)
 prob = ODEProblem(ms, [x => 1.1], (0.0,1.0), [])
 sol = solve(prob, Tsit5())
 
-sol(0.3, idxs=[RHS])                                                                                                                                                                     
+   
+using BenchmarkTools
+const constant = 10
+# actually constant can be reassigned by the same type, only issues warnings
+add(x) = constant + x
+@btime add(3)
+
+var = 10
+add2(x) = var::Int + x
+@btime add2(3)
+
+add3(x, y=var) = var +x
+@btime add3(3, $var)
+
+const semi = Ref(10)
+add4(x) = x + semi[]
+@btime add4(3)

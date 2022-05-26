@@ -1,7 +1,7 @@
-@testset "statesyms ODE" begin
+@testset "symbols_state ODE" begin
     @named m = samplesystem()
-    @test statesyms(m) == [:x, :RHS]   
-    @test parsyms(m) == [ :τ]   
+    @test symbols_state(m) == [:x, :RHS]   
+    @test symbols_par(m) == [ :τ]   
 end
 
 @testset "symbol" begin
