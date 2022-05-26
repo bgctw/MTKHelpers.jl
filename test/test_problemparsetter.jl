@@ -239,6 +239,7 @@ end;
     frandsym = () -> begin
         syms_arr = rand([:L,:k_L,:k_R],2)
         ntuple(i -> syms_arr[i], 2)
+        rand() > 0.5 ? (:L,:k_L,:k_R) : (:L,:k_L)
     end
     #frandsym()
     psr = @inferred ProblemParSetter(keys(u1),keys(p1),frandsym(), Val(false))
@@ -246,6 +247,13 @@ end;
     #xl = @inferred label_paropt(psr, collect(1:count_paropt(psr)))
     # but NamedVector is ok
     xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
+    ftmp = () -> begin
+        psr = ProblemParSetter(keys(u1),keys(p1),frandsym(), Val(false))
+        xn = name_paropt(psr, collect(1:count_paropt(psr)))
+    end
+    # @code_warntype ftmp()  # all read!! number of parameters not known
+    # need different ProblemParSetter that does not store integers in type signature
+    # and hence will not support LabelledArrays
 end;
 
 
