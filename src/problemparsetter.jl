@@ -226,18 +226,18 @@ The return type differs given the input
 - NTuple -> NamedTuple
 - AbstractVector -> LArray
 """
-function label_state(ps, u::AbstractVector); LArray{symbols_state(ps)}(u); end,
-function label_par(ps, par::AbstractVector); LArray{symbols_par(ps)}(par); end,
-function label_paropt(ps, popt::AbstractVector); LArray{symbols_paropt(ps)}(popt); end
+function label_state(ps::ProblemParSetter, u::AbstractVector); LArray{symbols_state(ps)}(u); end,
+function label_par(ps::ProblemParSetter, par::AbstractVector); LArray{symbols_par(ps)}(par); end,
+function label_paropt(ps::ProblemParSetter, popt::AbstractVector); LArray{symbols_paropt(ps)}(popt); end
 
-label_state(ps, u::SVector) = SLVector(label_state(ps, Tuple(u)))
-label_state(ps, u::NTuple) = NamedTuple{symbols_state(ps)}(u)
+label_state(ps::ProblemParSetter, u::SVector) = SLVector(label_state(ps, Tuple(u)))
+label_state(ps::ProblemParSetter, u::NTuple) = NamedTuple{symbols_state(ps)}(u)
 
-label_par(ps, par::SVector) = SLVector(label_par(ps, Tuple(par)))
-label_par(ps, par::NTuple) = NamedTuple{symbols_par(ps)}(par)
+label_par(ps::ProblemParSetter, par::SVector) = SLVector(label_par(ps, Tuple(par)))
+label_par(ps::ProblemParSetter, par::NTuple) = NamedTuple{symbols_par(ps)}(par)
 
-label_paropt(ps, popt::SVector) = SLVector(label_paropt(ps, Tuple(popt)))
-label_paropt(ps, popt::NTuple) = NamedTuple{symbols_paropt(ps)}(popt)
+label_paropt(ps::ProblemParSetter, popt::SVector) = SLVector(label_paropt(ps, Tuple(popt)))
+label_paropt(ps::ProblemParSetter, popt::NTuple) = NamedTuple{symbols_paropt(ps)}(popt)
 
 # extends Base.merge to work on SVector
 merge(x::T, y::NamedTuple) where T<:SLArray = T(merge(NamedTuple(x),y)...)

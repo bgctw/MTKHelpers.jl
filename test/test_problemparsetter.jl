@@ -251,9 +251,23 @@ end;
         psr = ProblemParSetter(keys(u1),keys(p1),frandsym(), Val(false))
         xn = name_paropt(psr, collect(1:count_paropt(psr)))
     end
-    # @code_warntype ftmp()  # all read!! number of parameters not known
+    # @code_warntype ftmp()  # all red!! number of parameters not known
     # need different ProblemParSetter that does not store integers in type signature
     # and hence will not support LabelledArrays
+    _ftmp = (namesopt) -> begin
+        local psr = ProblemParSetter(keys(u1),keys(p1),namesopt, Val(false))
+        #xn = @inferred label_paropt(psr, collect(1:count_paropt(psr)))
+        xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
+    end
+    ftmp = () -> begin
+        local namesopt = frandsym()
+        xn = @inferred _ftmp(namesopt)
+        @show typeof(xn)
+        # return value of entire function is not type stable, # because namesopt is not typestable 
+        # but inside this function typeof(xn) is known
+    end
+    xn = ftmp()  
+
 end;
 
 
