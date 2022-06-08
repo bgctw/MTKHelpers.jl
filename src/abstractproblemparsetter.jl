@@ -23,7 +23,8 @@ function count_paropt(::AbstractProblemParSetter) end
     symbols_paropt(pset::AbstractProblemParSetter)
 
 Report the names, i.e. symbols of problem states, problem parameters and 
-optimized parameters respectively, i.e. the concatenation of components    
+optimized parameters respectively, i.e. the concatenation of components.
+Similar to `ComponentArrays.label`, but inferred from Axis object.   
 """
 function symbols_state(::AbstractProblemParSetter) end,
 function symbols_par(::AbstractProblemParSetter) end,
@@ -36,9 +37,9 @@ function symbols_paropt(::AbstractProblemParSetter) end
 
 
 """
-    symbols_state(pset::AbstractProblemParSetter)
-    symbols_par(pset::AbstractProblemParSetter)
-    symbols_paropt(pset::AbstractProblemParSetter)
+    axis_state(pset::AbstractProblemParSetter)
+    axis_par(pset::AbstractProblemParSetter)
+    axis_paropt(pset::AbstractProblemParSetter)
 
 Report the Axis, i.e. nested component symbols of problem states, problem parameters and 
 optimized parameters respectively.
@@ -61,7 +62,7 @@ Extract the initial states and parameters corresponding to the positions
 that are optimized.    
 If both u0 and p are AbstractVectors, the result is a Vector, otherwise the result is a Tuple.
 
-The _lebeled versions additionally call `label_paropt` (see [`label_state`](@ref)) 
+The labeled versions additionally call `label_paropt` (see [`label_state`](@ref)) 
 on the return value.
 """
 function get_paropt(pset::AbstractProblemParSetter, prob::ODEProblem; kwargs...)
@@ -77,16 +78,12 @@ end
 # need to implement in concrete types: get_paropt_labeled -> ComponentVector
 
 """
-    label_state(pset, u::AbstractVector) = LArray{statesyms(pset)}(u)
-    label_par(pset, par::AbstractVector) = LArray{symbols_par(pset)}(par)
-    label_paropt(pset, popt::AbstractVector) = LArray{symbols_paropt(pset)}(popt)
+    label_state(pset::AbstractProblemParSetter, u::AbstractVector) 
+    label_par(pset::AbstractProblemParSetter, par::AbstractVector) 
+    label_paropt(pset::AbstractProblemParSetter, popt::AbstractVector) 
 
-Produce a labeled version of a sequence of initial states, parameters, or
+Produce a labeled version, i.e. a ComponentVector of initial states, parameters, or
 optimized parameters respectively.
-The return type differs given the input
-- SVector -> SLVector
-- NTuple -> NamedTuple
-- AbstractVector -> LArray
 """
 function label_state(pset::AbstractProblemParSetter, u); attach_axis(u, axis_state(pset)); end,
 function label_par(pset::AbstractProblemParSetter, p); attach_axis(p, axis_par(pset)); end,
@@ -106,25 +103,30 @@ attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getdata(x), (
 # label_paropt(pset::AbstractProblemParSetter, popt::NTuple) = NamedTuple{symbols_paropt(pset)}(popt)
 
 """
-    name_state(pset, u::AbstractVector) = LArray{statesyms(pset)}(u)
-    name_par(pset, par::AbstractVector) = LArray{symbols_par(pset)}(par)
-    name_paropt(pset, popt::AbstractVector) = LArray{symbols_paropt(pset)}(popt)
+    name_state(pset, u::AbstractVector) 
+    name_par(pset, par::AbstractVector) 
+    name_paropt(pset, popt::AbstractVector) 
 
-Produce a `NamedVector` of given state, parameters, or optimized vars
+    name_paropt(pset::AbstractProblemParSetter, prob::ODEProblem)    
+
+Produce a `NamedVector` of given state, parameters, or optimized vars.
 """
-name_state(pset::AbstractProblemParSetter, state::AbstractVector) = NamedArray(
-    state, (collect(symbols_state(pset))::Vector{Symbol},))
-name_par(pset::AbstractProblemParSetter, par::AbstractVector) = NamedArray(
-    par, (collect(symbols_par(pset))::Vector{Symbol},))
-name_paropt(pset::AbstractProblemParSetter, paropt::AbstractVector) = NamedArray(
-    paropt, (collect(symbols_paropt(pset))::Vector{Symbol},))
-
+function name_state(pset::AbstractProblemParSetter, state::AbstractVector); NamedArray(
+    state, (collect(symbols_state(pset))::Vector{Symbol},)); end,
+function name_par(pset::AbstractProblemParSetter, par::AbstractVector); NamedArray(
+    par, (collect(symbols_par(pset))::Vector{Symbol},)); end,
+function name_paropt(pset::AbstractProblemParSetter, paropt::AbstractVector); NamedArray(
+    paropt, (collect(symbols_paropt(pset))::Vector{Symbol},)); end,
+function name_paropt(pset::AbstractProblemParSetter, prob::ODEProblem; kwargs...); name_paropt(
+    pset, get_paropt(pset, prob); kwargs...); end
+    
 """
     prob_new = update_statepar(ps::ProblemParSetter, popt, prob::ODEProblem) 
     u0new, pnew = update_statepar(ps::ProblemParSetter, popt, u0, p) 
 
 Return an updated problem or updates states and parameters where
-values corresponding to positions in `popt` are set.
+values corresponding to positions in `popt` hold the values of popt.
+The type is changed to the promotion type of popt, to allow working with dual numbers.
 """
 function update_statepar(pset::AbstractProblemParSetter, popt, prob::ODEProblem) 
     u0,p = update_statepar(pset, popt, prob.u0, prob.p)

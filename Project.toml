@@ -1,7 +1,7 @@
 name = "MTKHelpers"
 uuid = "2725b469-bb7f-4d1a-ba58-ced332a70bc7"
 authors = ["Thomas Wutzler <twutz@bgc-jena.mpg.de> and contributors"]
-version = "0.1.1"
+version = "0.2.0"
 
 [deps]
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"

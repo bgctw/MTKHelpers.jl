@@ -7,18 +7,17 @@ CurrentModule = MTKHelpers
 Oftern one wants to change a subset of the initial
 states,`u0`, and a subset of parameters,`p`, of an ODEProblem during an optimization.
 
-Given `u0` and `p` being a sequence of scalars, 
-and `popt` is a sequence of optimized parameters, which may include initial states,
+Given `u0` and `p` can be expressed as ComponentVectors, 
+and `popt` can be expressed as a ComponentVector of optimized parameters, 
+which may include initial states,
 the following class helps updating the corresponding positions in 
 an ODEProblem.
 
-Currently, parameters to optimize must be of the form `u0...,p...`, i.e. the position of
-all states to optimize must be first, before the parameters to optimize.
-Initial states and parameters must have different names.
+Initial states and parameter components must have different names.
 
 ```@example doc
 # setting up a simple example composite system and problem
-using ModelingToolkit, DifferentialEquations, LabelledArrays
+using ModelingToolkit, DifferentialEquations, ComponentArrays
 using MTKHelpers
 function samplesystem(;name,τ = 3.0, p1=1.1, p2=1.2) 
     @variables t 
@@ -32,49 +31,52 @@ end
 prob = ODEProblem(sys, [m.x => 0.0], (0.0,10.0))
 
 # setup position matching
-popt = SLVector(m₊x=0.1, m₊p1=2.1)
-ps = ProblemParSetter(sys, keys(popt))
+popt = ComponentVector(m₊x=0.1, m₊p1=2.1)
+pset = ProblemParSetter(sys, popt) # not fully type-inferred
 
 # extract optimized 
-get_paropt_labeled(ps, prob)
+get_paropt(pset, prob)          # plain vector
+get_paropt_labeled(pset, prob)  # ComponentVector
+name_paropt(pset, prob)         # NamedVector 
 
 # update states and parameters
-prob2 = update_statepar(ps, popt, prob)
-get_paropt_labeled(ps, prob2) == popt
+prob2 = update_statepar(pset, popt, prob)
+prob2.p # p is still a plain vector
+label_par(pset, prob2.p).m₊p1 == popt.m₊p1 # attach labels and access properties
+label_state(pset, prob2.u0).m₊x == popt.m₊x # attach labels and access properties
+get_paropt_labeled(pset, prob2) == popt
 ```
+
+Note that ProblemParSetter, `pset`, is only fully type-inferred when constructed with 
+three ComponentArrays.Axis objects. This propagates to all ComponentVectors 
+constructed by it, e.g. with `label_state`.
+Hence, its recommended to pass `pset` across a function barrier for code
+where performance matters.
 
 ## ProblemParSetter
 
 The following type stores the necessary information, that can be queried.
 ```@docs
 ProblemParSetter
-symbols_state(::ProblemParSetter)
-count_state
+count_state(::AbstractProblemParSetter)
+axis_state(::AbstractProblemParSetter)
+symbols_state(::AbstractProblemParSetter)
 ```
 
 ## Updating a problem 
 ```@docs
-update_statepar
-```
-
-Further a variant or merge is implemented to produce an updated
-version of an `SLArray` or `LArray` are produced given a `NamedTuple` of updates.
-
-```@example 
-using LabelledArrays, MTKHelpers
-popt = SLVector(L = 10.1, k_L = 1.1, k_R = 1/20.1)
-popt2 = merge(popt, (k_L = 1.2,))
-popt2.k_L == 1.2
+update_statepar(::AbstractProblemParSetter,popt, prob::ODEProblem)
 ```
 
 ## Extracting optimized parameters
 ```@docs
-get_paropt
+get_paropt(::AbstractProblemParSetter,  u0, p)
 ```
 
 ## Labeling 
 ```@docs
-label_state
+label_state(::AbstractProblemParSetter, u0)
+name_state(::AbstractProblemParSetter, state::AbstractVector)
 ```
 
 

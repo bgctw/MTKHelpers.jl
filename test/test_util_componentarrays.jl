@@ -1,74 +1,76 @@
-@testset "_update_cv" begin
-    cv = ComponentVector(a=(a1=1,a2=2,a3=3),b=20)
-    s = ComponentVector(a=(a1=11,a2=2,a3=3),b=20)
-    cv1 = _update_cv(cv, s)
-    @test cv1 == s
-    s = ComponentVector(b=21)
-    cv1 = _update_cv(cv, s)
-    @test (cv1.a == cv.a) & (cv1.b == s.b)
-    s = ComponentVector(a=(a1=11,))
-    cv1 = _update_cv(cv, s)
-    @test (cv1.a.a1 == 11) & (cv1.a.a2 == cv.a.a2) & (cv1.b == cv.b)
-    s = ComponentVector(a=(aTypo=11,))
-    @test_throws ErrorException _update_cv(cv, s)
-    s = ComponentVector(a=11:13)
-    cv1 = _update_cv(cv, s)
-    @test cv1.a.a3 == 13
-    s = ComponentVector(a=1)
-    @test_throws ErrorException _update_cv(cv, s) # wrong length ComponentVector
-    s = ComponentVector(b=20:21) # wrong length flat axis
-    @test_throws ErrorException _update_cv(cv, s) 
-    ax = first(getaxes(cv))
-    CA.last_index(ax)
-    lastindex(ax)
-end;
-
-@testset "_get_index_axis" begin
-    # TODO update src and test in ComponentArrays.jl bgctw branch
-    cv = ComponentVector(a=(a1=1,a2=2,a3=3),b=20)
-    #s = ComponentVector(b=1)
-    s = ComponentVector(a=1)
-    ax = first(getaxes(s))
-    @test_throws ErrorException _get_index_axis(cv, ax)
-end;
-
-@testset "getindex_axis ComponentVector" begin
-    cv = ComponentVector(a=(a1=100,a2=(a21=210, a22=220)), b=2, c = (c1=reshape(1:4,(2,2)),))
-    cr = cv[first(axes(cv))]
-    @test  cr == cv
-    cr.a.a1 = 3100;  @test cv.a.a1 == 100 # does not modify original cv
-    # extract a single nested component
-    # construct Axis by template ComponentVector
-    cs = ComponentVector(a=(a2=(a22=1,),)) # the "," is important to make it a tuple
-    cr = cv[first(axes(cs))]
-    @test axes(cr) == axes(cs)
-    @test cr.a.a2.a22 == cv.a.a2.a22
-    # extract shaped component
-    @test cv[Axis(:c)].c == cv.c
-    # extract two upper-level components with structure
-    cr = cv[Axis(:a,:c)] # :b not include
-    @test keys(cr) == (:a,:c)
-    @test first(axes(cr.a)) == first(axes(cv.a))
-    @test cr.a == cv.a
-    @test cr.a.a1 == cv.a.a1
-    # TODO: documentation do not forget comma for tuple
-    cv[first(axes(ComponentVector(a=(a1=1,))))] # the "," is important to make it a tuple
-    # wrongly extracts full a including a1 including a2, because there is no a1 in axis
-    cv[first(axes(ComponentVector(a=(a1=1))))] 
-    #
-    # ugly error on not matching template
-    cs = ComponentVector(a=(aTypo=1,)) # the "," is important to make it a tuple
-    @test_throws ErrorException cv[first(axes(cs))] # has aTypo in error message
 
 
-    cv = ComponentVector(a=(a1=100,a2=(a21=210, a22=reshape(1:4,(2,2))),a3=300), b=3, c=4)
-    # extracting some of the nested a-components and the b component
-    # note that I do not specify the structure of a2
-    cv_indextemplate = ComponentVector(a=(a2=1, a3=1), b=1)
-    ax = first(getaxes(cv_indextemplate)) # todo specify without template
-    cv_sub = cv[ax]
+# @testset "_update_cv" begin
+#     cv = ComponentVector(a=(a1=1,a2=2,a3=3),b=20)
+#     s = ComponentVector(a=(a1=11,a2=2,a3=3),b=20)
+#     cv1 = _update_cv(cv, s)
+#     @test cv1 == s
+#     s = ComponentVector(b=21)
+#     cv1 = _update_cv(cv, s)
+#     @test (cv1.a == cv.a) & (cv1.b == s.b)
+#     s = ComponentVector(a=(a1=11,))
+#     cv1 = _update_cv(cv, s)
+#     @test (cv1.a.a1 == 11) & (cv1.a.a2 == cv.a.a2) & (cv1.b == cv.b)
+#     s = ComponentVector(a=(aTypo=11,))
+#     @test_throws ErrorException _update_cv(cv, s)
+#     s = ComponentVector(a=11:13)
+#     cv1 = _update_cv(cv, s)
+#     @test cv1.a.a3 == 13
+#     s = ComponentVector(a=1)
+#     @test_throws ErrorException _update_cv(cv, s) # wrong length ComponentVector
+#     s = ComponentVector(b=20:21) # wrong length flat axis
+#     @test_throws ErrorException _update_cv(cv, s) 
+#     ax = first(getaxes(cv))
+#     CA.last_index(ax)
+#     lastindex(ax)
+# end;
 
-end
+# @testset "_get_index_axis" begin
+#     # TODO update src and test in ComponentArrays.jl bgctw branch
+#     cv = ComponentVector(a=(a1=1,a2=2,a3=3),b=20)
+#     #s = ComponentVector(b=1)
+#     s = ComponentVector(a=1)
+#     ax = first(getaxes(s))
+#     @test_throws ErrorException _get_index_axis(cv, ax)
+# end;
+
+# @testset "getindex_axis ComponentVector" begin
+#     cv = ComponentVector(a=(a1=100,a2=(a21=210, a22=220)), b=2, c = (c1=reshape(1:4,(2,2)),))
+#     cr = cv[first(axes(cv))]
+#     @test  cr == cv
+#     cr.a.a1 = 3100;  @test cv.a.a1 == 100 # does not modify original cv
+#     # extract a single nested component
+#     # construct Axis by template ComponentVector
+#     cs = ComponentVector(a=(a2=(a22=1,),)) # the "," is important to make it a tuple
+#     cr = cv[first(axes(cs))]
+#     @test axes(cr) == axes(cs)
+#     @test cr.a.a2.a22 == cv.a.a2.a22
+#     # extract shaped component
+#     @test cv[Axis(:c)].c == cv.c
+#     # extract two upper-level components with structure
+#     cr = cv[Axis(:a,:c)] # :b not include
+#     @test keys(cr) == (:a,:c)
+#     @test first(axes(cr.a)) == first(axes(cv.a))
+#     @test cr.a == cv.a
+#     @test cr.a.a1 == cv.a.a1
+#     # TODO: documentation do not forget comma for tuple
+#     cv[first(axes(ComponentVector(a=(a1=1,))))] # the "," is important to make it a tuple
+#     # wrongly extracts full a including a1 including a2, because there is no a1 in axis
+#     cv[first(axes(ComponentVector(a=(a1=1))))] 
+#     #
+#     # ugly error on not matching template
+#     cs = ComponentVector(a=(aTypo=1,)) # the "," is important to make it a tuple
+#     @test_throws ErrorException cv[first(axes(cs))] # has aTypo in error message
+
+
+#     cv = ComponentVector(a=(a1=100,a2=(a21=210, a22=reshape(1:4,(2,2))),a3=300), b=3, c=4)
+#     # extracting some of the nested a-components and the b component
+#     # note that I do not specify the structure of a2
+#     cv_indextemplate = ComponentVector(a=(a2=1, a3=1), b=1)
+#     ax = first(getaxes(cv_indextemplate)) # todo specify without template
+#     cv_sub = cv[ax]
+
+# end
 
 
 
@@ -88,23 +90,23 @@ end
 #     # try with different AbstractArray than AxisArray
 # end;
 
-@testset "_get_index_axis NamedArray" begin
-    u1 = ComponentVector(L = 10.0,)
-    p1 = ComponentVector(k_L = 1.0, k_R = 1/20, m = 2.0)
-    popt = ComponentVector(L = 10.1, k_L = 1.1, k_R = 1/20.1)
-    u1a = NamedArray(collect(u1), (collect(keys(u1)),))
-    p1a = NamedArray(collect(p1), (collect(keys(p1)),))
-    vcat(u1a, p1a) # does preserve type 
-    # hence also ComponentArray cannot do anything
-    u1av = ComponentVector(u1a, (Axis(keys(u1)),))
-    p1av = ComponentVector(p1a, (Axis(keys(p1)),))
-    tmp = vcat(u1av, p1av) # skips underlying type
-    tmp2 = p1av.k_L
-    _get_index_axis(p1av, Axis(:k_L, :k_R))
-    # try with different AbstractArray than AxisArray
-end;
+# @testset "_get_index_axis NamedArray" begin
+#     u1 = ComponentVector(L = 10.0,)
+#     p1 = ComponentVector(k_L = 1.0, k_R = 1/20, m = 2.0)
+#     popt = ComponentVector(L = 10.1, k_L = 1.1, k_R = 1/20.1)
+#     u1a = NamedArray(collect(u1), (collect(keys(u1)),))
+#     p1a = NamedArray(collect(p1), (collect(keys(p1)),))
+#     vcat(u1a, p1a) # does preserve type 
+#     # hence also ComponentArray cannot do anything
+#     u1av = ComponentVector(u1a, (Axis(keys(u1)),))
+#     p1av = ComponentVector(p1a, (Axis(keys(p1)),))
+#     tmp = vcat(u1av, p1av) # skips underlying type
+#     tmp2 = p1av.k_L
+#     _get_index_axis(p1av, Axis(:k_L, :k_R))
+#     # try with different AbstractArray than AxisArray
+# end;
 
-@testset "_get_index_axis NamedArray" begin
+@testset "_labels" begin
     x = first(getaxes(ComponentArray(a=1, b=[1,2])))
     @test _labels(x) == [".a",".b[1]",".b[2]"]
     x = first(getaxes(ComponentArray(c=(a=1, b=[1,2]))))

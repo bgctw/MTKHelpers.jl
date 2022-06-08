@@ -5,12 +5,11 @@ using StaticArrays, LabelledArrays
 using Requires: @require 
 using NamedArrays
 using ComponentArrays
-using Infiltrator
-import IterTools
+#using Infiltrator
 
 export symbol, symbols_state, symbols_par, strip_namespace, embed_system, cm2inch, fixpoint
 
-export AbstractProbelmParSetter, ProblemParSetter, ProblemParSetterComp1,
+export AbstractProbelmParSetter, ProblemParSetter_sym, ProblemParSetter,
     count_state, count_par, count_paropt, 
     axis_paropt, axis_par, axis_state,
     symbols_paropt, symbols_state, symbols_par,
@@ -38,7 +37,7 @@ function __init__()
 include("util.jl")
 include("util_componentarrays.jl")
 include("abstractproblemparsetter.jl")
-include("problemparsetter_comp.jl")
+include("problemparsetter_sym.jl")
 include("problemparsetter.jl")
 include("smoothstep.jl")
 include("solution.jl")
