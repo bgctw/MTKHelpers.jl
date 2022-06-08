@@ -44,19 +44,21 @@ end
 #     ProblemParSetterComp1(Axis(state_names), Axis(par_names), Axis(popt_names))
 # end
 
-function ProblemParSetterComp1(state_names,par_names,popt_names) 
+function ProblemParSetterComp1(state_template,par_template,popt_template) 
     # not type-stable
     ProblemParSetterComp1(
-        _get_axis(state_names),
-        _get_axis(par_names),
-        _get_axis(popt_names),
+        _get_axis(state_template),
+        _get_axis(par_template),
+        _get_axis(popt_template),
     )
 end
 
-function _get_axis(x::Union{Tuple, AbstractArray}) 
-    Axis(Tuple(i for i in symbol.(x)))
-end
+# depr: need a full-fledged axis
+# function _get_axis(x::Union{Tuple, AbstractArray}) 
+#     Axis(Tuple(i for i in symbol.(x)))
+# end
 _get_axis(x::ComponentVector) = first(getaxes(x))
+_get_axis(x::AbstractAxis) = x
 
 
 function ProblemParSetterComp1(sys::ODESystem,popt_names; strip=false) 
@@ -70,9 +72,10 @@ end
 # count_par(::ProblemParSetterComp1{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = length(CA.indexmap(PA))
 # count_paropt(::ProblemParSetterComp1{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = N
 
-count_state(pset::ProblemParSetterComp1) = CA.last_index(pset.ax_state)
-count_par(pset::ProblemParSetterComp1) = CA.last_index(pset.ax_par)
-count_paropt(pset::ProblemParSetterComp1) = CA.last_index(pset.ax_paropt)
+# todo change to length(ax) when this becomes availale in ComponentArrays
+count_state(pset::ProblemParSetterComp1) = lastindex(pset.ax_state) - firstindex(pset.ax_state) + 1
+count_par(pset::ProblemParSetterComp1) = lastindex(pset.ax_par) - firstindex(pset.ax_par) + 1
+count_paropt(pset::ProblemParSetterComp1) = lastindex(pset.ax_paropt) - firstindex(pset.ax_paropt) + 1
 
 
 # axis_state(::ProblemParSetterComp1{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = SA
@@ -84,25 +87,24 @@ axis_par(ps::ProblemParSetterComp1) = ps.ax_par
 axis_paropt(ps::ProblemParSetterComp1) = ps.ax_paropt
 
 
-function _ax_symbols(ax::Union{AbstractAxis, CA.CombinedAxis}; prefix="₊") 
-    # strip the first prefix, convert to symbol and retun generator
-    (i for i in _ax_string_prefixed(ax; prefix) .|> (x -> x[(sizeof(prefix)+1):end]) .|> Symbol)
-end
-function _ax_symbols_tuple(ax::Union{AbstractAxis, CA.CombinedAxis}; kwargs...) 
-    Tuple(_ax_symbols(ax; kwargs...))::NTuple{CA.last_index(ax), Symbol}
-end
-function _ax_symbols_vector(ax::Union{AbstractAxis, CA.CombinedAxis}; kwargs...) 
-    # strip the first prefix, convert to symbol and collect into tuple
-    collect(_ax_symbols(ax; kwargs...))::Vector{Symbol}
-end
-
-
-
+# function _ax_symbols(ax::Union{AbstractAxis, CA.CombinedAxis}; prefix="₊") 
+#     # strip the first prefix, convert to symbol and retun generator
+#     (i for i in _ax_string_prefixed(ax; prefix) .|> (x -> x[(sizeof(prefix)+1):end]) .|> Symbol)
+# end
+# function _ax_symbols_tuple(ax::Union{AbstractAxis, CA.CombinedAxis}; kwargs...) 
+#     Tuple(_ax_symbols(ax; kwargs...))::NTuple{CA.last_index(ax), Symbol}
+# end
+# function _ax_symbols_vector(ax::Union{AbstractAxis, CA.CombinedAxis}; kwargs...) 
+#     # strip the first prefix, convert to symbol and collect into tuple
+#     collect(_ax_symbols(ax; kwargs...))::Vector{Symbol}
+# end
 
 symbols_state(pset::ProblemParSetterComp1) = _ax_symbols_tuple(axis_state(pset))
 symbols_par(pset::ProblemParSetterComp1) = _ax_symbols_tuple(axis_par(pset))
 symbols_paropt(pset::ProblemParSetterComp1) = _ax_symbols_tuple(axis_paropt(pset))
- 
+
+
+
 # Using unexported interface of ComponentArrays.axis, one place to change
 "Accessor function for index from ComponentIndex"
 idx(ci::CA.ComponentIndex) = ci.idx
@@ -120,27 +122,44 @@ values corresponding to positions in `popt` are set.
 # end
 
 
-function update_statepar(pset::ProblemParSetterComp1, popt, u0::TU, p::TP) where {TU,TP}
+function update_statepar(pset::ProblemParSetterComp1, popt::TO, u0::TU, p::TP) where {TO, TU, TP}
     popt_state, popt_p = _separate_state_p(pset, popt)
-    u0new = _update_cv(label_state(pset, u0), popt_state)
-    pnew = _update_cv(label_par(pset,p), popt_p)
-    # TODO care for different type of popt
-    u0new = convert(TU, getdata(u0new))::TU
-    pnew = convert(TP, getdata(pnew))::TP
-    (u0new, pnew)
+    u0new = length(popt_state) == 0 ? u0 : begin
+        u0_l = label_state(pset, u0)
+        fdata = (u0 isa ComponentVector) ? identity : getdata # stip labels?
+        TUP = typeof(similar(u0_l, promote_type(eltype(TU), eltype(TO))))
+        u0new = fdata(_update_cv_top(u0_l, popt_state)::TUP)
+    end
+    pnew = length(popt_p) == 0 ? p : begin
+        p_l = label_par(pset,p)
+        fdata = (p isa ComponentVector) ? identity : getdata # stip labels?
+        TPP = typeof(similar(p_l, promote_type(eltype(TP), eltype(TO))))
+        pnew = fdata(_update_cv_top(p_l, popt_p)::TPP)
+    end 
+    u0new, pnew
 end
 
 # extract p and state components of popt into separate ComponentVectors
 function _separate_state_p(pset, popt)
     popt_l = label_paropt(pset, popt)
-    popt_state = _get_index_axis(popt_l, Axis(
-        Tuple(k for (i,k) in enumerate(keys(popt_l)) if pset.is_state[i])))
-    #popt_p = popt_l[Axis( # WAIT use proper indexing when supported with ComponentArrays
-    popt_p = _get_index_axis(popt_l, Axis(
-            Tuple(k for (i,k) in enumerate(keys(popt_l)) if pset.is_p[i])))
-    popt_state, popt_p
+    syms_p = Tuple(k for (i,k) in enumerate(keys(popt_l)) if pset.is_p[i])
+    syms_s = Tuple(k for (i,k) in enumerate(keys(popt_l)) if pset.is_state[i])
+    # popt_state = _get_index_axis(popt_l, _get_axis_of_lengths_for_syms(popt_l,
+    #     Tuple(k for (i,k) in enumerate(keys(popt_l)) if pset.is_state[i])))
+    # #popt_p = popt_l[Axis( # WAIT use proper indexing when supported with ComponentArrays
+    # popt_p = _get_index_axis(popt_l, _get_axis_of_lengths_for_syms(popt_l,
+    #         Tuple(k for (i,k) in enumerate(keys(popt_l)) if pset.is_p[i])))
+    #popt_state, popt_p
+    _indexof(popt_l, syms_s), _indexof(popt_l, syms_p)
 end
-    
+
+# TODO after cv[()] works with empty and mono-Tuple
+get_empty(cv::ComponentVector) = ComponentVector(similar(getdata(cv),0), (ComponentArrays.NullAxis(),))
+function _indexof(cv::ComponentVector{T}, syms::NTuple{N,Symbol}) where {T,N}
+    N == 1 && return(cv[KeepIndex(syms[1])])::ComponentVector{T}
+    N == 0 && return(get_empty(cv))::ComponentVector{T}
+    res = cv[syms]::ComponentVector{T}
+end
 
 
 
@@ -168,26 +187,41 @@ end
 #     cv,first(getaxes(cv_template)))
 
 
+# function get_paropt_labeled(pset::ProblemParSetterComp1, u0, p) 
+#     ax = axis_paropt(pset)
+#     keys_ax = keys(ax)
+#     u0l = label_state(pset, u0)
+#     pl = label_par(pset, p)
+#     (i,k) = first(enumerate(keys_ax))
+#     #(i,k) = (2, keys_ax[2])
+#     fik = (i,k) -> begin
+#         cvs = pset.is_state[i] ? getproperty(u0l,k) : (pset.is_p[i] ? getproperty(pl,k) : missing) 
+#         ismissing(cvs) && return(
+#             ComponentVector(NamedTuple{(k,)}((fill(missing,length(ax[k].idx)),))))
+#         !(cvs isa ComponentVector) && return(
+#             cvs = pset.is_state[i] ? u0l[KeepIndex(k)] : pl[KeepIndex(k)])
+#         axs = ax[k].ax
+#         #@show cvs, axs, typeof(cvs)
+#         # TODO replace by cvs[axs] when _get_index was merged
+#         _get_index_axis(cvs, axs)
+#     end
+#     tmp = (fik(i,k) for (i,k) in enumerate(keys_ax))
+#     T = promote_type(eltype(u0), eltype(p))
+#     res = reduce(vcat, tmp)::ComponentVector{T, Vector{T}}
+#     # @infiltrate
+#     label_paropt(pset, res) # reattach axis for type inference
+# end
+
 function get_paropt_labeled(pset::ProblemParSetterComp1, u0, p) 
-    ax = axis_paropt(pset)
-    keys_ax = keys(ax)
-    u0l = label_state(pset, u0)
-    pl = label_par(pset, p)
-    (i,k) = first(enumerate(keys_ax))
-    #(i,k) = (2, keys_ax[2])
-    tmp = map(enumerate(keys_ax)) do (i,k)
-        #local u0k =  # inferred Any
-        cvs = pset.is_state[i] ? getproperty(u0l,k) : (pset.is_p[i] ? getproperty(pl,k) : missing) 
-        cvs isa ComponentVector || return(cvs)
-        axs = ax[k].ax
-        #@show cvs, axs, typeof(cvs)
-        # TODO replace by cvs[axs] when _get_index was merged
-        _get_index_axis(cvs, axs)
+    let u0_l = label_state(pset, u0), p_l = label_par(pset, p) 
+        fik = (i,k) -> pset.is_state[i] ? u0_l[KeepIndex(k)] : (pset.is_p[i] ? p_l[KeepIndex(k)] : missing) 
+        tmp = (fik(ik[1], ik[2]) for ik in enumerate(keys(axis_paropt(pset)))) 
+        T = promote_type(eltype(u0), eltype(p))
+        res = reduce(vcat, tmp)::ComponentVector{T, Vector{T}}
+        label_paropt(pset, res) # reattach axis for type inference
     end
-    T = promote_type(eltype(u0), eltype(p))
-    res = ComponentVector(NamedTuple{keys_ax}(tmp))::ComponentVector{T, Vector{T}}
-    label_paropt(pset, res) # reattach axis for type inference
 end
+
 
 # attach type in
 # type piracy I - until get this into ComponentArrays

@@ -112,9 +112,12 @@ attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getdata(x), (
 
 Produce a `NamedVector` of given state, parameters, or optimized vars
 """
-name_state(pset::AbstractProblemParSetter, state::AbstractVector) = NamedArray(state, (collect(symbols_state(pset)),))
-name_par(pset::AbstractProblemParSetter, par::AbstractVector) = NamedArray(par, (collect(symbols_par(pset)),))
-name_paropt(pset::AbstractProblemParSetter, paropt::AbstractVector) = NamedArray(paropt, (collect(symbols_paropt(pset)),))
+name_state(pset::AbstractProblemParSetter, state::AbstractVector) = NamedArray(
+    state, (collect(symbols_state(pset))::Vector{Symbol},))
+name_par(pset::AbstractProblemParSetter, par::AbstractVector) = NamedArray(
+    par, (collect(symbols_par(pset))::Vector{Symbol},))
+name_paropt(pset::AbstractProblemParSetter, paropt::AbstractVector) = NamedArray(
+    paropt, (collect(symbols_paropt(pset))::Vector{Symbol},))
 
 """
     prob_new = update_statepar(ps::ProblemParSetter, popt, prob::ODEProblem) 

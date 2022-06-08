@@ -6,6 +6,7 @@ using Requires: @require
 using NamedArrays
 using ComponentArrays
 using Infiltrator
+import IterTools
 
 export symbol, symbols_state, symbols_par, strip_namespace, embed_system, cm2inch, fixpoint
 
@@ -17,7 +18,7 @@ export AbstractProbelmParSetter, ProblemParSetter, ProblemParSetterComp1,
     name_paropt, name_par, name_state
 
 export    
-    _get_index_axis, _set_index_axis!, attach_axis, _update_cv
+    _get_index_axis, _set_index_axis!, attach_axis, _update_cv, _labels
 
 export smoothstep
 
