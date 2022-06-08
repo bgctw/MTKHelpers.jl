@@ -88,19 +88,18 @@ end;
 function test_label_svectors(pset, u0, p, popt, ::Val{NU0}, ::Val{NP}, ::Val{NOPT}) where {NOPT,NU0,NP}
     @test label_paropt(pset, popt) == popt
     @test @inferred(label_paropt(pset, convert(Array, popt))) == popt
-    @test @inferred(label_paropt(pset, SVector{NOPT}(popt))) == popt
-    @test (label_paropt(pset, SVector{NOPT}(popt)) |> getdata) isa SVector
+    @test @inferred(label_paropt(pset, SVector{NOPT}(getdata(popt)))) == popt
+    @test (label_paropt(pset, SVector{NOPT}(getdata(popt))) |> getdata) isa SVector
     #
     @test label_state(pset, u0) == u0
     @test @inferred(label_state(pset, convert(Array, u0))) == u0
-    tmp = label_state(pset, SVector{NU0}(u0))
-    ls = @inferred label_state(pset, SVector{NU0}(u0))
+    ls = @inferred label_state(pset, SVector{NU0}(getdata(u0))) # error without getdata
     @test ls == u0
     @test getdata(ls) isa SVector
     #
     @test label_par(pset, p) == p
     @test @inferred(label_par(pset, convert(Array, p))) == p
-    psv = SVector{NP}(p)
+    psv = SVector{NP}(getdata(p))
     @test @inferred(label_par(pset, psv)) == p
     #@btime label_par($ps, $psv) # 3 allocations? creating views for subectors
     lp = label_par(pset, psv)
