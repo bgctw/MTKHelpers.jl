@@ -93,8 +93,10 @@ function test_label_svectors(pset, u0, p, popt, ::Val{NU0}, ::Val{NP}, ::Val{NOP
     #
     @test label_state(pset, u0) == u0
     @test @inferred(label_state(pset, convert(Array, u0))) == u0
-    @test @inferred(label_state(pset, SVector{NU0}(u0))) == u0
-    @test (label_state(pset, SVector{NU0}(u0)) |> getdata) isa SVector
+    tmp = label_state(pset, SVector{NU0}(u0))
+    ls = @inferred label_state(pset, SVector{NU0}(u0))
+    @test ls == u0
+    @test getdata(ls) isa SVector
     #
     @test label_par(pset, p) == p
     @test @inferred(label_par(pset, convert(Array, p))) == p
