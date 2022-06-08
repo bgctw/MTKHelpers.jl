@@ -101,8 +101,9 @@ function test_label_svectors(pset, u0, p, popt, ::Val{NU0}, ::Val{NP}, ::Val{NOP
     psv = SVector{NP}(p)
     @test @inferred(label_par(pset, psv)) == p
     #@btime label_par($ps, $psv) # 3 allocations? creating views for subectors
-    @test (label_par(pset, psv) |> getdata) === psv
-    @test (label_par(pset, psv) |> getaxes) === getaxes(p)
+    lp = label_par(pset, psv)
+    @test getdata(lp) === psv
+    @test getaxes(lp) === getaxes(p)
 end
 
 @testset "label Vectors unstructured" begin
