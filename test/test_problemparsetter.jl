@@ -221,6 +221,8 @@ end
     @test get_paropt(pset, prob2) == getdata(popt) 
     @test get_paropt_labeled(pset, prob2) == popt 
     @test label_par(pset, prob.p) == ComponentVector(p)
+    #
+    @test names(name_paropt(pset, prob2),1) == [:u1, :p2]
 end;
 
 @testset "gradient _update_cv_top" begin

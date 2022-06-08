@@ -7,7 +7,7 @@ using NamedArrays
 using ComponentArrays
 #using Infiltrator
 
-export symbol, symbols_state, symbols_par, strip_namespace, embed_system, cm2inch, fixpoint
+export symbol, symbols_state, symbols_par, strip_namespace, embed_system
 
 export AbstractProbelmParSetter, ProblemParSetter_sym, ProblemParSetter,
     count_state, count_par, count_paropt, 

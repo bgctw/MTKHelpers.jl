@@ -10,7 +10,7 @@ abstract type AbstractProblemParSetter end
 Report the number of problem states, problem parameters and optimized parameters
 respectively.    
 """
-function count_state(::AbstractProblemParSetter) end,
+function count_state(::AbstractProblemParSetter) end, # only there for documentation
 function count_par(::AbstractProblemParSetter) end,
 function count_paropt(::AbstractProblemParSetter) end
 # need to implement in concrete types
