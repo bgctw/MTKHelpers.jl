@@ -1,12 +1,4 @@
 """
-    cm2inch(x)
-
-Convert length in cm to inch units: 1 inch = 2.54 cm.
-"""
-cm2inch(x) = x/2.54
-
-
-"""
     embed_system(m;name)
 
 Embeds system `m` as the single component of a larger system.
@@ -76,4 +68,15 @@ Extract the basic symbols without namespace of system states and system paramete
 """
 function symbols_state(sys::ODESystem); symbol.(states(sys)); end
 symbols_par(sys::ODESystem) = symbol.(parameters(sys))
+
+# "apply fun to x until fun(x) == x"
+# function fixpoint(fun, x, nrecur_max=12; fmap=identity)
+#     nrecur_max == 0 && error("cound not find fixpoint for $f and $x.")
+#     px = fun(x)
+#     #@show nrecur_max, x, fmap(x), fmap(px)
+#     fmap(px) == fmap(x) && return(px)
+#     fixpoint(fun, px, nrecur_max-1)
+# end
+
+
 
