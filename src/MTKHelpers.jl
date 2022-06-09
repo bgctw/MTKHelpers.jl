@@ -9,7 +9,7 @@ using ComponentArrays
 
 export symbol, symbols_state, symbols_par, strip_namespace, embed_system
 
-export AbstractProbelmParSetter, ProblemParSetter_sym, ProblemParSetter,
+export AbstractProblemParSetter, ProblemParSetter_sym, ProblemParSetter,
     count_state, count_par, count_paropt, 
     axis_paropt, axis_par, axis_state,
     symbols_paropt, symbols_state, symbols_par,
