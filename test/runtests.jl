@@ -3,7 +3,7 @@ import MTKHelpers as CP
 using Test
 
 using DifferentialEquations, ModelingToolkit
-using StaticArrays, LabelledArrays
+using StaticArrays, LabelledArrays, NamedArrays
 using ForwardDiff
 using NamedArrays
 # #push!(LOAD_PATH, expanduser("~/julia/turingtools/")) # access local package repo
