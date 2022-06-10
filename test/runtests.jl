@@ -1,4 +1,5 @@
 using MTKHelpers
+import MTKHelpers as CP
 using Test
 
 using DifferentialEquations, ModelingToolkit
@@ -17,6 +18,12 @@ include("samplesystem.jl")
     #include("test/test_util_componentarrays.jl")
     include("test_util_componentarrays.jl")
 end;
+
+@testset "ProblemParSetter_dummy" begin
+    #include("test/test_problemparsetter_dummy.jl")
+    include("test_problemparsetter_dummy.jl")
+end;
+
 
 @testset "ProblemParSetter_sym" begin
     #include("test/test_problemparsetter_sym.jl")

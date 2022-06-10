@@ -152,7 +152,7 @@ import ComponentArrays as CA
 #     _enum_dim(s, length(s))
 # end
 
-# labels(ax) would be type piracy II 
+# CA.labels(ax) would be type piracy II 
 labels_noprefix(ax::AbstractAxis) = map(x -> x[2:end], _labels(ax))
 
 _ax_symbols_tuple(ax::AbstractAxis; prefix="₊") = (labels_noprefix(ax) .|> (x -> replace(x,"." => prefix)) .|> Symbol) |> Tuple
@@ -213,26 +213,33 @@ function _update_cv_top(cv::ComponentVector{TD}, s::ComponentVector{TS}) where {
     res = reduce(vcat, tmp)::T_C 
 end
 
-subaxis(ax::AbstractAxis, syms) = _subaxis(ax, syms)
-subaxis(ax::AbstractAxis, sym::Symbol) = _subaxis(ax, (sym,))
-subaxis(cv::ComponentVector, syms) = subaxis(first(getaxes(cv)), syms)
+# # TODO: wait for ComponentArrays implement length(Axis)
+# """
+#     subaxis(ax, sym::Symbol)
+#     subaxis(ax, syms)
 
-function _subaxis(ax::Axis,syms)
-    is_missing = map(s -> !(s ∈ keys(ax)), syms)
-    any(is_missing) && error(
-        "Expected subcomponents to be among keys(ax)=$(keys(ax)). Failed for " * 
-        "$([s for (m,s) in zip(is_missing, syms) if m])")
-    length_axs = NamedTuple{keys(indexmap(ax))}(map(length, indexmap(ax)))
-    # start positions of subaxes in original and in target axis
-    start_axs = NamedTuple{keys(length_axs)}(
-        cumsum(vcat(1,collect(length_axs)[1:end-1])))
-    start_axt = NamedTuple{syms}(cumsum(
-        vcat(1,[p.second for p in pairs(length_axs) if p.first ∈ syms])[1:end-1]))
-    nts = map(syms) do sym
-        ax_sym = indexmap(ax)[sym]
-        reindex(ax_sym, start_axt[sym]-start_axs[sym])
-    end
-    Axis(NamedTuple{syms}(nts))
-end
+# Construct new reindexed axis for a top-level subcomponent of an axis.
+# """
+# function subaxis(ax::AbstractAxis, syms); _subaxis(ax, syms); end,
+# function subaxis(ax::AbstractAxis, sym::Symbol); _subaxis(ax, (sym,)); end,
+# function subaxis(cv::ComponentVector, syms); subaxis(first(getaxes(cv)), syms); end
+
+# function _subaxis(ax::Axis,syms)
+#     is_missing = map(s -> !(s ∈ keys(ax)), syms)
+#     any(is_missing) && error(
+#         "Expected subcomponents to be among keys(ax)=$(keys(ax)). Failed for " * 
+#         "$([s for (m,s) in zip(is_missing, syms) if m])")
+#     length_axs = NamedTuple{keys(CA.indexmap(ax))}(map(length, CA.indexmap(ax)))
+#     # start positions of subaxes in original and in target axis
+#     start_axs = NamedTuple{keys(length_axs)}(
+#         cumsum(vcat(1,collect(length_axs)[1:end-1])))
+#     start_axt = NamedTuple{syms}(cumsum(
+#         vcat(1,[p.second for p in pairs(length_axs) if p.first ∈ syms])[1:end-1]))
+#     nts = map(syms) do sym
+#         ax_sym = indexmap(ax)[sym]
+#         reindex(ax_sym, start_axt[sym]-start_axs[sym])
+#     end
+#     Axis(NamedTuple{syms}(nts))
+# end
 
 

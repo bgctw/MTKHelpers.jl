@@ -1,6 +1,6 @@
 
 abstract type AbstractProblemParSetter end
-
+struct DummyProblemParSetter <: AbstractProblemParSetter; end # for testing error message
 
 """
     count_state(::AbstractProblemParSetter) 
@@ -10,10 +10,16 @@ abstract type AbstractProblemParSetter end
 Report the number of problem states, problem parameters and optimized parameters
 respectively.    
 """
-function count_state(::AbstractProblemParSetter) end, # only there for documentation
-function count_par(::AbstractProblemParSetter) end,
-function count_paropt(::AbstractProblemParSetter) end
-# need to implement in concrete types
+# need to implement in concrete types, only there for documentation
+function count_state(pset::AbstractProblemParSetter)
+    error("Expect $(typeof(pset)) to implement method `count_state` but was not.") 
+end, 
+function count_par(pset::AbstractProblemParSetter) 
+    error("Expect $(typeof(pset)) to implement method `count_par` but was not.") 
+end,
+function count_paropt(pset::AbstractProblemParSetter) 
+    error("Expect $(typeof(pset)) to implement method `count_paropt` but was not.") 
+end
 
 @deprecate count_states(pset::AbstractProblemParSetter)  count_state(pset)
 
@@ -26,9 +32,15 @@ Report the names, i.e. symbols of problem states, problem parameters and
 optimized parameters respectively, i.e. the concatenation of components.
 Similar to `ComponentArrays.label`, but inferred from Axis object.   
 """
-function symbols_state(::AbstractProblemParSetter) end,
-function symbols_par(::AbstractProblemParSetter) end,
-function symbols_paropt(::AbstractProblemParSetter) end
+function symbols_state(pset::AbstractProblemParSetter) 
+    error("Expect $(typeof(pset)) to implement method `symbols_state` but was not.") 
+end,
+function symbols_par(pset::AbstractProblemParSetter) 
+    error("Expect $(typeof(pset)) to implement method `symbols_par` but was not.") 
+end,
+function symbols_paropt(pset::AbstractProblemParSetter) 
+    error("Expect $(typeof(pset)) to implement method `symbols_paropt` but was not.") 
+end
 # need to implement in concrete types
 
 @deprecate statesyms(pset::AbstractProblemParSetter) symbols_state(pset)
@@ -45,9 +57,15 @@ Report the Axis, i.e. nested component symbols of problem states, problem parame
 optimized parameters respectively.
 Returns an AbstractAxis.
 """
-function axis_state(::AbstractProblemParSetter) end,
-function axis_par(::AbstractProblemParSetter) end,
-function axis_paropt(::AbstractProblemParSetter) end
+function axis_state(pset::AbstractProblemParSetter) 
+    error("Expect $(typeof(pset)) to implement method `axis_state` but was not.") 
+end,
+function axis_par(pset::AbstractProblemParSetter) 
+    error("Expect $(typeof(pset)) to implement method `axis_par` but was not.") 
+end,
+function axis_paropt(pset::AbstractProblemParSetter) 
+    error("Expect $(typeof(pset)) to implement method `axis_paropt` but was not.") 
+end
 # need to implement in concrete types
 
 

@@ -144,5 +144,10 @@
     @test syms[2] == Symbol("b[1]₊a₊a")
 end;
 
+# @testset "subaxis" begin
+#     cv = ComponentVector(a=(a1=1,a2=2,a3=3),b=20)
+#     CP.subaxis(cv, :a)    
+# end;
+
 
 
