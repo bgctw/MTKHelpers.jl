@@ -7,6 +7,6 @@
     @test res == NamedArray([sol[m.x,end], sol[m.RHS,end]], ([m.x, m.RHS],))   
     res2 = @inferred getlast(sol, res) # providing NamedArray to getlast
     @test res2 == res
-end;
+end; 
 
 

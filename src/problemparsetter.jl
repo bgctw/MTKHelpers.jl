@@ -156,7 +156,7 @@ function _separate_state_p(pset, popt)
     _indexof(popt_l, syms_s), _indexof(popt_l, syms_p)
 end
 
-# TODO after cv[()] works with empty and mono-Tuple
+# TODO after cv[()] works with empty and mono-Tuple, replace by indexof(cv, syms)
 get_empty(cv::ComponentVector) = ComponentVector(similar(getdata(cv),0), (ComponentArrays.NullAxis(),))
 function _indexof(cv::ComponentVector{T}, syms::NTuple{N,Symbol}) where {T,N}
     N == 1 && return(cv[KeepIndex(syms[1])])::ComponentVector{T}
@@ -227,7 +227,7 @@ end
 
 
 # attach type in
-# type piracy I - until get this into ComponentArrays
+# TODO type piracy I - until get this into ComponentArrays
 @inline CA.getdata(x::ComponentArray{T,N,A}) where {T,N,A} = getfield(x, :data)::A
 @inline CA.getdata(x::ComponentVector{T,A}) where {T,A} = getfield(x, :data)::A
 
