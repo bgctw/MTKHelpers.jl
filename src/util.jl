@@ -57,7 +57,7 @@ symbol(s) = Symbol(s)
     
 Omit the part before the first dot.
 """    
-function strip_namespace(s::String); match(r"[^.₊]+$",s).match; end
+function strip_namespace(s::AbstractString); match(r"[^.₊]+$",s).match; end
 function strip_namespace(s::Symbol); Symbol(strip_namespace(string(s))); end
 
 """
