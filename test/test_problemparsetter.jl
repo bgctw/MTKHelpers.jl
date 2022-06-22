@@ -229,10 +229,12 @@ end;
     cv = ComponentVector(a=1:2, b=2, c=3.0)
     popt = ComponentVector(a=11:12, b=20.0)
     cv2 = MTKHelpers._update_cv_top(cv, popt)
-    fcost = (popt) -> begin
-        cv2 = MTKHelpers._update_cv_top(cv, popt)
-        d = sum(cv2)
-        d*d
+    fcost = let cv = cv
+        (popt) -> begin
+            local cv2 = @inferred MTKHelpers._update_cv_top(cv, popt)
+            d = sum(cv2)
+            d*d
+        end
     end
     fcost(popt)
     ForwardDiff.gradient(fcost, popt)
@@ -243,13 +245,26 @@ end;
 
 @testset "gradient with Vector" begin
     pset = psc; u0 = u1c; p=p1c; popt = poptc; cv=p1c
-    fcost = (popt) -> begin
-        u0o, po = update_statepar(pset, popt, u0, p)
-        d = sum(get_paropt(pset, u0o, po))
-        d*d
+    fcost_noninferred = let  pset=pset, u0 = u0, p=p
+        (popt) -> begin
+            local u0o, po = update_statepar(pset, popt, u0, p)
+            d = sum(get_paropt(pset, u0o, po))
+            d*d
+        end
     end
-    fcost(popt)
-    res = ForwardDiff.gradient(fcost, popt)
+    fcost = let  pset=pset, u0 = u0, p=p
+        (popt) -> begin
+            local u0o, po = @inferred update_statepar(pset, popt, u0, p)
+            local u0o, po = update_statepar(pset, popt, u0, p)
+            d = sum(get_paropt(pset, u0o, po))
+            d*d
+        end
+    end
+    @inferred fcost(popt)
+    res = ForwardDiff.gradient(fcost_noninferred, popt)
+    # TODO fix update_statepar returning union type 
+    # try putting is_state and is_p to type signature
+    @test_broken res = ForwardDiff.gradient(fcost, popt)
     @test typeof(res) == typeof(popt)
 end;
 
