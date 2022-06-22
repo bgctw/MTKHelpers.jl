@@ -68,7 +68,7 @@ function ProblemParSetter(sys::ODESystem,popt_names; strip=false)
     ft = strip ? strip_namespace : identity
     state_names = ft.(symbol.(states(sys)))
     par_names = ft.(symbol.(parameters(sys)))
-    ProblemParSetter(Axis(state_names), Axis(par_names), _get_axis(popt_names))
+    ProblemParSetter(CA.Axis(state_names), CA.Axis(par_names), _get_axis(popt_names))
 end
 
 # count_state(::ProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = length(CA.indexmap(SA))
