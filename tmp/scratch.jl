@@ -79,3 +79,6 @@ prob2.p # p is still a plain vector
 label_par(ps, prob2.p).m₊p1 == popt.m₊p1 # attach labels and access properties
 label_state(ps, prob2.u0).m₊x == popt.m₊x # attach labels and access properties
 get_paropt_labeled(ps, prob2) == popt
+
+
+# issue 

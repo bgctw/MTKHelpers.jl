@@ -228,9 +228,10 @@ end
 
 # attach type in
 # TODO type piracy I - until get this into ComponentArrays
-@inline CA.getdata(x::ComponentArray{T,N,A}) where {T,N,A} = getfield(x, :data)::A
-@inline CA.getdata(x::ComponentVector{T,A}) where {T,A} = getfield(x, :data)::A
-
+# @inline CA.getdata(x::ComponentArray{T,N,A}) where {T,N,A} = getfield(x, :data)::A
+# @inline CA.getdata(x::ComponentVector{T,A}) where {T,A} = getfield(x, :data)::A
+#@inline CA.getdata(x::ComponentArray) = getfield(x, :data)
+#@inline CA.getdata(x::ComponentVector) = getfield(x, :data)
 
 
 # # extends Base.merge to work on SVector

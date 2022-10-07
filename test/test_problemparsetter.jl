@@ -152,6 +152,8 @@ end;
     # inferred although pset is global
     _, _ = @inferred update_statepar(pset, getdata(popt), getdata(u0), getdata(p))
     _ = @inferred get_paropt_labeled(pset, collect(u0), collect(p))
+    #@code_warntype get_paropt_labeled(pset, collect(u0), collect(p))
+    #@descend_code_warntype get_paropt_labeled(pset, collect(u0), collect(p))
     test_update_statepar_and_get_paropt(pset, u1, p1, popt, u1t, pt)
 end;
 @testset "update_statepar vector structured" begin

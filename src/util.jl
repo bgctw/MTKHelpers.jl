@@ -78,5 +78,49 @@ symbols_par(sys::ODESystem) = symbol.(parameters(sys))
 #     fixpoint(fun, px, nrecur_max-1)
 # end
 
+using ModelingToolkit: AbstractSystem, get_eqs, get_states, get_ps, get_observed, get_continuous_events, get_defaults, get_systems
+
+"""
+(TYPEDSIGNATURES)
+
+entend the `basesys` with `sys`, the resulting system would inherit `sys`'s name
+by default. Contrary to extend, it allows replacing equations.
+
+Experimental: subject to change
+"""
+function extend_overide(sys::AbstractSystem, basesys::AbstractSystem; name::Symbol=nameof(sys))
+    # https://github.com/SciML/ModelingToolkit.jl/issues/1518
+    T = SciMLBase.parameterless_type(basesys)
+    ivs = independent_variables(basesys)
+    if !(sys isa T)
+        if length(ivs) == 0
+            sys = convert_system(T, sys)
+        elseif length(ivs) == 1
+            sys = convert_system(T, sys, ivs[1])
+        else
+            throw("Extending multivariate systems is not supported")
+        end
+    end
+
+    eqs_base_dict = Dict(eq.lhs => eq for eq in get_eqs(basesys))
+    eqs_new_keys = [eq.lhs for eq in get_eqs(sys)]
+    eqs_base_keys = setdiff(keys(eqs_base_dict), eqs_new_keys)
+    eqs_base_no_overwrite = get.(Ref(eqs_base_dict), eqs_base_keys, missing)
+
+    eqs = union(eqs_base_no_overwrite, get_eqs(sys))
+    sts = union(get_states(basesys), get_states(sys))
+    ps = union(get_ps(basesys), get_ps(sys))
+    obs = union(get_observed(basesys), get_observed(sys))
+    evs = union(get_continuous_events(basesys), get_continuous_events(sys))
+    defs = merge(get_defaults(basesys), get_defaults(sys)) # prefer `sys`
+    syss = union(get_systems(basesys), get_systems(sys))
+
+    if length(ivs) == 0
+        T(eqs, sts, ps, observed = obs, defaults = defs, name=name, systems = syss, continuous_events=evs)
+    elseif length(ivs) == 1
+        T(eqs, ivs[1], sts, ps, observed = obs, defaults = defs, name = name, systems = syss, continuous_events=evs)
+    end
+end
+
 
 
