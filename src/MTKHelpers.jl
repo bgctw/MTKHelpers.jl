@@ -42,6 +42,7 @@ include("problemparsetter.jl")
 include("smoothstep.jl")
 include("solution.jl")
 
-
+export AbstractProblemUpdater, AbstractProblemParGetter, ProblemUpdater, KeysProblemParGetter
+include("problem_updater.jl")
 
 end

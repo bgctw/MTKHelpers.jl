@@ -53,14 +53,54 @@ constructed by it, e.g. with `label_state`.
 Hence, its recommended to pass `pset` across a function barrier for code
 where performance matters.
 
+## ProblemUpdater
+A [`ProblemParSetter`](@ref) can be combined with a [`KeysProblemParGetter`](@ref)
+or other specific implementations of `AbstractProblemParGetter` to 
+update an ODEProblem based on information already present in the ODEProblem.
+
+The following example updates parameters `k_R` and `k_P` in the ODEProblem
+to the value of `k_L`. This can be useful to ensure that these parameters
+are also changed when optimizing parameter `k_L`.
+
+```@example doc
+f = (u,p,t) -> p[1]*u
+u0 = (L=1/2,)
+p = (k_L = 1.0, k_R = 2.0, k_P = 3.0)
+tspan = (0.0,1.0)
+prob = ODEProblem(f,collect(u0),tspan,collect(p))
+
+source = (:k_L,:k_L)
+dest = (:k_R,:k_P)
+pset = ProblemParSetter(Axis(keys(u0)),Axis(keys(p)),Axis(dest))
+pu = ProblemUpdater(KeysProblemParGetter(source), pset)
+prob2 = pu(prob)
+label_par(pset, prob2.p).k_R == p.k_L
+label_par(pset, prob2.p).k_P == p.k_L
+```
+
+```@docs
+ProblemUpdater
+```
+
+## ProblemParGetter
+
+```@docs
+KeysProblemParGetter
+```
+
+In order to provide computations for parameters to set, declare a
+concrete subtype of `KeysProblemParGetter`, and implement a custom 
+method `(pg::MyProblemParGetter)(pu::ProblemUpdater, prob)` that returns
+a vector of parameter values.
+
 ## ProblemParSetter
 
 The following type stores the necessary information, that can be queried.
 ```@docs
 ProblemParSetter
-count_state(::AbstractProblemParSetter)
-axis_state(::AbstractProblemParSetter)
-symbols_state(::AbstractProblemParSetter)
+count_state
+axis_state
+symbols_state
 ```
 
 ## Updating a problem 

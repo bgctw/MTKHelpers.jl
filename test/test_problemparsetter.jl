@@ -169,6 +169,7 @@ end;
     pt = ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
     # fix bug in ComponentArrays where KeepIndex retuns an Vector instead SVector based 
     @test_broken test_update_statepar_and_get_paropt(psc, u1s, p1s, poptc, u1t, pt)
+    #test_update_statepar_and_get_paropt(psc, u1s, p1s, poptc, u1t, pt)
 end
 # @testset "upate_statepar and get_paropt for AxisArray" begin
 #     @test_broken "AxisArray"

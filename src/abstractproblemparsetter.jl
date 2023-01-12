@@ -10,16 +10,9 @@ struct DummyProblemParSetter <: AbstractProblemParSetter; end # for testing erro
 Report the number of problem states, problem parameters and optimized parameters
 respectively.    
 """
-# need to implement in concrete types, only there for documentation
-function count_state(pset::AbstractProblemParSetter)
-    error("Expect $(typeof(pset)) to implement method `count_state` but was not.") 
-end, 
-function count_par(pset::AbstractProblemParSetter) 
-    error("Expect $(typeof(pset)) to implement method `count_par` but was not.") 
-end,
-function count_paropt(pset::AbstractProblemParSetter) 
-    error("Expect $(typeof(pset)) to implement method `count_paropt` but was not.") 
-end
+function count_state end, 
+function count_par end,
+function count_paropt end
 
 @deprecate count_states(pset::AbstractProblemParSetter)  count_state(pset)
 
@@ -32,15 +25,9 @@ Report the names, i.e. symbols of problem states, problem parameters and
 optimized parameters respectively, i.e. the concatenation of components.
 Similar to `ComponentArrays.label`, but inferred from Axis object.   
 """
-function symbols_state(pset::AbstractProblemParSetter) 
-    error("Expect $(typeof(pset)) to implement method `symbols_state` but was not.") 
-end,
-function symbols_par(pset::AbstractProblemParSetter) 
-    error("Expect $(typeof(pset)) to implement method `symbols_par` but was not.") 
-end,
-function symbols_paropt(pset::AbstractProblemParSetter) 
-    error("Expect $(typeof(pset)) to implement method `symbols_paropt` but was not.") 
-end
+function symbols_state end,
+function symbols_par end,
+function symbols_paropt end
 # need to implement in concrete types
 
 @deprecate statesyms(pset::AbstractProblemParSetter) symbols_state(pset)
@@ -57,15 +44,9 @@ Report the Axis, i.e. nested component symbols of problem states, problem parame
 optimized parameters respectively.
 Returns an AbstractAxis.
 """
-function axis_state(pset::AbstractProblemParSetter) 
-    error("Expect $(typeof(pset)) to implement method `axis_state` but was not.") 
-end,
-function axis_par(pset::AbstractProblemParSetter) 
-    error("Expect $(typeof(pset)) to implement method `axis_par` but was not.") 
-end,
-function axis_paropt(pset::AbstractProblemParSetter) 
-    error("Expect $(typeof(pset)) to implement method `axis_paropt` but was not.") 
-end
+function axis_state(pset::AbstractProblemParSetter) end,
+function axis_par(pset::AbstractProblemParSetter) end,
+function axis_paropt(pset::AbstractProblemParSetter) end
 # need to implement in concrete types
 
 
@@ -108,8 +89,11 @@ function label_par(pset::AbstractProblemParSetter, p); attach_axis(p, axis_par(p
 function label_paropt(pset::AbstractProblemParSetter, popt); attach_axis(popt, axis_paropt(pset)); end
 
 # TODO move to ComponentArrays.jl
+# type piracy: https://github.com/jonniedie/ComponentArrays.jl/issues/141
+#@inline CA.getdata(x::ComponentVector) = getfield(x, :data)
 attach_axis(x::AbstractVector, ax::AbstractAxis) = ComponentArray(x, (ax,))
-attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getdata(x), (ax,))
+#attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getdata(x), (ax,))
+attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getfield(x, :data), (ax,))
 
 # label_state(pset::AbstractProblemParSetter, u::SVector) = SLVector(label_state(pset, Tuple(u)))
 # label_state(pset::AbstractProblemParSetter, u::NTuple) = NamedTuple{symbols_state(pset)}(u)

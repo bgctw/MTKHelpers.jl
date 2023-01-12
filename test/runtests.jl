@@ -35,6 +35,10 @@ end;
     include("test_problemparsetter.jl")
 end;
 
+@testset "ProblemUpdater" begin
+    #include("test/test_problem_updater.jl")
+    include("test_problem_updater.jl")
+end;
 
 @testset "utilities" begin
     include("test_util.jl")
