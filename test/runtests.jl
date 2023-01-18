@@ -14,6 +14,10 @@ import ComponentArrays as CA
 #include("test/samplesystem.jl")
 include("samplesystem.jl")
 
+@testset "util_nums" begin
+    include("test_util_nums.jl")
+end;
+
 @testset "util_componentarrays" begin
     #include("test/test_util_componentarrays.jl")
     include("test_util_componentarrays.jl")
