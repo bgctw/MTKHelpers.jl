@@ -22,6 +22,11 @@ function (pu::ProblemUpdater)(prob)
     update_statepar(pu.pset, x, prob)
 end
 
+"AbstractProblemUpdater that returns the original ODEProblem."
+struct NullProblemUpdater{PG <: AbstractProblemParGetter, PS <: AbstractProblemParSetter} <: AbstractProblemUpdater; end
+(pu::NullProblemUpdater)(prob) = prob
+
+
 
 """
     KeysProblemParGetter(source_keys::NTuple{N,Symbol})
