@@ -7,8 +7,6 @@ using NamedArrays
 using ComponentArrays
 #using Infiltrator
 
-export symbol, symbols_state, symbols_par, strip_namespace, embed_system
-
 export AbstractProblemParSetter, ProblemParSetter_sym, ProblemParSetter,
     count_state, count_par, count_paropt, 
     axis_paropt, axis_par, axis_state,
@@ -34,8 +32,9 @@ function __init__()
     @require CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0" include("requires_cairommakie.jl")
   end
   
-  
+export symbol, symbols_state, symbols_par, strip_namespace, embed_system, override_system
 include("util.jl")
+
 include("util_componentarrays.jl")
 include("abstractproblemparsetter.jl")
 include("problemparsetter_sym.jl")

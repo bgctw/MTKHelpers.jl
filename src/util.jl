@@ -81,46 +81,46 @@ symbols_par(sys::ODESystem) = symbol.(parameters(sys))
 using ModelingToolkit: AbstractSystem, get_eqs, get_states, get_ps, get_observed, get_continuous_events, get_defaults, get_systems
 
 """
-(TYPEDSIGNATURES)
+    override_system(eqs, basesys::AbstractSystem; 
+        name::Symbol=Symbol(string(nameof(basesys))*"_ext"), 
+        ps=Term[], 
+        obs=Equation[], 
+        evs=ModelingToolkit.SymbolicContinuousCallback[], 
+        defs=Dict()
+    )
 
-entend the `basesys` with `sys`, the resulting system would inherit `sys`'s name
-by default. Contrary to extend, it allows replacing equations.
-
-Experimental: subject to change
+Modify `basesys` by replacing some equations matched by their left-hand-side.
+The keyword argument correspond to ODESystem.
 """
-function extend_overide(sys::AbstractSystem, basesys::AbstractSystem; name::Symbol=nameof(sys))
-    # https://github.com/SciML/ModelingToolkit.jl/issues/1518
+function override_system(eqs, basesys::AbstractSystem; 
+    name::Symbol=Symbol(string(nameof(basesys))*"_ext"), 
+    ps=Term[], 
+    obs=Equation[], 
+    evs=ModelingToolkit.SymbolicContinuousCallback[], 
+    defs=Dict()
+    )
     T = SciMLBase.parameterless_type(basesys)
     ivs = independent_variables(basesys)
-    if !(sys isa T)
-        if length(ivs) == 0
-            sys = convert_system(T, sys)
-        elseif length(ivs) == 1
-            sys = convert_system(T, sys, ivs[1])
-        else
-            throw("Extending multivariate systems is not supported")
-        end
-    end
-
+    length(ivs) > 1 && error("Extending multivariate systems is not supported")
     eqs_base_dict = Dict(eq.lhs => eq for eq in get_eqs(basesys))
-    eqs_new_keys = [eq.lhs for eq in get_eqs(sys)]
+    eqs_new_keys = [eq.lhs for eq in eqs]
+    is_key_present = eqs_new_keys .∈ Ref(keys(eqs_base_dict))
+    !all(is_key_present) && error(
+        "Expected all lhs of new equations to be present in basesys. " *
+        "But following keys were not present: $(string.(eqs_new_keys[.!is_key_present]))")
     eqs_base_keys = setdiff(keys(eqs_base_dict), eqs_new_keys)
     eqs_base_no_overwrite = get.(Ref(eqs_base_dict), eqs_base_keys, missing)
-
-    eqs = union(eqs_base_no_overwrite, get_eqs(sys))
-    sts = union(get_states(basesys), get_states(sys))
-    ps = union(get_ps(basesys), get_ps(sys))
-    obs = union(get_observed(basesys), get_observed(sys))
-    evs = union(get_continuous_events(basesys), get_continuous_events(sys))
-    defs = merge(get_defaults(basesys), get_defaults(sys)) # prefer `sys`
-    syss = union(get_systems(basesys), get_systems(sys))
-
+    eqs_ext = union(eqs_base_no_overwrite, eqs)
+    sts = get_states(basesys)
+    ps_ext = union(get_ps(basesys), ps)
+    obs_ext = union(get_observed(basesys), obs)
+    evs_ext = union(get_continuous_events(basesys), evs)
+    defs_ext = merge(get_defaults(basesys), defs) # prefer new defs 
+    syss = get_systems(basesys)
+    #
     if length(ivs) == 0
-        T(eqs, sts, ps, observed = obs, defaults = defs, name=name, systems = syss, continuous_events=evs)
+        T(eqs_ext, sts, ps_ext, observed = obs_ext, defaults = defs_ext, name=name, systems = syss, continuous_events=evs_ext)
     elseif length(ivs) == 1
-        T(eqs, ivs[1], sts, ps, observed = obs, defaults = defs, name = name, systems = syss, continuous_events=evs)
+        T(eqs_ext, ivs[1], sts, ps_ext, observed = obs_ext, defaults = defs_ext, name = name, systems = syss, continuous_events=evs_ext)
     end
 end
-
-
-
