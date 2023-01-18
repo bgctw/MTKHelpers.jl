@@ -247,5 +247,48 @@ end
 #     xnew
 # end
 
+"""
+    get_u_map(names_u, pset::AbstractProblemParSetter)
+    get_p_map(names_p, pset::AbstractProblemParSetter)
+    
+Map each state and parameter the `ProblemParSetter` `pset` to a position in names.
+
+When construction an ODEProblem from a ODESystem, the order of states and 
+parameters may have changed compared with a previous construction.
+
+In order to set entire state or parameter vectors, a mapping from current
+to previous positions, i.e. integer indices, is required, 
+so that one can get a vectors in the new format by 
+- `u0_old[u_map]`
+- `p_old[p_map]`
+
+The mapping is constructed by supplying the names of u0_old and p_old to
+a ProblemParameterSetter constructed with the current ODESystem.
+
+## Keyowrd arguments
+- `do_waro_warn_missing`: set to true to issue warnings if some ODESystem state or 
+  parameter names are not found in the old names. This may give false warnings
+  for System parameters that have defaults and do not need to be part
+  of the parameter vector.
+"""
+function get_u_map(names_u, pset::AbstractProblemParSetter; do_warn_missing=false)
+    names_uprob = symbols_state(pset)
+    u_map = map(name_uprob -> findfirst(isequal(name_uprob), names_u), names_uprob) 
+    do_warn_missing && any(isnothing.(u_map)) && warning(
+        "problem states $(names_pprob[findall(isnothing.(u_map))]) not in names_u.")
+    SVector(u_map)
+end,
+function get_p_map(names_p, pset::AbstractProblemParSetter; do_warn_missing=false)
+    names_pprob = symbols_par(pset)
+    p_map = map(name_pprob -> findfirst(isequal(name_pprob), names_p), names_pprob) 
+    # usually the default parameters, such as u_PlantPmax ~ i_L0 / β_Pi0 - imbalance_P
+    # are not part of names_p -> false warning
+    do_warn_missing && any(isnothing.(p_map)) && warning(
+        "problem parameters $(names_pprob[findall(isnothing.(p_map))]) not in names_p.")
+    SVector(p_map)
+end
+
+
+
 
 

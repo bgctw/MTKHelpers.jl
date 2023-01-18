@@ -119,8 +119,7 @@ label_state(::AbstractProblemParSetter, u0)
 name_state(::AbstractProblemParSetter, state::AbstractVector)
 ```
 
-
-
-
-
-
+## Setting entire state and parameter vectors
+```@docs
+get_u_map
+```

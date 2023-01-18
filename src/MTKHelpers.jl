@@ -14,7 +14,8 @@ export AbstractProblemParSetter, ProblemParSetter_sym, ProblemParSetter,
     axis_paropt, axis_par, axis_state,
     symbols_paropt, symbols_state, symbols_par,
     update_statepar, get_paropt, get_paropt_labeled, label_paropt, label_par, label_state,
-    name_paropt, name_par, name_state
+    name_paropt, name_par, name_state,
+    get_u_map, get_p_map
 
 export    
     _get_index_axis, _set_index_axis!, attach_axis, _update_cv, _labels

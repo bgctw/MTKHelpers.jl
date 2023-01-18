@@ -342,6 +342,21 @@ end;
     xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
 end;
 
+@testset "get_u_map" begin
+    u1 = ComponentVector(a=1.0, b=2.0)
+    p1 = ComponentVector(p1=10.0, p2=20.0, p3=30.0)
+    # assume that positions have been changed
+    u1s = u1[SA[:b,:a]]
+    p1s = p1[SA[:p3,:p1,:p2]]
+    pset = ProblemParSetter(u1, p1, ComponentVector(p1=10.1))
+    u_map = get_u_map(keys(u1s), pset)
+    @test all(u1s[u_map] .== u1)
+    @test keys(u1s)[u_map] == keys(u1)
+    p_map = get_p_map(keys(p1s), pset)
+    @test keys(p1s)[p_map] == keys(p1)
+    @test all(p1s[p_map] .== p1)
+end;
+
 
 
 
