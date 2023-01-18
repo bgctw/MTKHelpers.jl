@@ -1,7 +1,7 @@
 @testset "symbols_state ODE" begin
     @named m = samplesystem()
     @test symbols_state(m) == [:x, :RHS]   
-    @test symbols_par(m) == [ :τ]   
+    @test symbols_par(m) == [:τ, :p1, :p2]  
 end
 
 @testset "symbol" begin

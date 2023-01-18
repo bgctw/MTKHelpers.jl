@@ -46,4 +46,7 @@ include("solution.jl")
 export AbstractProblemUpdater, AbstractProblemParGetter, ProblemUpdater, KeysProblemParGetter, NullProblemUpdater
 include("problem_updater.jl")
 
+export get_system_symbol_dict, system_num_dict
+include("util_nums.jl")
+
 end

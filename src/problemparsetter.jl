@@ -250,7 +250,7 @@ end
 """
     get_u_map(names_u, pset::AbstractProblemParSetter)
     get_p_map(names_p, pset::AbstractProblemParSetter)
-    
+
 Map each state and parameter the `ProblemParSetter` `pset` to a position in names.
 
 When construction an ODEProblem from a ODESystem, the order of states and 
@@ -266,7 +266,7 @@ The mapping is constructed by supplying the names of u0_old and p_old to
 a ProblemParameterSetter constructed with the current ODESystem.
 
 ## Keyowrd arguments
-- `do_waro_warn_missing`: set to true to issue warnings if some ODESystem state or 
+- `do_warn_missing`: set to true to issue warnings if some ODESystem state or 
   parameter names are not found in the old names. This may give false warnings
   for System parameters that have defaults and do not need to be part
   of the parameter vector.
