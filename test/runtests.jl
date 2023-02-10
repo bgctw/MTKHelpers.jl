@@ -1,15 +1,16 @@
 using MTKHelpers
 import MTKHelpers as CP
 using Test
+using StaticArrays, LabelledArrays, NamedArrays
 
 using DifferentialEquations, ModelingToolkit
-using StaticArrays, LabelledArrays, NamedArrays
 using ForwardDiff
-using NamedArrays
 # #push!(LOAD_PATH, expanduser("~/julia/turingtools/")) # access local package repo
 # import AxisArrays: AxisArray
 using ComponentArrays
-import ComponentArrays as CA
+using ComponentArrays: ComponentArrays as CA
+using Statistics
+using Distributions
 
 #include("test/samplesystem.jl")
 include("samplesystem.jl")
@@ -43,6 +44,12 @@ end;
 @testset "utilities" begin
     include("test_util.jl")
 end;
+
+@testset "prior_util" begin
+    #include("test/test_prior_util.jl")
+    include("test_prior_util.jl")
+end;
+
 
 @testset "smoothstep" begin
     include("test_smoothstep.jl")
