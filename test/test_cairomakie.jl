@@ -1,6 +1,6 @@
 tmp_f = function()
-    push!(LOAD_PATH, "/User/homes/twutz/twutz/julia/makietools")
-    push!(LOAD_PATH, "/User/homes/twutz/twutz/julia/18_tools/makietools")
+    push!(LOAD_PATH, expanduser("~/twutz/julia/makietools"))
+    push!(LOAD_PATH, expanduser("~/twutz/julia/18_tools/makietools"))
 end
 using CairoMakie
 
