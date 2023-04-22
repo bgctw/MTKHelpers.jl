@@ -2,7 +2,6 @@ module MTKHelpers
 
 using ModelingToolkit, DifferentialEquations
 using StaticArrays, LabelledArrays
-using Requires: @require 
 using NamedArrays
 using ComponentArrays
 using Distributions
@@ -29,9 +28,25 @@ export getlast
 import Base: merge, getindex    
 import ComponentArrays: getdata
 
-function __init__()
-    @require CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0" include("requires_cairommakie.jl")
-  end
+if !isdefined(Base, :get_extension)
+    using Requires
+end
+
+@static if !isdefined(Base, :get_extension)
+    function __init__()
+        @require CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0" include("../ext/MTKHelpersMakieExt.jl")
+    end
+end
+
+"""
+    series_sol!(ax, sol::AbstractODESolution, vars; tspan=extrema(sol.t), labels=string.(vars), nt=120, kwargs...)
+
+calls `CairoMakie.series` for a grid fo `n` points and interpolated values
+from `sol`.
+Currently works only with solutions created by a non-composite solver, e.g. `Tsit5`.
+"""
+function series_sol! end
+export series_sol!
   
 export symbol, symbols_state, symbols_par, strip_namespace, embed_system, override_system
 include("util.jl")

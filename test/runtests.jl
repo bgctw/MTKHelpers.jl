@@ -1,3 +1,10 @@
+tmp_f = function()
+    pop!(LOAD_PATH)
+    push!(LOAD_PATH, "/User/homes/twutz/twutz/julia/18_tools/devtools")
+    #
+    push!(LOAD_PATH, "/User/homes/twutz/twutz/julia/18_tools/scimltools")
+end
+
 using MTKHelpers
 import MTKHelpers as CP
 using Test
