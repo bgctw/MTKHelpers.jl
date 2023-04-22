@@ -46,9 +46,10 @@ end
 """
     symbol(t)
 
-Extract the inner symbol from a Term or Num object.
+Extract the inner symbol from a Term, Num, or BasicSymbolic object.
 """
 function symbol(t::Term); symbol(t.f); end
+symbol(s::SymbolicUtils.BasicSymbolic) = istree(s) ? Symbol(operation(s)) : Symbol(s)
 symbol(num::Num) = symbol(num.val)
 symbol(s) = Symbol(s)
 
