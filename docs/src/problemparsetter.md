@@ -62,6 +62,11 @@ The following example updates parameters `k_R` and `k_P` in the ODEProblem
 to the value of `k_L`. This can be useful to ensure that these parameters
 are also changed when optimizing parameter `k_L`.
 
+An implementations of `AbstractProblemParGetter` can use any computation of
+the source keys to provide its destination keys. It should implement the keys method,
+so that when constructing the ProblemUpdater, consistent keys are used,
+as in the example below.
+
 ```@example doc
 f = (u,p,t) -> p[1]*u
 u0 = (L=1/2,)
@@ -71,11 +76,11 @@ prob = ODEProblem(f,collect(u0),tspan,collect(p))
 
 source = (:k_L,:k_L)
 dest = (:k_R,:k_P)
-pset = ProblemParSetter(Axis(keys(u0)),Axis(keys(p)),Axis(dest))
-pu = ProblemUpdater(KeysProblemParGetter(source), pset)
+pu = ProblemUpdater(KeysProblemParGetter(source, dest), keys(u0), keys(p))
 prob2 = pu(prob)
-label_par(pset, prob2.p).k_R == p.k_L
-label_par(pset, prob2.p).k_P == p.k_L
+p2 = label_par(par_setter(pu), prob2.p)
+p2.k_R == p.k_L
+p2.k_P == p.k_L
 ```
 
 ```@docs
