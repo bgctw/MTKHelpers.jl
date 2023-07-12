@@ -76,9 +76,12 @@ end
 # count_paropt(::ProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = N
 
 # todo change to length(ax) when this becomes availale in ComponentArrays
-count_state(pset::ProblemParSetter) = lastindex(pset.ax_state) - firstindex(pset.ax_state) + 1
-count_par(pset::ProblemParSetter) = lastindex(pset.ax_par) - firstindex(pset.ax_par) + 1
-count_paropt(pset::ProblemParSetter) = lastindex(pset.ax_paropt) - firstindex(pset.ax_paropt) + 1
+count_state(pset::ProblemParSetter) = axis_length(pset.ax_state)
+count_par(pset::ProblemParSetter) = axis_length(pset.ax_par)
+count_paropt(pset::ProblemParSetter) = axis_length(pset.ax_paropt)
+
+axis_length(ax::AbstractAxis) = lastindex(ax) - firstindex(ax) + 1
+axis_length(::FlatAxis) = 0
 
 
 # axis_state(::ProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = SA
@@ -220,7 +223,7 @@ function get_paropt_labeled(pset::ProblemParSetter, u0, p)
         fik = (i,k) -> pset.is_state[i] ? u0_l[KeepIndex(k)] : (pset.is_p[i] ? p_l[KeepIndex(k)] : missing) 
         tmp = (fik(ik[1], ik[2]) for ik in enumerate(keys(axis_paropt(pset)))) 
         T = promote_type(eltype(u0), eltype(p))
-        res = reduce(vcat, tmp)::ComponentVector{T, Vector{T}}
+        res = (isempty(tmp) ? ComponentVector{T}() : reduce(vcat, tmp))::ComponentVector{T, Vector{T}}
         label_paropt(pset, res) # reattach axis for type inference
     end
 end
