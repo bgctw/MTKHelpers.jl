@@ -31,7 +31,7 @@ function (pu::ProblemUpdater)(prob)
 end
 
 "AbstractProblemUpdater that returns the original ODEProblem."
-struct NullProblemUpdater{PG <: AbstractProblemParGetter, PS <: AbstractProblemParSetter} <: AbstractProblemUpdater; end
+struct NullProblemUpdater <: AbstractProblemUpdater; end
 (pu::NullProblemUpdater)(prob) = prob
 
 
