@@ -24,7 +24,7 @@ MTKHelpersMakieExt = "CairoMakie"
 
 [compat]
 CairoMakie = "0.10"
-ComponentArrays = "0.12, 0.13, 0.14"
+ComponentArrays = "0.12, 0.13, 0.14, 0.15"
 DiffEqBase = "6"
 DifferentialEquations = "7.1"
 Distributions = "0.25"
