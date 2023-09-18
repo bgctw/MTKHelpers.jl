@@ -56,10 +56,14 @@ function ProblemParSetter(state_template,par_template,popt_template)
     )
 end
 
-# depr: need a full-fledged axis
-# function _get_axis(x::Union{Tuple, AbstractArray}) 
+# function _get_axis(x::AbstractArray) 
+#     @info("Providing Parameters as Array was deprecated for performance?")
+#     # depr?: need a full-fledged axis
 #     Axis(Tuple(i for i in symbol.(x)))
 # end
+function _get_axis(x::Tuple) 
+    Axis(Tuple(i for i in symbol.(x)))
+end
 _get_axis(x::ComponentVector) = first(getaxes(x))
 _get_axis(x::AbstractAxis) = x
 

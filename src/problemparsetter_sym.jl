@@ -115,6 +115,7 @@ function update_statepar(ps::ProblemParSetter_sym, popt, u0::TU, p::TP) where {T
     # take care that popt might be of different type, like FowwardDiff
     # need to convert to new type
     u00 = map(x -> x * zero(eltype(popt)), u0)
+    #eachindex(u0) does not work it iterates keys instead of integer indices
     u0g = (ps.statemap[i] == 0 ? u0[i] : popt[ps.statemap[i]] for i in 1:length(u0))
     #u0new = typed_from_generator(TU, u00, u0g)
     u0new = typed_from_generator(u00, u0g)

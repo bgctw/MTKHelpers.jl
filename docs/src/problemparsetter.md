@@ -4,7 +4,7 @@ CurrentModule = MTKHelpers
 
 # Setting Initial state and Parameters of a problem
 
-Oftern one wants to change a subset of the initial
+Often one wants to change a subset of the initial
 states,`u0`, and a subset of parameters,`p`, of an ODEProblem during an optimization.
 
 Given `u0` and `p` can be expressed as ComponentVectors, 

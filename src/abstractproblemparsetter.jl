@@ -94,6 +94,8 @@ function label_paropt(pset::AbstractProblemParSetter, popt); attach_axis(popt, a
 attach_axis(x::AbstractVector, ax::AbstractAxis) = ComponentArray(x, (ax,))
 #attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getdata(x), (ax,))
 attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getfield(x, :data), (ax,))
+attach_x_axis(x::ComponentMatrix, ax::AbstractAxis) = ComponentArray(x, (ax,FlatAxis()))
+
 
 # label_state(pset::AbstractProblemParSetter, u::SVector) = SLVector(label_state(pset, Tuple(u)))
 # label_state(pset::AbstractProblemParSetter, u::NTuple) = NamedTuple{symbols_state(pset)}(u)
