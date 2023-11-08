@@ -24,6 +24,20 @@ u1s =  label_state(psc,SVector{3}(getdata(u1c)))
 p1s =  label_par(psc,SVector{5}(getdata(p1c))) # convert to ComponentVector{SVector}
 
 
+@testset "_get_axis of ComponentVectors and Strings" begin
+    popt_strings_tup = ("L", "k_L", "k_R")
+    ps = ProblemParSetter(u1, p1, popt_strings_tup)
+    @test axis_paropt(ps) == Axis(L = 1, k_L = 2, k_R = 3)
+end;
+
+@testset "axis_length FlatAxis" begin
+    # empty substructure gives a FlatAxis
+    u1_flat = ComponentVector{Float64}()
+    popt1_no_u = ComponentVector(k_L = 1.1, k_R = 1/20.1)
+    ps = ProblemParSetter(u1_flat, p1, popt1_no_u)
+    @test count_state(ps) == 0
+end;
+
 @testset "_ax_symbols" begin
     cv = ComponentVector(a=(a1=100,a2=(a21=210, a22=220)), c = (c1=reshape(1:4,(2,2)),))
     ax = first(getaxes(cv))
