@@ -7,8 +7,14 @@ All Symbols are prefixed with `<string_sys>₊`
 
 The second variant merges the dictionaries obtained from several systems.
 """
-function get_system_symbol_dict(sys::AbstractSystem, string_sys::String=string(nameof(sys)))
-    Dict(Symbol(string_sys*"₊"*string(p)) => getproperty(sys,p) for p in propertynames(sys))
+function get_system_symbol_dict(
+    sys::AbstractSystem,
+    string_sys::String = string(nameof(sys)),
+)
+    Dict(
+        Symbol(string_sys * "₊" * string(p)) => getproperty(sys, p) for
+        p in propertynames(sys)
+    )
 end
 function get_system_symbol_dict(systems...)
     dicts = map(systems) do sys
@@ -30,17 +36,18 @@ Omit pairs where no Num was found.
 In the third variant, a tuple of AbstractSystems can be specified to 
 replace Nums of several (sub-)systems in the dictionary.
 """
-function system_num_dict(d, sys::AbstractSystem, string_sys=string(nameof(sys)))
+function system_num_dict(d, sys::AbstractSystem, string_sys = string(nameof(sys)))
     system_num_dict(d, get_system_symbol_dict(sys, string_sys))
 end
 function system_num_dict(d, symbol_dict::AbstractDict)
-    Dict([get(symbol_dict, k, missing) => v for (k,v) in d if !ismissing(get(symbol_dict, k, missing))])
+    Dict([
+        get(symbol_dict, k, missing) => v for
+        (k, v) in d if !ismissing(get(symbol_dict, k, missing))
+    ])
 end
 function system_num_dict(ca::CA.ComponentVector, symbol_dict::AbstractDict)
     system_num_dict(Dict(propertynames(ca) .=> values(ca)), symbol_dict)
 end
-function system_num_dict(d, systems::NTuple) 
+function system_num_dict(d, systems::NTuple)
     system_num_dict(d, get_system_symbol_dict(systems...))
 end
-
-

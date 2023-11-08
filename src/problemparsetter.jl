@@ -16,17 +16,22 @@ The states and parameters can be extracted from an `ModelingToolkit.ODESystem`.
 If `strip=true`, then namespaces of parameters of a composed system are removed, 
 e.g. `subcomp₊p` becomes `p`.
 """
-struct ProblemParSetter{NOPT, POPTA <: AbstractAxis, SA <: AbstractAxis, PA <: AbstractAxis} <: AbstractProblemParSetter
+struct ProblemParSetter{NOPT,POPTA<:AbstractAxis,SA<:AbstractAxis,PA<:AbstractAxis} <:
+       AbstractProblemParSetter
     # u0_opt::NTuple{NS, Symbol}
     # p_opt::NTuple{NP, Symbol}
     ax_paropt::POPTA
     ax_state::SA
     ax_par::PA
-    is_state::NTuple{NOPT, Bool}
-    is_p::NTuple{NOPT, Bool}
+    is_state::NTuple{NOPT,Bool}
+    is_p::NTuple{NOPT,Bool}
 end
 
-function ProblemParSetter(ax_state::AbstractAxis, ax_par::AbstractAxis, ax_paropt::AbstractAxis) 
+function ProblemParSetter(
+    ax_state::AbstractAxis,
+    ax_par::AbstractAxis,
+    ax_paropt::AbstractAxis,
+)
     popt_names = keys(CA.indexmap(ax_paropt))
     state_names = keys(CA.indexmap(ax_state))
     par_names = keys(CA.indexmap(ax_par))
@@ -35,11 +40,21 @@ function ProblemParSetter(ax_state::AbstractAxis, ax_par::AbstractAxis, ax_parop
     is_p = ntuple(i -> popt_names[i] ∈ par_names, NOPT)
     is_u0_or_p = is_state .| is_p
     all(is_u0_or_p) || @warn(
-        "missing optimization parameters in system: " * join(popt_names[collect(.!is_u0_or_p)],", "))
+        "missing optimization parameters in system: " *
+        join(popt_names[collect(.!is_u0_or_p)], ", ")
+    )
     is_u0_and_p = is_state .& is_p
     any(is_u0_and_p) && @warn(
-        "expted parameter names and state names to be distinct, but occurred in both: " * join(popt_names[collect(is_u0_and_p)],", "))
-    ProblemParSetter{NOPT, typeof(ax_paropt),typeof(ax_state), typeof(ax_par)}(ax_paropt, ax_state, ax_par, is_state, is_p)
+        "expted parameter names and state names to be distinct, but occurred in both: " *
+        join(popt_names[collect(is_u0_and_p)], ", ")
+    )
+    ProblemParSetter{NOPT,typeof(ax_paropt),typeof(ax_state),typeof(ax_par)}(
+        ax_paropt,
+        ax_state,
+        ax_par,
+        is_state,
+        is_p,
+    )
 end
 
 # function ProblemParSetter(state_names::NTuple{NS, Symbol}, par_names::NTuple{NP, Symbol}, popt_names::NTuple{NOPT, Symbol}) where {NS, NP, NOPT} 
@@ -47,7 +62,7 @@ end
 #     ProblemParSetter(Axis(state_names), Axis(par_names), Axis(popt_names))
 # end
 
-function ProblemParSetter(state_template,par_template,popt_template) 
+function ProblemParSetter(state_template, par_template, popt_template)
     # not type-stable
     ProblemParSetter(
         _get_axis(state_template),
@@ -61,14 +76,14 @@ end
 #     # depr?: need a full-fledged axis
 #     Axis(Tuple(i for i in symbol.(x)))
 # end
-function _get_axis(x::Tuple) 
+function _get_axis(x::Tuple)
     Axis(Tuple(i for i in symbol.(x)))
 end
 _get_axis(x::ComponentVector) = first(getaxes(x))
 _get_axis(x::AbstractAxis) = x
 
 
-function ProblemParSetter(sys::ODESystem,popt_names; strip=false) 
+function ProblemParSetter(sys::ODESystem, popt_names; strip = false)
     ft = strip ? strip_namespace : identity
     state_names = ft.(symbol.(states(sys)))
     par_names = ft.(symbol.(parameters(sys)))
@@ -116,7 +131,7 @@ symbols_paropt(pset::ProblemParSetter) = _ax_symbols_tuple(axis_paropt(pset))
 # # Using unexported interface of ComponentArrays.axis, one place to change
 # "Accessor function for index from ComponentIndex"
 # idx(ci::CA.ComponentIndex) = ci.idx
-    
+
 """
     prob_new = update_statepar(pset::ProblemParSetter, popt, prob::ODEProblem) 
     u0new, pnew = update_statepar(pset::ProblemParSetter, popt, u0, p) 
@@ -130,28 +145,32 @@ values corresponding to positions in `popt` are set.
 # end
 
 
-function update_statepar(pset::ProblemParSetter, popt::TO, u0::TU, p::TP) where {TO, TU, TP}
+function update_statepar(pset::ProblemParSetter, popt::TO, u0::TU, p::TP) where {TO,TU,TP}
     popt_state, popt_p = _separate_state_p(pset, popt)
-    u0new = length(popt_state) == 0 ? u0 : begin
-        u0_l = label_state(pset, u0)
-        fdata = (u0 isa ComponentVector) ? identity : getdata # strip labels?
-        TUP = typeof(similar(u0_l, promote_type(eltype(TU), eltype(TO))))
-        u0new = fdata(_update_cv_top(u0_l, popt_state)::TUP)
-    end
-    pnew = length(popt_p) == 0 ? p : begin
-        p_l = label_par(pset,p)
-        fdata = (p isa ComponentVector) ? identity : getdata # strip labels?
-        TPP = typeof(similar(p_l, promote_type(eltype(TP), eltype(TO))))
-        pnew = fdata(_update_cv_top(p_l, popt_p)::TPP)
-    end 
+    u0new =
+        length(popt_state) == 0 ? u0 :
+        begin
+            u0_l = label_state(pset, u0)
+            fdata = (u0 isa ComponentVector) ? identity : getdata # strip labels?
+            TUP = typeof(similar(u0_l, promote_type(eltype(TU), eltype(TO))))
+            u0new = fdata(_update_cv_top(u0_l, popt_state)::TUP)
+        end
+    pnew =
+        length(popt_p) == 0 ? p :
+        begin
+            p_l = label_par(pset, p)
+            fdata = (p isa ComponentVector) ? identity : getdata # strip labels?
+            TPP = typeof(similar(p_l, promote_type(eltype(TP), eltype(TO))))
+            pnew = fdata(_update_cv_top(p_l, popt_p)::TPP)
+        end
     u0new, pnew
 end
 
 # extract p and state components of popt into separate ComponentVectors
 function _separate_state_p(pset, popt)
     popt_l = label_paropt(pset, popt)
-    syms_p = Tuple(k for (i,k) in enumerate(keys(popt_l)) if pset.is_p[i])
-    syms_s = Tuple(k for (i,k) in enumerate(keys(popt_l)) if pset.is_state[i])
+    syms_p = Tuple(k for (i, k) in enumerate(keys(popt_l)) if pset.is_p[i])
+    syms_s = Tuple(k for (i, k) in enumerate(keys(popt_l)) if pset.is_state[i])
     # popt_state = _get_index_axis(popt_l, _get_axis_of_lengths_for_syms(popt_l,
     #     Tuple(k for (i,k) in enumerate(keys(popt_l)) if pset.is_state[i])))
     # #popt_p = popt_l[Axis( # WAIT use proper indexing when supported with ComponentArrays
@@ -162,10 +181,11 @@ function _separate_state_p(pset, popt)
 end
 
 # TODO after cv[()] works with empty and mono-Tuple, replace by indexof(cv, syms)
-get_empty(cv::ComponentVector) = ComponentVector(similar(getdata(cv),0), (ComponentArrays.NullAxis(),))
+get_empty(cv::ComponentVector) =
+    ComponentVector(similar(getdata(cv), 0), (ComponentArrays.NullAxis(),))
 function _indexof(cv::ComponentVector{T}, syms::NTuple{N,Symbol}) where {T,N}
-    N == 1 && return(cv[KeepIndex(syms[1])])::ComponentVector{T}
-    N == 0 && return(get_empty(cv))::ComponentVector{T}
+    N == 1 && return (cv[KeepIndex(syms[1])])::ComponentVector{T}
+    N == 0 && return (get_empty(cv))::ComponentVector{T}
     res = cv[syms]::ComponentVector{T}
 end
 
@@ -220,12 +240,17 @@ end
 #     label_paropt(pset, res) # reattach axis for type inference
 # end
 
-function get_paropt_labeled(pset::ProblemParSetter, u0, p) 
-    let u0_l = label_state(pset, u0), p_l = label_par(pset, p) 
-        fik = (i,k) -> pset.is_state[i] ? u0_l[KeepIndex(k)] : (pset.is_p[i] ? p_l[KeepIndex(k)] : missing) 
-        tmp = (fik(ik[1], ik[2]) for ik in enumerate(keys(axis_paropt(pset)))) 
+function get_paropt_labeled(pset::ProblemParSetter, u0, p)
+    let u0_l = label_state(pset, u0), p_l = label_par(pset, p)
+        fik =
+            (i, k) ->
+                pset.is_state[i] ? u0_l[KeepIndex(k)] :
+                (pset.is_p[i] ? p_l[KeepIndex(k)] : missing)
+        tmp = (fik(ik[1], ik[2]) for ik in enumerate(keys(axis_paropt(pset))))
         T = promote_type(eltype(u0), eltype(p))
-        res = (isempty(tmp) ? ComponentVector{T}() : reduce(vcat, tmp))::ComponentVector{T, Vector{T}}
+        res = (
+            isempty(tmp) ? ComponentVector{T}() : reduce(vcat, tmp)
+        )::ComponentVector{T,Vector{T}}
         label_paropt(pset, res) # reattach axis for type inference
     end
 end
@@ -276,24 +301,23 @@ a ProblemParameterSetter constructed with the current ODESystem.
   for System parameters that have defaults and do not need to be part
   of the parameter vector.
 """
-function get_u_map(names_u, pset::AbstractProblemParSetter; do_warn_missing=false)
+function get_u_map(names_u, pset::AbstractProblemParSetter; do_warn_missing = false)
     names_uprob = symbols_state(pset)
-    u_map = map(name_uprob -> findfirst(isequal(name_uprob), names_u), names_uprob) 
-    do_warn_missing && any(isnothing.(u_map)) && warning(
-        "problem states $(names_pprob[findall(isnothing.(u_map))]) not in names_u.")
+    u_map = map(name_uprob -> findfirst(isequal(name_uprob), names_u), names_uprob)
+    do_warn_missing &&
+        any(isnothing.(u_map)) &&
+        warning("problem states $(names_pprob[findall(isnothing.(u_map))]) not in names_u.")
     SVector(u_map)
 end,
-function get_p_map(names_p, pset::AbstractProblemParSetter; do_warn_missing=false)
+function get_p_map(names_p, pset::AbstractProblemParSetter; do_warn_missing = false)
     names_pprob = symbols_par(pset)
-    p_map = map(name_pprob -> findfirst(isequal(name_pprob), names_p), names_pprob) 
+    p_map = map(name_pprob -> findfirst(isequal(name_pprob), names_p), names_pprob)
     # usually the default parameters, such as u_PlantPmax ~ i_L0 / β_Pi0 - imbalance_P
     # are not part of names_p -> false warning
-    do_warn_missing && any(isnothing.(p_map)) && warning(
-        "problem parameters $(names_pprob[findall(isnothing.(p_map))]) not in names_p.")
+    do_warn_missing &&
+        any(isnothing.(p_map)) &&
+        warning(
+            "problem parameters $(names_pprob[findall(isnothing.(p_map))]) not in names_p.",
+        )
     SVector(p_map)
 end
-
-
-
-
-

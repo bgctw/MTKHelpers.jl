@@ -1,6 +1,6 @@
 
 abstract type AbstractProblemParSetter end
-struct DummyProblemParSetter <: AbstractProblemParSetter; end # for testing error message
+struct DummyProblemParSetter <: AbstractProblemParSetter end # for testing error message
 
 """
     count_state(::AbstractProblemParSetter) 
@@ -10,11 +10,9 @@ struct DummyProblemParSetter <: AbstractProblemParSetter; end # for testing erro
 Report the number of problem states, problem parameters and optimized parameters
 respectively.    
 """
-function count_state end, 
-function count_par end,
-function count_paropt end
+function count_state end, function count_par end, function count_paropt end
 
-@deprecate count_states(pset::AbstractProblemParSetter)  count_state(pset)
+@deprecate count_states(pset::AbstractProblemParSetter) count_state(pset)
 
 """
     symbols_state(pset::AbstractProblemParSetter)
@@ -25,9 +23,7 @@ Report the names, i.e. symbols of problem states, problem parameters and
 optimized parameters respectively, i.e. the concatenation of components.
 Similar to `ComponentArrays.label`, but inferred from Axis object.   
 """
-function symbols_state end,
-function symbols_par end,
-function symbols_paropt end
+function symbols_state end, function symbols_par end, function symbols_paropt end
 # need to implement in concrete types
 
 @deprecate statesyms(pset::AbstractProblemParSetter) symbols_state(pset)
@@ -70,8 +66,8 @@ end,
 function get_paropt_labeled(pset::AbstractProblemParSetter, prob::ODEProblem; kwargs...)
     get_paropt_labeled(pset, prob.u0, prob.p; kwargs...)
 end,
-function get_paropt(pset::AbstractProblemParSetter, u0, p) 
-    getdata(get_paropt_labeled(pset, u0,p))    
+function get_paropt(pset::AbstractProblemParSetter, u0, p)
+    getdata(get_paropt_labeled(pset, u0, p))
 
 end
 # need to implement in concrete types: get_paropt_labeled -> ComponentVector
@@ -84,17 +80,24 @@ end
 Produce a labeled version, i.e. a ComponentVector of initial states, parameters, or
 optimized parameters respectively.
 """
-function label_state(pset::AbstractProblemParSetter, u); attach_axis(u, axis_state(pset)); end,
-function label_par(pset::AbstractProblemParSetter, p); attach_axis(p, axis_par(pset)); end,
-function label_paropt(pset::AbstractProblemParSetter, popt); attach_axis(popt, axis_paropt(pset)); end
+function label_state(pset::AbstractProblemParSetter, u)
+    attach_axis(u, axis_state(pset))
+end,
+function label_par(pset::AbstractProblemParSetter, p)
+    attach_axis(p, axis_par(pset))
+end,
+function label_paropt(pset::AbstractProblemParSetter, popt)
+    attach_axis(popt, axis_paropt(pset))
+end
 
 # TODO move to ComponentArrays.jl
 # type piracy: https://github.com/jonniedie/ComponentArrays.jl/issues/141
 #@inline CA.getdata(x::ComponentVector) = getfield(x, :data)
 attach_axis(x::AbstractVector, ax::AbstractAxis) = ComponentArray(x, (ax,))
 #attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getdata(x), (ax,))
-attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getfield(x, :data), (ax,))
-attach_x_axis(x::ComponentMatrix, ax::AbstractAxis) = ComponentArray(x, (ax,FlatAxis()))
+attach_axis(x::ComponentVector, ax::AbstractAxis) =
+    ComponentArray(getfield(x, :data), (ax,))
+attach_x_axis(x::ComponentMatrix, ax::AbstractAxis) = ComponentArray(x, (ax, FlatAxis()))
 
 
 # label_state(pset::AbstractProblemParSetter, u::SVector) = SLVector(label_state(pset, Tuple(u)))
@@ -115,15 +118,19 @@ attach_x_axis(x::ComponentMatrix, ax::AbstractAxis) = ComponentArray(x, (ax,Flat
 
 Produce a `NamedVector` of given state, parameters, or optimized vars.
 """
-function name_state(pset::AbstractProblemParSetter, state::AbstractVector); NamedArray(
-    state, (collect(symbols_state(pset))::Vector{Symbol},)); end,
-function name_par(pset::AbstractProblemParSetter, par::AbstractVector); NamedArray(
-    par, (collect(symbols_par(pset))::Vector{Symbol},)); end,
-function name_paropt(pset::AbstractProblemParSetter, paropt::AbstractVector); NamedArray(
-    paropt, (collect(symbols_paropt(pset))::Vector{Symbol},)); end,
-function name_paropt(pset::AbstractProblemParSetter, prob::ODEProblem; kwargs...); name_paropt(
-    pset, get_paropt(pset, prob); kwargs...); end
-    
+function name_state(pset::AbstractProblemParSetter, state::AbstractVector)
+    NamedArray(state, (collect(symbols_state(pset))::Vector{Symbol},))
+end,
+function name_par(pset::AbstractProblemParSetter, par::AbstractVector)
+    NamedArray(par, (collect(symbols_par(pset))::Vector{Symbol},))
+end,
+function name_paropt(pset::AbstractProblemParSetter, paropt::AbstractVector)
+    NamedArray(paropt, (collect(symbols_paropt(pset))::Vector{Symbol},))
+end,
+function name_paropt(pset::AbstractProblemParSetter, prob::ODEProblem; kwargs...)
+    name_paropt(pset, get_paropt(pset, prob); kwargs...)
+end
+
 """
     prob_new = update_statepar(ps::ProblemParSetter, popt, prob::ODEProblem) 
     u0new, pnew = update_statepar(ps::ProblemParSetter, popt, u0, p) 
@@ -132,12 +139,7 @@ Return an updated problem or updates states and parameters where
 values corresponding to positions in `popt` hold the values of popt.
 The type is changed to the promotion type of popt, to allow working with dual numbers.
 """
-function update_statepar(pset::AbstractProblemParSetter, popt, prob::ODEProblem) 
-    u0,p = update_statepar(pset, popt, prob.u0, prob.p)
+function update_statepar(pset::AbstractProblemParSetter, popt, prob::ODEProblem)
+    u0, p = update_statepar(pset, popt, prob.u0, prob.p)
     remake(prob; u0, p)
 end
-
-
-
-
-

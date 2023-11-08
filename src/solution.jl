@@ -25,17 +25,17 @@ res == NamedArray([sol[m.x,end], sol[m.RHS,end]], ([m.x, m.RHS],))
 true
 ```    
 """
-function getlast(sol::SciMLBase.AbstractODESolution, vars...; kwargs...) 
+function getlast(sol::SciMLBase.AbstractODESolution, vars...; kwargs...)
     getlast(sol, collect(vars))
 end
-function getlast(sol::SciMLBase.AbstractODESolution, vars::AbstractVector) 
-    iend = lastindex(sol,2)
+function getlast(sol::SciMLBase.AbstractODESolution, vars::AbstractVector)
+    iend = lastindex(sol, 2)
     names_vars_vec = _names_vars(vars)
     #names_vars_vec = names_vars #convert(Array, names_vars)::Vector{eltype(names_vars)}
     a = getindex.(Ref(sol), names_vars_vec, iend)::Array{eltype(sol)}
     #names = ntuple(i -> symbol(vars[i]), length(vars))
     #A = @LArray a names
-    NamedArray(a, (names_vars_vec,)) 
+    NamedArray(a, (names_vars_vec,))
 end
 _names_vars(vars_vec) = vars_vec
 _names_vars(vars_vec::NamedArray) = first(names(vars_vec))
