@@ -22,6 +22,9 @@ CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 [extensions]
 MTKHelpersMakieExt = "CairoMakie"
 
+[extras]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+
 [compat]
 CairoMakie = "0.10"
 ComponentArrays = "0.12, 0.13, 0.14, 0.15"
