@@ -83,13 +83,13 @@ end;
     #using BenchmarkTools
     #@btime get_paropt($ps, $u0o, $po)
     #
-    # no @inferred because labelling ist not type stable
+    # no @inferred because labelling is not type stable
     popt2n = get_paropt_labeled(ps, u0o, po)
     @test popt2n == LArray(popt)
 end;
 
 # vcat AxisArray does not recturn AxisArray
-# @testset "upate_statepar and get_paropt for AxisArray" begin
+# @testset "update_statepar and get_paropt for AxisArray" begin
 #     # test with AbstractVector different from Vector
 #     u1vec = AxisArray(collect(u1); row = keys(u1))
 #     p1vec = collect(p1)
@@ -105,7 +105,7 @@ end;
 #     #using BenchmarkTools
 #     #@btime get_paropt($ps, $u0o, $po)
 #     #
-#     # no @inferred because labelling ist not type stable
+#     # no @inferred because labelling is not type stable
 #     popt2n = get_paropt_labeled(ps, u0o, po)
 #     @test popt2n == LArray(popt)
 # end;
@@ -124,12 +124,12 @@ end;
     #using BenchmarkTools
     #@btime get_paropt($ps, $u0o, $po)
     #
-    # no @inferred because labelling ist not type stable
+    # no @inferred because labelling is not type stable
     popt2n = get_paropt_labeled(ps, u0o, po)
     @test popt2n == NamedTuple(popt) #u0o is NamedTuple
 end;
 
-@testset "merge: create a mofified popt AbstractVector" begin
+@testset "merge: create a modified popt AbstractVector" begin
     popt3 = @inferred merge(popt, (k_L = 1.2,))
     @test length(popt3) == length(popt)
     @test popt3.k_L == 1.2
@@ -137,7 +137,7 @@ end;
     @test popt3.k_R == popt.k_R
 end;
 
-@testset "merge: create a mofified popt AbstractVector on LVector" begin
+@testset "merge: create a modified popt AbstractVector on LVector" begin
     poptlv = LArray(popt)
     popt3 = @inferred merge(poptlv, (k_L = 1.2,))
     @test length(popt3) == length(popt)
@@ -218,12 +218,12 @@ end;
 
 @testset "error message on state not in front of parameters" begin
     @named m = samplesystem()
-    popt_names = (:τ, :RHS) # note :RHS is a state and should be in fron to :τ
+    popt_names = (:τ, :RHS) # note :RHS is a state and should be in front of :τ
     @test_throws ErrorException ps1 = ProblemParSetter_sym(m, popt_names)
     # @test symbols_paropt(ps1) == popt_names # fails too
     #
     # in addition to missing parameters
-    popt_names = (:τ, :RHS, :M) # note :RHS is a state and should be in fron to :τ
+    popt_names = (:τ, :RHS, :M) # note :RHS is a state and should be in front of :τ
     @test_throws ErrorException ps1 = ProblemParSetter_sym(m, popt_names)
 end;
 

@@ -20,7 +20,7 @@ Helps keeping track of a subset of initial states and paraemters to be optimized
 - `popt_names`: the parameter/initial states to be optimized.
 
 The states and parameters can be extracted from an `ModelingToolkit.ODESystem`.
-If `strip=true`, then namespaces of parameteres of a composed system are removed, 
+If `strip=true`, then namespaces of parameters of a composed system are removed, 
 e.g. `subcomp₊p` becomes `p`.
 """
 function ProblemParSetter_sym(
@@ -62,7 +62,7 @@ function ProblemParSetter_sym(
         ps = ProblemParSetter_sym{NS,NP,NO,IT}(
             optinfo, statemap, parmap, state_syms, par_syms,)     
     end
-    # make sure that states go first: smalles p position > highest u position            
+    # make sure that states go first: smallest p position > highest u position            
     symbols_paropt(ps) == popt_syms_in || error(
         "Expected states to optimize before parameters to optimize. But got $popt_syms_in.")
     ps

@@ -1,6 +1,6 @@
 #using Infiltrator
 
-# states and parametes are single entries
+# states and parameters are single entries
 u1 = ComponentVector(L = 10.0,)
 p1 = ComponentVector(k_L = 1.0, k_R = 1/20, m = 2.0)
 popt1 = ComponentVector(L = 10.1, k_L = 1.1, k_R = 1/20.1)
@@ -11,7 +11,7 @@ ps = ps1 = ProblemParSetter(u1,p1,popt1)
 # entries with substructure
 u1c = ComponentVector(a=(a1=1,a2=(a21=21, a22=22.0)))
 p1c = ComponentVector(b=(b1=0.1, b2=0.2), c=[0.01, 0.02], d=3.0)
-# as long as ComponentArrays does not support Axis-indexing, focus on top-level compoents rather than implementing this indexing in MTKHelpers
+# as long as ComponentArrays does not support Axis-indexing, focus on top-level components rather than implementing this indexing in MTKHelpers
 # note: no a1 no b, 
 # a2 and c need to have correct length for updating
 #poptc = ComponentVector(a=(a2=1:2,), c=1:2) 
@@ -27,7 +27,7 @@ p1s =  label_par(psc,SVector{5}(getdata(p1c))) # convert to ComponentVector{SVec
 @testset "_ax_symbols" begin
     cv = ComponentVector(a=(a1=100,a2=(a21=210, a22=220)), c = (c1=reshape(1:4,(2,2)),))
     ax = first(getaxes(cv))
-    #tp = @inferred MTKHelpers._ax_symbols_tuple(ax; prefix = "_") # lastindex not inferrable
+    #tp = @inferred MTKHelpers._ax_symbols_tuple(ax; prefix = "_") # lastindex not inferable
     tp = MTKHelpers._ax_symbols_tuple(ax; prefix = "_") 
     @test tp == (
         :a_a1, :a_a2_a21, :a_a2_a22, 
@@ -72,7 +72,7 @@ end;
 @testset "access symbols and counts" begin
     # u1c = ComponentVector(a=(a1=1,a2=(a21=21, a22=22.0)))
     # p1c = ComponentVector(b=(b1=0.1, b2=0.2), c=[0.01, 0.02], d=3.0)
-    # as long as ComponentArrays does not support Axis-indexing, focus on top-level compoents rather than implementing this indexing in MTKHelpers
+    # as long as ComponentArrays does not support Axis-indexing, focus on top-level components rather than implementing this indexing in MTKHelpers
     # note: no a1 no b, 
     # a2 and c need to have correct length for updating
     #poptc = ComponentVector(a=(a2=1:2,), c=1:2) 
@@ -167,11 +167,11 @@ end;
 @testset "update_statepar Svector structured" begin
     u1t = ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
     pt = ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
-    # fix bug in ComponentArrays where KeepIndex retuns an Vector instead SVector based 
+    # fix bug in ComponentArrays where KeepIndex returns an Vector instead SVector based 
     @test_broken test_update_statepar_and_get_paropt(psc, u1s, p1s, poptc, u1t, pt)
     #test_update_statepar_and_get_paropt(psc, u1s, p1s, poptc, u1t, pt)
 end
-# @testset "upate_statepar and get_paropt for AxisArray" begin
+# @testset "update_statepar and get_paropt for AxisArray" begin
 #     @test_broken "AxisArray"
 #     # test with AbstractVector different from Vector
 #     # _update_cv returns a Vector because _
@@ -185,7 +185,7 @@ end
 #     test_update_statepar_and_get_paropt(ps, u1a, p1a, popt, u1t, pt)
 # end;
 
-# @testset "merge: create a mofified popt AbstractVector" begin
+# @testset "merge: create a modified popt AbstractVector" begin
 #     popt3 = @inferred merge(popt, (k_L = 1.2,))
 #     @test length(popt3) == length(popt)
 #     @test popt3.k_L == 1.2
@@ -193,7 +193,7 @@ end
 #     @test popt3.k_R == popt.k_R
 # end;
 
-# @testset "merge: create a mofified popt AbstractVector on LVector" begin
+# @testset "merge: create a modified popt AbstractVector on LVector" begin
 #     poptlv = LArray(popt)
 #     popt3 = @inferred merge(poptlv, (k_L = 1.2,))
 #     @test length(popt3) == length(popt)
@@ -335,8 +335,8 @@ end;
     # as long as Axis argument is passed, all the type is inferred
     #psr = @inferred ProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(frandsym()))
     ftmp = (poptnames) -> ProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(poptnames))
-    #psr = @inferred ftmp(frandsym()) # not inferrable: Axis is constructed from unknow syms
-    psr = ftmp(frandsym()) # not inferrable: Axis is constructed from unknow syms
+    #psr = @inferred ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
+    psr = ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
     # use Parsetter either with explicit Axis or inside function barrier
     xl = @inferred label_paropt(psr, collect(1:count_paropt(psr))) # ok?
     xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
