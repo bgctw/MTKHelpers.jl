@@ -223,8 +223,8 @@ end;
     # @test symbols_paropt(ps1) == popt_names # fails too
     #
     # in addition to missing parameters
-    popt_names = (:τ, :RHS, :M) # note :RHS is a state and should be in front of :τ
-    @test_throws ErrorException ps1 = ProblemParSetter_sym(m, popt_names)
+    popt_names = (:τ, :RHS, :misspar) # note :RHS is a state and should be in front of :τ
+    @test_logs (:warn,r"misspar") @test_throws ErrorException ps1 = ProblemParSetter_sym(m, popt_names)
 end;
 
 
@@ -263,7 +263,6 @@ end;
     ftmp = () -> begin
         local namesopt = frandsym()
         xn = @inferred _ftmp(namesopt)
-        @show typeof(xn)
         # return value of entire function is not type stable, # because namesopt is not typestable 
         # but inside this function typeof(xn) is known
     end
