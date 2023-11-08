@@ -2,7 +2,8 @@ abstract type AbstractProblemUpdater end
 abstract type AbstractProblemParGetter end
 
 """
-    ProblemUpdater(AbstractProblemParGetter, AbstractProblemParSetter) 
+    ProblemUpdater(par_getter, par_setter) 
+    ProblemUpdater(par_getter, u0_keys, p_keys)
 
 Encapsulates updating an ODEProblem based on the problem itself by 
 Callable `(pu::ProblemUpdater)(prob)`.
@@ -11,6 +12,9 @@ Must be initialized with a callable `AbstractProblemParGetter`,
 e.g. [`KeysProblemParGetter`](@ref)
 and on a `AbstractProblemParSetter`,
 e.g. [`ProblemParSetter`](@ref).
+
+The second form of the constructor creates a ProblemParSetter based on 
+`keys(par_getter)`.
 """
 struct ProblemUpdater{PG <: AbstractProblemParGetter, PS <: AbstractProblemParSetter} <: AbstractProblemUpdater
     pget::PG

@@ -7,7 +7,8 @@ DocMeta.setdocmeta!(MTKHelpers, :DocTestSetup, :(using MTKHelpers); recursive=tr
 makedocs(;
     #modules=[MTKHelpers], # do not check for not included docstrings
     authors="Thomas Wutzler <twutz@bgc-jena.mpg.de> and contributors",
-    repo="https://github.com/bgctw/MTKHelpers.jl/blob/{commit}{path}#{line}",
+    #repo="https://github.com/bgctw/MTKHelpers.jl/blob/{commit}{path}#{line}",
+    repo = Remotes.GitHub("bgctw", "MTKHelpers.jl"),
     sitename="MTKHelpers.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
