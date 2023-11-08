@@ -74,6 +74,13 @@ end;
     include("test_util_nums.jl")
 end;
 
+using JET: JET
+@testset "JET" begin
+   JET.test_package(MTKHelpers; target_modules=(@__MODULE__,)) # 
+end;
+# JET.report_package(MTKHelpers) # to debug the errors
+# JET.report_package(MTKHelpers; target_modules=(@__MODULE__,)) # to debug the errors
+
 
 
 
