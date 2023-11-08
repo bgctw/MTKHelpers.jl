@@ -34,8 +34,8 @@ length(dx2) == 3
 true
 ```
 """
-function embed_system(m;name, simplify=true)
-    @named _sys_embed = ODESystem(Equation[], ModelingToolkit.get_iv(m))               
+function embed_system(m; name, simplify = true)
+    @named _sys_embed = ODESystem(Equation[], ModelingToolkit.get_iv(m))
     sys = compose(_sys_embed, [m]; name)
     if simplify
         sys = structural_simplify(sys)
@@ -48,7 +48,9 @@ end
 
 Extract the inner symbol from a Term, Num, or BasicSymbolic object.
 """
-function symbol(t::Term); symbol(t.f); end
+function symbol(t::Term)
+    symbol(t.f)
+end
 symbol(s::SymbolicUtils.BasicSymbolic) = istree(s) ? Symbol(operation(s)) : Symbol(s)
 symbol(num::Num) = symbol(num.val)
 symbol(s) = Symbol(s)
@@ -57,9 +59,13 @@ symbol(s) = Symbol(s)
     strip_namespace(s)
     
 Omit the part before the first dot.
-"""    
-function strip_namespace(s::AbstractString); match(r"[^.₊]+$",s).match; end
-function strip_namespace(s::Symbol); Symbol(strip_namespace(string(s))); end
+"""
+function strip_namespace(s::AbstractString)
+    match(r"[^.₊]+$", s).match
+end
+function strip_namespace(s::Symbol)
+    Symbol(strip_namespace(string(s)))
+end
 
 """
     symbols_state(sys::ODESystem)
@@ -67,7 +73,9 @@ function strip_namespace(s::Symbol); Symbol(strip_namespace(string(s))); end
 
 Extract the basic symbols without namespace of system states and system parameters.
 """
-function symbols_state(sys::ODESystem); symbol.(states(sys)); end
+function symbols_state(sys::ODESystem)
+    symbol.(states(sys))
+end
 symbols_par(sys::ODESystem) = symbol.(parameters(sys))
 
 # "apply fun to x until fun(x) == x"
@@ -79,7 +87,15 @@ symbols_par(sys::ODESystem) = symbol.(parameters(sys))
 #     fixpoint(fun, px, nrecur_max-1)
 # end
 
-using ModelingToolkit: AbstractSystem, get_eqs, get_states, get_ps, get_observed, get_continuous_events, get_defaults, get_systems
+using ModelingToolkit:
+    AbstractSystem,
+    get_eqs,
+    get_states,
+    get_ps,
+    get_observed,
+    get_continuous_events,
+    get_defaults,
+    get_systems
 
 """
     override_system(eqs, basesys::AbstractSystem; 
@@ -93,13 +109,15 @@ using ModelingToolkit: AbstractSystem, get_eqs, get_states, get_ps, get_observed
 Modify `basesys` by replacing some equations matched by their left-hand-side.
 The keyword argument correspond to ODESystem.
 """
-function override_system(eqs, basesys::AbstractSystem; 
-    name::Symbol=Symbol(string(nameof(basesys))*"_ext"), 
-    ps=Term[], 
-    obs=Equation[], 
-    evs=ModelingToolkit.SymbolicContinuousCallback[], 
-    defs=Dict()
-    )
+function override_system(
+    eqs,
+    basesys::AbstractSystem;
+    name::Symbol = Symbol(string(nameof(basesys)) * "_ext"),
+    ps = Term[],
+    obs = Equation[],
+    evs = ModelingToolkit.SymbolicContinuousCallback[],
+    defs = Dict(),
+)
     T = SciMLBase.parameterless_type(basesys)
     ivs = independent_variables(basesys)
     length(ivs) > 1 && error("Extending multivariate systems is not supported")
@@ -108,7 +126,8 @@ function override_system(eqs, basesys::AbstractSystem;
     is_key_present = eqs_new_keys .∈ Ref(keys(eqs_base_dict))
     !all(is_key_present) && error(
         "Expected all lhs of new equations to be present in basesys. " *
-        "But following keys were not present: $(string.(eqs_new_keys[.!is_key_present]))")
+        "But following keys were not present: $(string.(eqs_new_keys[.!is_key_present]))",
+    )
     eqs_base_keys = setdiff(keys(eqs_base_dict), eqs_new_keys)
     eqs_base_no_overwrite = get.(Ref(eqs_base_dict), eqs_base_keys, missing)
     eqs_ext = union(eqs_base_no_overwrite, eqs)
@@ -120,8 +139,27 @@ function override_system(eqs, basesys::AbstractSystem;
     syss = get_systems(basesys)
     #
     if length(ivs) == 0
-        T(eqs_ext, sts, ps_ext, observed = obs_ext, defaults = defs_ext, name=name, systems = syss, continuous_events=evs_ext)
+        T(
+            eqs_ext,
+            sts,
+            ps_ext,
+            observed = obs_ext,
+            defaults = defs_ext,
+            name = name,
+            systems = syss,
+            continuous_events = evs_ext,
+        )
     elseif length(ivs) == 1
-        T(eqs_ext, ivs[1], sts, ps_ext, observed = obs_ext, defaults = defs_ext, name = name, systems = syss, continuous_events=evs_ext)
+        T(
+            eqs_ext,
+            ivs[1],
+            sts,
+            ps_ext,
+            observed = obs_ext,
+            defaults = defs_ext,
+            name = name,
+            systems = syss,
+            continuous_events = evs_ext,
+        )
     end
 end

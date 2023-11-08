@@ -1,10 +1,10 @@
 u1 = (L = 10.0,)
-p1 = (k_L = 1.0, k_R = 1/20, m = 2.0)
+p1 = (k_L = 1.0, k_R = 1 / 20, m = 2.0)
 # make sure that all states go before parameters 
-popt = SLVector(L = 10.1, k_L = 1.1, k_R = 1/20.1)
+popt = SLVector(L = 10.1, k_L = 1.1, k_R = 1 / 20.1)
 
 # use allow_missing_opt = false for type stability
-ps = @inferred ProblemParSetter_sym(keys(u1),keys(p1),keys(popt), Val(false))
+ps = @inferred ProblemParSetter_sym(keys(u1), keys(p1), keys(popt), Val(false))
 
 
 @testset "warning on missing symbols" begin
@@ -12,11 +12,16 @@ ps = @inferred ProblemParSetter_sym(keys(u1),keys(p1),keys(popt), Val(false))
     par_syms = keys(p1)
     popt_syms = (:L, :k_L, :M1, :M2)
     NO = length(popt_syms)
-    psw = @test_logs (:warn,r"missing optimization parameters") ProblemParSetter_sym(state_syms, par_syms, popt_syms)
+    psw = @test_logs (:warn, r"missing optimization parameters") ProblemParSetter_sym(
+        state_syms,
+        par_syms,
+        popt_syms,
+    )
 end;
 
 @testset "MethodError if missing symbols are not allowed" begin
-    @test_throws MethodError ps1 = ProblemParSetter_sym((:x, :RHS), (:τ,), (:RHS, :τ, :M), Val(false))
+    @test_throws MethodError ps1 =
+        ProblemParSetter_sym((:x, :RHS), (:τ,), (:RHS, :τ, :M), Val(false))
 end;
 
 @testset "access symbols and counts" begin
@@ -50,7 +55,7 @@ end;
     u0o, po = @inferred update_statepar(ps, popt, u1, p1)
     #@btime update_statepar($ps, $popt, $u1, $p1) # zero allocations
     @test collect(u0o) == [10.1]
-    @test collect(po) == [1.1,1/20.1,2.0]
+    @test collect(po) == [1.1, 1 / 20.1, 2.0]
     #
     # retrieve popt again
     # using Cthulhu
@@ -74,7 +79,7 @@ end;
     u0o, po = @inferred update_statepar(ps, popt, u1vec, p1vec)
     #@btime update_statepar($ps, $popt, $u1, $p1) # zero allocations
     @test collect(u0o) == [10.1]
-    @test collect(po) == [1.1,1/20.1,2.0]
+    @test collect(po) == [1.1, 1 / 20.1, 2.0]
     #
     # retrieve popt again
     #@code_warntype get_paropt(ps, u0o, po)
@@ -115,7 +120,7 @@ end;
     u0o, po = @inferred update_statepar(ps, popt, u1, p1vec)
     #@btime update_statepar($ps, $popt, $u1, $p1) # zero allocations
     @test collect(u0o) == [10.1]
-    @test collect(po) == [1.1,1/20.1,2.0]
+    @test collect(po) == [1.1, 1 / 20.1, 2.0]
     #
     # retrieve popt again
     #@code_warntype get_paropt(ps, u0o, po)
@@ -148,15 +153,15 @@ end;
 
 
 @testset "update ODEProblem optimized parameters" begin
-    f = (u,p,t) -> p[1]*u
-    u0 = (u1=1/2,)
-    p = (p1=1.1,p2=2)
-    tspan = (0.0,1.0)
-    prob = ODEProblem(f,SVector(Tuple(u0)),tspan,SVector(Tuple(p)))
+    f = (u, p, t) -> p[1] * u
+    u0 = (u1 = 1 / 2,)
+    p = (p1 = 1.1, p2 = 2)
+    tspan = (0.0, 1.0)
+    prob = ODEProblem(f, SVector(Tuple(u0)), tspan, SVector(Tuple(p)))
     #sol = solve(prob)
     #sol[end]
-    ps = ProblemParSetter_sym(keys(u0),keys(p),(:u1,:p2))
-    popt = (u1=1/4, p2=1.2)
+    ps = ProblemParSetter_sym(keys(u0), keys(p), (:u1, :p2))
+    popt = (u1 = 1 / 4, p2 = 1.2)
     #
     # update_statepar
     prob2 = update_statepar(ps, popt, prob)
@@ -174,7 +179,7 @@ end;
     fcost = (popt) -> begin
         u0, p = update_statepar(ps, popt, u1, p1)
         d = sum(get_paropt(ps, u0, p))
-        d*d
+        d * d
     end
     fcost(popt)
     @test typeof(ForwardDiff.gradient(fcost, popt)) == typeof(popt)
@@ -184,7 +189,7 @@ end;
     fcost = (popt) -> begin
         u0, p = update_statepar(ps, popt, u1, p1)
         d = sum(get_paropt(ps, u0, p))
-        d*d
+        d * d
     end
     poptsv = SVector(popt)
     fcost(poptsv)
@@ -195,7 +200,7 @@ end;
     fcost = (popt) -> begin
         u0, p = update_statepar(ps, popt, u1, p1)
         d = sum(get_paropt(ps, u0, p))
-        d*d
+        d * d
     end
     poptv = collect(popt)
     fcost(poptv)
@@ -205,12 +210,12 @@ end;
 @testset "construct from ODESystem" begin
     @named m = samplesystem()
     popt_names = (:RHS, :τ)
-    ps1 = ProblemParSetter_sym(m, popt_names; strip=true)
+    ps1 = ProblemParSetter_sym(m, popt_names; strip = true)
     @test symbols_state(ps1) == (:x, :RHS)
     @test symbols_par(ps1) == (:τ, :p1, :p2)
     @test symbols_paropt(ps1) == popt_names
-    em = embed_system(m;name=:m, simplify=false)
-    ps1 = ProblemParSetter_sym(em, popt_names; strip=true)
+    em = embed_system(m; name = :m, simplify = false)
+    ps1 = ProblemParSetter_sym(em, popt_names; strip = true)
     @test symbols_state(ps1) == (:x, :RHS)
     @test symbols_par(ps1) == (:τ, :p1, :p2)
     @test symbols_paropt(ps1) == popt_names
@@ -224,52 +229,50 @@ end;
     #
     # in addition to missing parameters
     popt_names = (:τ, :RHS, :misspar) # note :RHS is a state and should be in front of :τ
-    @test_logs (:warn,r"misspar") @test_throws ErrorException ps1 = ProblemParSetter_sym(m, popt_names)
+    @test_logs (:warn, r"misspar") @test_throws ErrorException ps1 =
+        ProblemParSetter_sym(m, popt_names)
 end;
 
 
 @testset "name_paropt" begin
     xn = @inferred name_paropt(ps, collect(1:count_paropt(ps)))
     @test names(xn)[1] == collect(symbols_paropt(ps))
-    @test xn[:k_R] == 3 
+    @test xn[:k_R] == 3
     xn = @inferred name_state(ps, collect(1:count_state(ps)))
     @test names(xn)[1] == collect(symbols_state(ps))
     xn = @inferred name_par(ps, collect(1:count_par(ps)))
     @test names(xn)[1] == collect(symbols_par(ps))
     #
     frandsym = () -> begin
-        syms_arr = rand([:L,:k_L,:k_R],2)
+        syms_arr = rand([:L, :k_L, :k_R], 2)
         ntuple(i -> syms_arr[i], 2)
-        rand() > 0.5 ? (:L,:k_L,:k_R) : (:L,:k_L)
+        rand() > 0.5 ? (:L, :k_L, :k_R) : (:L, :k_L)
     end
     #frandsym()
-    psr = @inferred ProblemParSetter_sym(keys(u1),keys(p1),frandsym(), Val(false))
+    psr = @inferred ProblemParSetter_sym(keys(u1), keys(p1), frandsym(), Val(false))
     # cannot be inferred, because labels are not known at construction time
     #xl = @inferred label_paropt(psr, collect(1:count_paropt(psr)))
     # but NamedVector is ok
     xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
     ftmp = () -> begin
-        psr = ProblemParSetter_sym(keys(u1),keys(p1),frandsym(), Val(false))
+        psr = ProblemParSetter_sym(keys(u1), keys(p1), frandsym(), Val(false))
         xn = name_paropt(psr, collect(1:count_paropt(psr)))
     end
     # @code_warntype ftmp()  # all red!! number of parameters not known
     # need different ProblemParSetter_sym that does not store integers in type signature
     # and hence will not support LabelledArrays
-    _ftmp = (namesopt) -> begin
-        local psr = ProblemParSetter_sym(keys(u1),keys(p1),namesopt, Val(false))
-        #xn = @inferred label_paropt(psr, collect(1:count_paropt(psr)))
-        xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
-    end
+    _ftmp =
+        (namesopt) -> begin
+            local psr = ProblemParSetter_sym(keys(u1), keys(p1), namesopt, Val(false))
+            #xn = @inferred label_paropt(psr, collect(1:count_paropt(psr)))
+            xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
+        end
     ftmp = () -> begin
         local namesopt = frandsym()
         xn = @inferred _ftmp(namesopt)
         # return value of entire function is not type stable, # because namesopt is not typestable 
         # but inside this function typeof(xn) is known
     end
-    xn = ftmp()  
+    xn = ftmp()
 
 end;
-
-
-
-

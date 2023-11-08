@@ -16,14 +16,17 @@ e.g. [`ProblemParSetter`](@ref).
 The second form of the constructor creates a ProblemParSetter based on 
 `keys(par_getter)`.
 """
-struct ProblemUpdater{PG <: AbstractProblemParGetter, PS <: AbstractProblemParSetter} <: AbstractProblemUpdater
+struct ProblemUpdater{PG<:AbstractProblemParGetter,PS<:AbstractProblemParSetter} <:
+       AbstractProblemUpdater
     pget::PG
     pset::PS
 end
 
 function ProblemUpdater(par_getter::AbstractProblemParGetter, u0_keys, p_keys)
     ProblemUpdater(
-        par_getter, ProblemParSetter(Axis(u0_keys),Axis(p_keys),Axis(keys(par_getter))))
+        par_getter,
+        ProblemParSetter(Axis(u0_keys), Axis(p_keys), Axis(keys(par_getter))),
+    )
 end
 
 par_setter(pu::ProblemUpdater) = pu.pset
@@ -35,7 +38,7 @@ function (pu::ProblemUpdater)(prob)
 end
 
 "AbstractProblemUpdater that returns the original ODEProblem."
-struct NullProblemUpdater <: AbstractProblemUpdater; end
+struct NullProblemUpdater <: AbstractProblemUpdater end
 (pu::NullProblemUpdater)(prob) = prob
 
 
@@ -63,17 +66,17 @@ end
 # so that it can be used by constructing a ProblemUpdater
 Base.keys(pg::KeysProblemParGetter) = pg.dest_keys
 
-function (pg::KeysProblemParGetter)(pu::ProblemUpdater, prob) 
+function (pg::KeysProblemParGetter)(pu::ProblemUpdater, prob)
     p = vcat(label_state(pu.pset, prob.u0), label_par(pu.pset, prob.p))
     SVector(getproperty.(Ref(p), pg.source_keys))
 end
 
 "Custom AbstractProblemParGetter used in tests that computes parameters to set."
-struct DummyParGetter <: AbstractProblemParGetter; end
-function (pg::DummyParGetter)(pu::ProblemUpdater, prob) 
+struct DummyParGetter <: AbstractProblemParGetter end
+function (pg::DummyParGetter)(pu::ProblemUpdater, prob)
     p = label_par(pu.pset, prob.p)
     #p_source = getproperty.(Ref(p), SA[:k_L])
     #(:k_R,:k_P)
-    vcat(p.k_L, p.k_L[1]*10)
-end    
-Base.keys(pg::DummyParGetter) = (:k_R,:k_P)
+    vcat(p.k_L, p.k_L[1] * 10)
+end
+Base.keys(pg::DummyParGetter) = (:k_R, :k_P)

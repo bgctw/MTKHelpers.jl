@@ -107,18 +107,28 @@
 # end;
 
 @testset "_labels" begin
-    x = first(getaxes(ComponentArray(a=1, b=[1,2])))
-    @test _labels(x) == [".a",".b[1]",".b[2]"]
-    x = first(getaxes(ComponentArray(c=(a=1, b=[1,2]))))
-    @test _labels(x) == [".c.a",".c.b[1]",".c.b[2]"]
-    x = (a=1, b=[1,2])
-    @test _labels(x) == [".a",".b[1]",".b[2]"]
-    x = first(getaxes(ComponentArray(c=[(a=[1,2],),(a=[2,3],),(a=[3,4],)])))
+    x = first(getaxes(ComponentArray(a = 1, b = [1, 2])))
+    @test _labels(x) == [".a", ".b[1]", ".b[2]"]
+    x = first(getaxes(ComponentArray(c = (a = 1, b = [1, 2]))))
+    @test _labels(x) == [".c.a", ".c.b[1]", ".c.b[2]"]
+    x = (a = 1, b = [1, 2])
+    @test _labels(x) == [".a", ".b[1]", ".b[2]"]
+    x = first(getaxes(ComponentArray(c = [(a = [1, 2],), (a = [2, 3],), (a = [3, 4],)])))
     @test _labels(x) == [
-        ".c[1].a[1]",".c[1].a[2]",".c[2].a[1]",".c[2].a[2]",".c[3].a[1]",".c[3].a[2]"]
-    x = first(getaxes(ComponentArray(c=(b=[1 2; 5 6]))))
-    @test _labels(x) == [ ".c[1,1]",".c[2,1]",".c[1,2]",".c[2,2]"]
-    nt2 = (a = 5, b = [(a = (a = 20, b = 1), b = 0), (a = (a = 33, b = 1), b = 0)], c = (a = (a = 2, b = [1, 2]), b = [1.0 2.0; 5 6]))
+        ".c[1].a[1]",
+        ".c[1].a[2]",
+        ".c[2].a[1]",
+        ".c[2].a[2]",
+        ".c[3].a[1]",
+        ".c[3].a[2]",
+    ]
+    x = first(getaxes(ComponentArray(c = (b = [1 2; 5 6]))))
+    @test _labels(x) == [".c[1,1]", ".c[2,1]", ".c[1,2]", ".c[2,2]"]
+    nt2 = (
+        a = 5,
+        b = [(a = (a = 20, b = 1), b = 0), (a = (a = 33, b = 1), b = 0)],
+        c = (a = (a = 2, b = [1, 2]), b = [1.0 2.0; 5 6]),
+    )
     ca2 = ComponentArray(nt2)
     x = first(getaxes(ca2))
     lab = _labels(x)
@@ -139,7 +149,7 @@
         ".c.b[2,2]",
     ]
     #MTKHelpers.labels_noprefix(x)
-    syms = MTKHelpers._ax_symbols_tuple(x) 
+    syms = MTKHelpers._ax_symbols_tuple(x)
     @test syms isa NTuple
     @test syms[2] == Symbol("b[1]₊a₊a")
 end;
@@ -148,6 +158,3 @@ end;
 #     cv = ComponentVector(a=(a1=1,a2=2,a3=3),b=20)
 #     CP.subaxis(cv, :a)    
 # end;
-
-
-
