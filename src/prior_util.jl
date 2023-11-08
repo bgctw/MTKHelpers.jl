@@ -44,7 +44,7 @@ num_compositions(mstep,n) = binomial(n+mstep-1, n-1)
 
 """
 Update matrix A with positions of simplex grid with msteps, i.e. mstep+1 records
-for all other dimesnions being 0
+for all other dimensions being 0
 """
 function simplex_grid!(A, mstep, n; L=num_compositions(mstep,n))
     if n==2

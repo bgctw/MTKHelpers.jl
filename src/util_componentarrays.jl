@@ -72,7 +72,7 @@ import ComponentArrays as CA
 # where `type_of(parent(x)) = type_of(x)`. Only base-types that support conversion
 # from Vector without additional information are supported, e.g. StaticArray, but
 # not AxisArray or NamedArray.
-# Use `_set_index_axis!(cv, s)` to mutate an exsiting vector and keep its type
+# Use `_set_index_axis!(cv, s)` to mutate an existing vector and keep its type
 # """
 # function _update_cv(cv::ComponentVector{T,A}, s::ComponentVector) where {T,A}
 #     ax = first(getaxes(cv))

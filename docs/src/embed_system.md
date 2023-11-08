@@ -10,12 +10,12 @@ embed_system
 
 # Overriding equations of an existing system
 
-For debugging bigger systems, it is helful to set some equtions
+For debugging bigger systems, it is helful to set some equations
 to zero or modify/simplify the system in other ways.
 
-Function `override_system` takes a set of equtions and matches the
+Function `override_system` takes a set of equations and matches the
 right-hand site to the equations of the original system and replaces
-those equtions.
+those equations.
 
 ```@example doc
 # setting up a simple example composite system and problem
@@ -29,7 +29,7 @@ function samplesystem(;name,τ = 3.0, p1=1.1, p2=1.2)
     ODESystem([ RHS  ~ p1/p2 * (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)
 end                     
 
-# simplify the sysmte by setting RHS ~ RHS_0 * x
+# simplify the system by setting RHS ~ RHS_0 * x
 function samplesystem_const(RHS0; name) 
     # demonstrating override_system by setting the RHS to constant first order rate
     m = samplesystem(;name)

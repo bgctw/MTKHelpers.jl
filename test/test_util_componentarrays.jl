@@ -81,7 +81,7 @@
 #     popt = ComponentVector(L = 10.1, k_L = 1.1, k_R = 1/20.1)
 #     u1a = AxisArray(collect(u1); row = keys(u1))
 #     p1a = AxisArray(collect(p1); row = keys(p1))
-#     vcat(u1a, p1a) # does ot preserve type - returns plain vector
+#     vcat(u1a, p1a) # does not preserve type - returns plain vector
 #     # hence also ComponentArray cannot do anything
 #     u1av = ComponentVector(u1a, (Axis(keys(u1)),))
 #     p1av = ComponentVector(p1a, (Axis(keys(p1)),))

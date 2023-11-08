@@ -72,7 +72,7 @@ symbols_par(sys::ODESystem) = symbol.(parameters(sys))
 
 # "apply fun to x until fun(x) == x"
 # function fixpoint(fun, x, nrecur_max=12; fmap=identity)
-#     nrecur_max == 0 && error("cound not find fixpoint for $f and $x.")
+#     nrecur_max == 0 && error("could not find fixpoint for $f and $x.")
 #     px = fun(x)
 #     #@show nrecur_max, x, fmap(x), fmap(px)
 #     fmap(px) == fmap(x) && return(px)

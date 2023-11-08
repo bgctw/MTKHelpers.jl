@@ -13,7 +13,7 @@ If all of `state_names`, `par_names`, and `popt_names` are type-inferred Axes,
 then also the constructed ProblemParSetter is type-inferred.
 
 The states and parameters can be extracted from an `ModelingToolkit.ODESystem`.
-If `strip=true`, then namespaces of parameteres of a composed system are removed, 
+If `strip=true`, then namespaces of parameters of a composed system are removed, 
 e.g. `subcomp₊p` becomes `p`.
 """
 struct ProblemParSetter{NOPT, POPTA <: AbstractAxis, SA <: AbstractAxis, PA <: AbstractAxis} <: AbstractProblemParSetter
@@ -38,7 +38,7 @@ function ProblemParSetter(ax_state::AbstractAxis, ax_par::AbstractAxis, ax_parop
         "missing optimization parameters in system: " * join(popt_names[collect(.!is_u0_or_p)],", "))
     is_u0_and_p = is_state .& is_p
     any(is_u0_and_p) && @warn(
-        "expted parameter names and state names to be distinct, but occured in both: " * join(popt_names[collect(is_u0_and_p)],", "))
+        "expted parameter names and state names to be distinct, but occurred in both: " * join(popt_names[collect(is_u0_and_p)],", "))
     ProblemParSetter{NOPT, typeof(ax_paropt),typeof(ax_state), typeof(ax_par)}(ax_paropt, ax_state, ax_par, is_state, is_p)
 end
 
@@ -79,7 +79,7 @@ end
 # count_par(::ProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = length(CA.indexmap(PA))
 # count_paropt(::ProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = N
 
-# todo change to length(ax) when this becomes availale in ComponentArrays
+# todo change to length(ax) when this becomes available in ComponentArrays
 count_state(pset::ProblemParSetter) = axis_length(pset.ax_state)
 count_par(pset::ProblemParSetter) = axis_length(pset.ax_par)
 count_paropt(pset::ProblemParSetter) = axis_length(pset.ax_paropt)
@@ -98,7 +98,7 @@ axis_paropt(ps::ProblemParSetter) = ps.ax_paropt
 
 
 # function _ax_symbols(ax::Union{AbstractAxis, CA.CombinedAxis}; prefix="₊") 
-#     # strip the first prefix, convert to symbol and retun generator
+#     # strip the first prefix, convert to symbol and return generator
 #     (i for i in _ax_string_prefixed(ax; prefix) .|> (x -> x[(sizeof(prefix)+1):end]) .|> Symbol)
 # end
 # function _ax_symbols_tuple(ax::Union{AbstractAxis, CA.CombinedAxis}; kwargs...) 
@@ -136,13 +136,13 @@ function update_statepar(pset::ProblemParSetter, popt::TO, u0::TU, p::TP) where 
     popt_state, popt_p = _separate_state_p(pset, popt)
     u0new = length(popt_state) == 0 ? u0 : begin
         u0_l = label_state(pset, u0)
-        fdata = (u0 isa ComponentVector) ? identity : getdata # stip labels?
+        fdata = (u0 isa ComponentVector) ? identity : getdata # strip labels?
         TUP = typeof(similar(u0_l, promote_type(eltype(TU), eltype(TO))))
         u0new = fdata(_update_cv_top(u0_l, popt_state)::TUP)
     end
     pnew = length(popt_p) == 0 ? p : begin
         p_l = label_par(pset,p)
-        fdata = (p isa ComponentVector) ? identity : getdata # stip labels?
+        fdata = (p isa ComponentVector) ? identity : getdata # strip labels?
         TPP = typeof(similar(p_l, promote_type(eltype(TP), eltype(TO))))
         pnew = fdata(_update_cv_top(p_l, popt_p)::TPP)
     end 
@@ -272,7 +272,7 @@ so that one can get a vectors in the new format by
 The mapping is constructed by supplying the names of u0_old and p_old to
 a ProblemParameterSetter constructed with the current ODESystem.
 
-## Keyowrd arguments
+## Keyword arguments
 - `do_warn_missing`: set to true to issue warnings if some ODESystem state or 
   parameter names are not found in the old names. This may give false warnings
   for System parameters that have defaults and do not need to be part
