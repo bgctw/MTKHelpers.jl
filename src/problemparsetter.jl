@@ -79,7 +79,7 @@ end
 # count_par(::ProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = length(CA.indexmap(PA))
 # count_paropt(::ProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = N
 
-# todo change to length(ax) when this becomes available in ComponentArrays
+# TODO change to length(ax) when this becomes available in ComponentArrays
 count_state(pset::ProblemParSetter) = axis_length(pset.ax_state)
 count_par(pset::ProblemParSetter) = axis_length(pset.ax_par)
 count_paropt(pset::ProblemParSetter) = axis_length(pset.ax_paropt)
@@ -113,11 +113,9 @@ symbols_state(pset::ProblemParSetter) = _ax_symbols_tuple(axis_state(pset))
 symbols_par(pset::ProblemParSetter) = _ax_symbols_tuple(axis_par(pset))
 symbols_paropt(pset::ProblemParSetter) = _ax_symbols_tuple(axis_paropt(pset))
 
-
-
-# Using unexported interface of ComponentArrays.axis, one place to change
-"Accessor function for index from ComponentIndex"
-idx(ci::CA.ComponentIndex) = ci.idx
+# # Using unexported interface of ComponentArrays.axis, one place to change
+# "Accessor function for index from ComponentIndex"
+# idx(ci::CA.ComponentIndex) = ci.idx
     
 """
     prob_new = update_statepar(pset::ProblemParSetter, popt, prob::ODEProblem) 
