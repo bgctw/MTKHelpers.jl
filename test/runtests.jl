@@ -74,6 +74,12 @@ end;
     include("test_util_nums.jl")
 end;
 
+using JET: JET
+@testset "JET" begin
+   JET.test_package(DistributionFits; target_modules=(@__MODULE__,)) # 
+end;
+# JET.report_package(DistributionFits) # to debug the errors
+
 
 
 
