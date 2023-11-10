@@ -1,7 +1,7 @@
 @testset "symbols_state ODE" begin
     @named m = samplesystem()
     @test symbols_state(m) == [:x, :RHS]
-    @test symbols_par(m) == [:τ, :p1, :p2]
+    @test symbols_par(m) == [:τ, :p1, :p2, :i]
 end
 
 @testset "symbol" begin
@@ -21,7 +21,7 @@ end;
     @named m2 = samplesystem()
     @named sys = embed_system(m2)
     prob = ODEProblem(sys, [m2.x => 0.0], (0.0, 10.0), [m2.τ => 3.0])
-    sol = solve(prob)
+    sol = solve(prob);
     @test first(sol[m2.x]) == 0.0
     #plot(sol, vars=[m2.x,m2.RHS])    
     #

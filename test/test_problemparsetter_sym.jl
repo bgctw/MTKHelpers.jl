@@ -210,12 +210,12 @@ end;
     popt_names = (:RHS, :τ)
     ps1 = ProblemParSetter_sym(m, popt_names; strip = true)
     @test symbols_state(ps1) == (:x, :RHS)
-    @test symbols_par(ps1) == (:τ, :p1, :p2)
+    @test symbols_par(ps1) == (:τ, :p1, :p2, :i)
     @test symbols_paropt(ps1) == popt_names
     em = embed_system(m; name = :m, simplify = false)
     ps1 = ProblemParSetter_sym(em, popt_names; strip = true)
     @test symbols_state(ps1) == (:x, :RHS)
-    @test symbols_par(ps1) == (:τ, :p1, :p2)
+    @test symbols_par(ps1) == (:τ, :p1, :p2, :i)
     @test symbols_paropt(ps1) == popt_names
 end;
 

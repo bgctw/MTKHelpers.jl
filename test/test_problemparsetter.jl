@@ -347,7 +347,7 @@ function test_system(ps1, popt_names, m)
     #@code_warntype ProblemParSetter(m, Axis(popt_names))
     #@descend_code_warntype ProblemParSetter(m, Axis(popt_names))
     @test @inferred(keys(axis_state(ps1))) == (:x, :RHS)
-    @test @inferred(keys(axis_par(ps1))) == (:τ, :p1, :p2)
+    @test @inferred(keys(axis_par(ps1))) == (:τ, :p1, :p2, :i)
     @test @inferred(keys(axis_paropt(ps1))) == popt_names
 end
 @testset "construct from ODESystem" begin
