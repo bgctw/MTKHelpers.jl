@@ -58,6 +58,7 @@ include("solution.jl")
 export AbstractProblemUpdater,
     AbstractProblemParGetter, ProblemUpdater, KeysProblemParGetter, NullProblemUpdater
 export par_setter, par_setter
+export strip_deriv_num
 include("problem_updater.jl")
 
 export get_system_symbol_dict, system_num_dict

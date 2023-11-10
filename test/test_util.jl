@@ -22,9 +22,13 @@ end;
     @named m2 = samplesystem()
     @named sys = embed_system(m2)
     prob = ODEProblem(sys, [m2.x => 0.0], (0.0, 10.0), [m2.τ => 3.0])
-    sol = solve(prob)
+    sol = solve(prob);
     @test first(sol[m2.x]) == 0.0
     #plot(sol, vars=[m2.x,m2.RHS])    
+    #
+    # specify by symbol instead of num
+    _dict_nums = get_system_symbol_dict(m2)
+    prob = ODEProblem(sys, [_dict_nums[:m2₊x] => 0.0], (0.0, 10.0), [m2.τ => 3.0])
 end;
 
 @testset "override_system" begin

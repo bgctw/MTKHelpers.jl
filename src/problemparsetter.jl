@@ -90,6 +90,20 @@ function ProblemParSetter(sys::ODESystem, popt_names; strip = false)
     ProblemParSetter(CA.Axis(state_names), CA.Axis(par_names), _get_axis(popt_names))
 end
 
+"""
+    strip_deriv_num(num)
+
+Provide a Symbol that omits the derivative part of a Num
+- x(t,s) -> :x
+
+E.g. used in `ProblemParSetter(system, strip_deriv_num.(popt_names))`
+"""    
+function strip_deriv_num(num)
+    num |> string |> (x -> replace(x, r"\(.+\)" => "")) |> Symbol    
+end
+
+
+
 # count_state(::ProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = length(CA.indexmap(SA))
 # count_par(::ProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = length(CA.indexmap(PA))
 # count_paropt(::ProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = N
@@ -321,3 +335,4 @@ function get_p_map(names_p, pset::AbstractProblemParSetter; do_warn_missing = fa
         )
     SVector(p_map)
 end
+

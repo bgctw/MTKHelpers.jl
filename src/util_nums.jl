@@ -11,8 +11,9 @@ function get_system_symbol_dict(
     sys::AbstractSystem,
     string_sys::String = string(nameof(sys)),
 )
+    prefix = isempty(string_sys) ? "" : string_sys * "₊"
     Dict(
-        Symbol(string_sys * "₊" * string(p)) => getproperty(sys, p) for
+        Symbol(prefix * string(p)) => getproperty(sys, p) for
         p in propertynames(sys)
     )
 end
