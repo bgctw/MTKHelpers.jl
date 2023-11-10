@@ -6,22 +6,21 @@ popt = SLVector(L = 10.1, k_L = 1.1, k_R = 1 / 20.1)
 # use allow_missing_opt = false for type stability
 ps = @inferred ProblemParSetter_sym(keys(u1), keys(p1), keys(popt), Val(false))
 
-
 @testset "warning on missing symbols" begin
     state_syms = keys(u1)
     par_syms = keys(p1)
     popt_syms = (:L, :k_L, :M1, :M2)
     NO = length(popt_syms)
-    psw = @test_logs (:warn, r"missing optimization parameters") ProblemParSetter_sym(
-        state_syms,
+    psw = @test_logs (:warn, r"missing optimization parameters") ProblemParSetter_sym(state_syms,
         par_syms,
-        popt_syms,
-    )
+        popt_syms)
 end;
 
 @testset "MethodError if missing symbols are not allowed" begin
-    @test_throws MethodError ps1 =
-        ProblemParSetter_sym((:x, :RHS), (:τ,), (:RHS, :τ, :M), Val(false))
+    @test_throws MethodError ps1=ProblemParSetter_sym((:x, :RHS),
+        (:τ,),
+        (:RHS, :τ, :M),
+        Val(false))
 end;
 
 @testset "access symbols and counts" begin
@@ -151,7 +150,6 @@ end;
     @test popt3.k_R == popt.k_R
 end;
 
-
 @testset "update ODEProblem optimized parameters" begin
     f = (u, p, t) -> p[1] * u
     u0 = (u1 = 1 / 2,)
@@ -224,15 +222,14 @@ end;
 @testset "error message on state not in front of parameters" begin
     @named m = samplesystem()
     popt_names = (:τ, :RHS) # note :RHS is a state and should be in front of :τ
-    @test_throws ErrorException ps1 = ProblemParSetter_sym(m, popt_names)
+    @test_throws ErrorException ps1=ProblemParSetter_sym(m, popt_names)
     # @test symbols_paropt(ps1) == popt_names # fails too
     #
     # in addition to missing parameters
     popt_names = (:τ, :RHS, :misspar) # note :RHS is a state and should be in front of :τ
-    @test_logs (:warn, r"misspar") @test_throws ErrorException ps1 =
-        ProblemParSetter_sym(m, popt_names)
+    @test_logs (:warn, r"misspar") @test_throws ErrorException ps1=ProblemParSetter_sym(m,
+        popt_names)
 end;
-
 
 @testset "name_paropt" begin
     xn = @inferred name_paropt(ps, collect(1:count_paropt(ps)))
@@ -261,12 +258,11 @@ end;
     # @code_warntype ftmp()  # all red!! number of parameters not known
     # need different ProblemParSetter_sym that does not store integers in type signature
     # and hence will not support LabelledArrays
-    _ftmp =
-        (namesopt) -> begin
-            local psr = ProblemParSetter_sym(keys(u1), keys(p1), namesopt, Val(false))
-            #xn = @inferred label_paropt(psr, collect(1:count_paropt(psr)))
-            xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
-        end
+    _ftmp = (namesopt) -> begin
+        local psr = ProblemParSetter_sym(keys(u1), keys(p1), namesopt, Val(false))
+        #xn = @inferred label_paropt(psr, collect(1:count_paropt(psr)))
+        xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
+    end
     ftmp = () -> begin
         local namesopt = frandsym()
         xn = @inferred _ftmp(namesopt)
@@ -274,5 +270,4 @@ end;
         # but inside this function typeof(xn) is known
     end
     xn = ftmp()
-
 end;

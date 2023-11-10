@@ -17,12 +17,11 @@ end;
     @test strip_namespace("s.m.x") == "x"
 end;
 
-
 @testset "embed with name different than m" begin
     @named m2 = samplesystem()
     @named sys = embed_system(m2)
     prob = ODEProblem(sys, [m2.x => 0.0], (0.0, 10.0), [m2.τ => 3.0])
-    sol = solve(prob);
+    sol = solve(prob)
     @test first(sol[m2.x]) == 0.0
     #plot(sol, vars=[m2.x,m2.RHS])    
     #
@@ -50,5 +49,5 @@ end;
     eqs = [
         p1 ~ RHS_0 * x,  # but p1 is not a right-hand-side item
     ]
-    @test_throws ErrorException sys_ext = override_system(eqs, m; name, ps)
+    @test_throws ErrorException sys_ext=override_system(eqs, m; name, ps)
 end;

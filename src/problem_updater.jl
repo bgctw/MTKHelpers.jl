@@ -16,17 +16,15 @@ e.g. [`ProblemParSetter`](@ref).
 The second form of the constructor creates a ProblemParSetter based on 
 `keys(par_getter)`.
 """
-struct ProblemUpdater{PG<:AbstractProblemParGetter,PS<:AbstractProblemParSetter} <:
+struct ProblemUpdater{PG <: AbstractProblemParGetter, PS <: AbstractProblemParSetter} <:
        AbstractProblemUpdater
     pget::PG
     pset::PS
 end
 
 function ProblemUpdater(par_getter::AbstractProblemParGetter, u0_keys, p_keys)
-    ProblemUpdater(
-        par_getter,
-        ProblemParSetter(Axis(u0_keys), Axis(p_keys), Axis(keys(par_getter))),
-    )
+    ProblemUpdater(par_getter,
+        ProblemParSetter(Axis(u0_keys), Axis(p_keys), Axis(keys(par_getter))))
 end
 
 par_setter(pu::ProblemUpdater) = pu.pset
@@ -41,7 +39,6 @@ end
 struct NullProblemUpdater <: AbstractProblemUpdater end
 (pu::NullProblemUpdater)(prob) = prob
 
-
 """
     KeysProblemParGetter(source_keys::NTuple{N,Symbol})
 
@@ -52,8 +49,8 @@ Initialize with an NTuple of symbols that index into
 `vcat(label_state(pu.pset, prob.u0), label_par(pu.pset, prob.p))`.
 """
 struct KeysProblemParGetter{N} <: AbstractProblemParGetter
-    source_keys::NTuple{N,Symbol}
-    dest_keys::NTuple{N,Symbol}
+    source_keys::NTuple{N, Symbol}
+    dest_keys::NTuple{N, Symbol}
     # type parameter already enfources same length
     # KeysProblemParGetter(source::NTuple{N,Symbol},dest::NTuple{N,Symbol}) 
     #     length(source) == length(dest) || error(

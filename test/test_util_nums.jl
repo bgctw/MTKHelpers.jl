@@ -3,7 +3,7 @@
 
 @testset "system_num_dict single" begin
     symd = get_system_symbol_dict(m)
-    @test symd isa Dict{Symbol,Num}
+    @test symd isa Dict{Symbol, Num}
     @test all((:m₊x, :m₊RHS, :m₊τ) .∈ Ref(keys(symd)))
     #
     p1 = ComponentVector(m₊x = 1.0, m₊τ = 2.0)
@@ -16,7 +16,7 @@ end;
 
 @testset "system_num_dict Tuple" begin
     symd = get_system_symbol_dict(m, m2)
-    @test symd isa Dict{Symbol,Num}
+    @test symd isa Dict{Symbol, Num}
     @test all((:m₊x, :m₊RHS, :m₊τ) .∈ Ref(keys(symd)))
     @test all((:m2₊x, :m2₊RHS, :m2₊τ) .∈ Ref(keys(symd)))
     #

@@ -1,32 +1,31 @@
-test_smoothstep =
-    (x_step, dx, a, b) -> begin
-        # at the center between edges
-        c = (a + b) / 2
-        @test smoothstep(x_step, x_step, dx, a, b) == c
-        # before and at edge0 return a
-        @test smoothstep(x_step - dx - 0.0001, x_step, dx, a, b) == a
-        @test smoothstep(x_step - dx, x_step, dx, a, b) == a
-        # after and at edge1 return b
-        @test smoothstep(x_step + dx + 0.0001, x_step, dx, a, b) == b
-        @test smoothstep(x_step + dx, x_step, dx, a, b) == b
-        if a <= b
-            # before x_step return between a and center
-            @test a <= smoothstep(x_step - dx / 2, x_step, dx, a, b) <= c
-            # after x_step return between center and b
-            @test c <= smoothstep(x_step + dx / 2, x_step, dx, a, b) <= b
-        else
-            # before x_step return between a and center
-            @test a >= smoothstep(x_step - dx / 2, x_step, dx, a, b) >= c
-            # after x_step return between center and b
-            @test c >= smoothstep(x_step + dx / 2, x_step, dx, a, b) >= b
-        end
-        # monotonous
-        xs = range(x_step - dx, x_step + dx, length = 10)
-        ys = smoothstep.(xs, x_step, dx, a, b)
-        dys = [ys[i+1] - ys[i] for i = 1:(length(ys)-1)]
-        @test all(sign.(dys) .== sign(b - a))
-        true
+test_smoothstep = (x_step, dx, a, b) -> begin
+    # at the center between edges
+    c = (a + b) / 2
+    @test smoothstep(x_step, x_step, dx, a, b) == c
+    # before and at edge0 return a
+    @test smoothstep(x_step - dx - 0.0001, x_step, dx, a, b) == a
+    @test smoothstep(x_step - dx, x_step, dx, a, b) == a
+    # after and at edge1 return b
+    @test smoothstep(x_step + dx + 0.0001, x_step, dx, a, b) == b
+    @test smoothstep(x_step + dx, x_step, dx, a, b) == b
+    if a <= b
+        # before x_step return between a and center
+        @test a <= smoothstep(x_step - dx / 2, x_step, dx, a, b) <= c
+        # after x_step return between center and b
+        @test c <= smoothstep(x_step + dx / 2, x_step, dx, a, b) <= b
+    else
+        # before x_step return between a and center
+        @test a >= smoothstep(x_step - dx / 2, x_step, dx, a, b) >= c
+        # after x_step return between center and b
+        @test c >= smoothstep(x_step + dx / 2, x_step, dx, a, b) >= b
     end
+    # monotonous
+    xs = range(x_step - dx, x_step + dx, length = 10)
+    ys = smoothstep.(xs, x_step, dx, a, b)
+    dys = [ys[i + 1] - ys[i] for i in 1:(length(ys) - 1)]
+    @test all(sign.(dys) .== sign(b - a))
+    true
+end
 
 @testset "smoothstep" begin
     x = 0

@@ -109,25 +109,22 @@ using ModelingToolkit:
 Modify `basesys` by replacing some equations matched by their left-hand-side.
 The keyword argument correspond to ODESystem.
 """
-function override_system(
-    eqs,
-    basesys::AbstractSystem;
+function override_system(eqs, basesys::AbstractSystem;
     name::Symbol = Symbol(string(nameof(basesys)) * "_ext"),
     ps = Term[],
     obs = Equation[],
     evs = ModelingToolkit.SymbolicContinuousCallback[],
-    defs = Dict(),
-)
+    defs = Dict())
     T = SciMLBase.parameterless_type(basesys)
     ivs = independent_variables(basesys)
     length(ivs) > 1 && error("Extending multivariate systems is not supported")
     eqs_base_dict = Dict(eq.lhs => eq for eq in get_eqs(basesys))
     eqs_new_keys = [eq.lhs for eq in eqs]
     is_key_present = eqs_new_keys .∈ Ref(keys(eqs_base_dict))
-    !all(is_key_present) && error(
-        "Expected all lhs of new equations to be present in basesys. " *
-        "But following keys were not present: $(string.(eqs_new_keys[.!is_key_present]))",
-    )
+    !all(is_key_present) &&
+        error("Expected all lhs of new equations to be present in basesys. " *
+              "But following keys were not present: *
+              $(string.(eqs_new_keys[.!is_key_present]))")
     eqs_base_keys = setdiff(keys(eqs_base_dict), eqs_new_keys)
     eqs_base_no_overwrite = get.(Ref(eqs_base_dict), eqs_base_keys, missing)
     eqs_ext = union(eqs_base_no_overwrite, eqs)
@@ -139,19 +136,16 @@ function override_system(
     syss = get_systems(basesys)
     #
     if length(ivs) == 0
-        T(
-            eqs_ext,
+        T(eqs_ext,
             sts,
             ps_ext,
             observed = obs_ext,
             defaults = defs_ext,
             name = name,
             systems = syss,
-            continuous_events = evs_ext,
-        )
+            continuous_events = evs_ext)
     elseif length(ivs) == 1
-        T(
-            eqs_ext,
+        T(eqs_ext,
             ivs[1],
             sts,
             ps_ext,
@@ -159,7 +153,6 @@ function override_system(
             defaults = defs_ext,
             name = name,
             systems = syss,
-            continuous_events = evs_ext,
-        )
+            continuous_events = evs_ext)
     end
 end

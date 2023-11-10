@@ -13,8 +13,7 @@ makedocs(;
     format = Documenter.HTML(;
         prettyurls = get(ENV, "CI", "false") == "true",
         canonical = "https://bgctw.github.io/MTKHelpers.jl",
-        assets = String[],
-    ),
+        assets = String[]),
     pages = [
         "Home" => "index.md",
         "Embedding a system" => "embed_system.md",
@@ -24,7 +23,6 @@ makedocs(;
         "Smooth steps" => "smoothstep.md",
         "CairoMakie Helpers" => "cairomakie.md",
         "index" => "zindex.md",
-    ],
-)
+    ])
 
 deploydocs(; repo = "github.com/bgctw/MTKHelpers.jl", devbranch = "main")

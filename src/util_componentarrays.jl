@@ -23,7 +23,6 @@ import ComponentArrays as CA
 # # e.g. (a=1) to match entire (a=(a1=1, a2=2))
 # _get_index_axis(cv::ComponentVector, ax::CA.NullorFlatAxis) = cv # else method ambiguous
 
-
 # function _set_index_axis!(cv::ComponentVector, s::ComponentVector)
 #     ax = first(getaxes(s))
 #     if first(getaxes(cv)) == ax 
@@ -57,13 +56,11 @@ import ComponentArrays as CA
 #     s.a.a3 = 6
 #     _set_index_axis!(cv, s)
 
-
 #     cvs = ComponentVector(a=1)
 #     s = cv0[cvs]
 #     s.a = [10,20,30]
 #     _set_index_axis!(cv, s)    
 # end
-
 
 # """
 # assembles a new ComponentVector with some components replaced by corresponding
@@ -108,7 +105,6 @@ import ComponentArrays as CA
 #     #AT = typeof(parent(cv))
 #     attach_axis(convert(AT,getdata(res))::AT, first(getaxes(cv)))
 # end
-
 
 # function _ax_string_prefixed(any; prefix);  ""; end
 # _ax_string_prefixed(sym::Symbol; prefix) = [string(sym)]
@@ -155,21 +151,25 @@ import ComponentArrays as CA
 # CA.labels(ax) would be type piracy II 
 labels_noprefix(ax::AbstractAxis) = map(x -> x[2:end], _labels(ax))
 
-_ax_symbols_tuple(ax::AbstractAxis; prefix = "₊") =
+function _ax_symbols_tuple(ax::AbstractAxis; prefix = "₊")
     (labels_noprefix(ax) .|> (x -> replace(x, "." => prefix)) .|> Symbol) |> Tuple
+end
 
-_ax_symbols_vector(ax::AbstractAxis; prefix = "₊") =
+function _ax_symbols_vector(ax::AbstractAxis; prefix = "₊")
     (labels_noprefix(ax) .|> (x -> replace(x, "." => prefix)) .|> Symbol)::Vector{Symbol}
+end
 
 function _labels(x::AbstractAxis, nview::Int = 0)
     #@info "Absract:$(typeof(x))"
     vcat((".$(key)" .* _labels(x[key]) for key in keys(x))...)
 end
-_labels(x::NamedTuple, nview::Int = 0) =
+function _labels(x::NamedTuple, nview::Int = 0)
     length(x) == 0 ? [""] : vcat((".$(key)" .* _labels(x[key]) for key in keys(x))...)
+end
 
-_labels(x::AbstractArray, nview::Int = 0) =
+function _labels(x::AbstractArray, nview::Int = 0)
     vcat(("[" * join(i.I, ",") * "]" for i in CartesianIndices(x))...)
+end
 function _labels(x, nview::Int = 0)
     # @info "_labels(x)"
     # @show x, typeof(x)
@@ -177,31 +177,31 @@ function _labels(x, nview::Int = 0)
 end
 _labels(x::CA.NullAxis, nview::Int = 0) = ""
 
-function _labels(x::CA.PartitionedAxis{PartSz,IdxMap}, nview::Int) where {PartSz,IdxMap}
+function _labels(x::CA.PartitionedAxis{PartSz, IdxMap}, nview::Int) where {PartSz, IdxMap}
     la = _labels(IdxMap)
     ncomp = Int(nview / PartSz)
     #@show nview, PartSz, ncomp
-    v = vcat(("[$i]" for i = 1:ncomp)...)
+    v = vcat(("[$i]" for i in 1:ncomp)...)
     vcat((vi .* a for (a, vi) in Iterators.product(la, v))...)
 end
-function _labels(x::CA.ShapedAxis{Shape,IdxMap}, nview::Int) where {Shape,IdxMap}
+function _labels(x::CA.ShapedAxis{Shape, IdxMap}, nview::Int) where {Shape, IdxMap}
     la = _labels(IdxMap)
     v = vcat(("[" * join(i.I, ",") * "]" for i in CartesianIndices(Shape))...)
     vcat((vi .* a for (a, vi) in Iterators.product(la, v))...)
 end
 
-_labels(x::CA.ComponentIndex{N,FlatAxis}, nview::Int = 0) where {N} =
+function _labels(x::CA.ComponentIndex{N, FlatAxis}, nview::Int = 0) where {N}
     vcat(("[$i]" for i in eachindex(x.idx))...)
-_labels(x::CA.ComponentIndex{N,<:AbstractAxis}, nview::Int = 0) where {N} =
+end
+function _labels(x::CA.ComponentIndex{N, <:AbstractAxis}, nview::Int = 0) where {N}
     _labels(x.ax, length(x.idx))
+end
 
-function _update_cv_top(cv::ComponentVector{TD}, s::ComponentVector{TS}) where {TD,TS}
+function _update_cv_top(cv::ComponentVector{TD}, s::ComponentVector{TS}) where {TD, TS}
     keyss = keys(s)
     mkeys = (!(k ∈ keys(cv)) for k in keyss)
-    any(mkeys) && error(
-        "The following keys to update were not found in destination " *
-        string(keyss[collect(mkeys)]),
-    )
+    any(mkeys) && error("The following keys to update were not found in destination " *
+          string(keyss[collect(mkeys)]))
     # assigning a Dual to existing cv does not work, cannot use constructor
     #t = Tuple(getproperty(s,k) for k in keyss)
     #nt = NamedTuple{keyss}(t)

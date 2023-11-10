@@ -30,7 +30,6 @@ function symbols_state end, function symbols_par end, function symbols_paropt en
 @deprecate parsyms(pset::AbstractProblemParSetter) symbols_par(pset)
 @deprecate paroptsyms(pset::AbstractProblemParSetter) symbols_paropt(pset)
 
-
 """
     axis_state(pset::AbstractProblemParSetter)
     axis_par(pset::AbstractProblemParSetter)
@@ -44,7 +43,6 @@ function axis_state(pset::AbstractProblemParSetter) end,
 function axis_par(pset::AbstractProblemParSetter) end,
 function axis_paropt(pset::AbstractProblemParSetter) end
 # need to implement in concrete types
-
 
 """
     get_paropt(pset::AbstractProblemParSetter, prob::ODEProblem; kwargs...)
@@ -68,7 +66,6 @@ function get_paropt_labeled(pset::AbstractProblemParSetter, prob::ODEProblem; kw
 end,
 function get_paropt(pset::AbstractProblemParSetter, u0, p)
     getdata(get_paropt_labeled(pset, u0, p))
-
 end
 # need to implement in concrete types: get_paropt_labeled -> ComponentVector
 
@@ -95,10 +92,10 @@ end
 #@inline CA.getdata(x::ComponentVector) = getfield(x, :data)
 attach_axis(x::AbstractVector, ax::AbstractAxis) = ComponentArray(x, (ax,))
 #attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getdata(x), (ax,))
-attach_axis(x::ComponentVector, ax::AbstractAxis) =
+function attach_axis(x::ComponentVector, ax::AbstractAxis)
     ComponentArray(getfield(x, :data), (ax,))
+end
 attach_x_axis(x::ComponentMatrix, ax::AbstractAxis) = ComponentArray(x, (ax, FlatAxis()))
-
 
 # label_state(pset::AbstractProblemParSetter, u::SVector) = SLVector(label_state(pset, Tuple(u)))
 # label_state(pset::AbstractProblemParSetter, u::NTuple) = NamedTuple{symbols_state(pset)}(u)

@@ -32,7 +32,6 @@ end;
     include("test_problemparsetter_dummy.jl")
 end;
 
-
 @testset "ProblemParSetter_sym" begin
     #include("test/test_problemparsetter_sym.jl")
     include("test_problemparsetter_sym.jl")
@@ -56,7 +55,6 @@ end;
     #include("test/test_prior_util.jl")
     include("test_prior_util.jl")
 end;
-
 
 @testset "smoothstep" begin
     include("test_smoothstep.jl")

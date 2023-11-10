@@ -43,8 +43,6 @@ export getlast
 import Base: merge, getindex
 import ComponentArrays: getdata
 
-
-
 export symbol, symbols_state, symbols_par, strip_namespace, embed_system, override_system
 include("util.jl")
 
@@ -67,10 +65,8 @@ include("util_nums.jl")
 export fit_Dirichlet_std, fit_Dirichlet_mode, simplex_grid
 include("prior_util.jl")
 
-
 export series_sol!
 include("makie_util.jl")
-
 
 if !isdefined(Base, :get_extension)
     using Requires
@@ -78,11 +74,8 @@ end
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
-        @require CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0" include(
-            "../ext/MTKHelpersMakieExt.jl",
-        )
+        @require CairoMakie="13f3f980-e62b-5c42-98c6-ff1f3baf88f0" include("../ext/MTKHelpersMakieExt.jl")
     end
 end
-
 
 end

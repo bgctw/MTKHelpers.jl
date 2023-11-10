@@ -1,5 +1,5 @@
 @testset "fit_Dirichlet_std" begin
-    α2 = SA[0.5, 1/3]
+    α2 = SA[0.5, 1 / 3]
     σ = 0.2
     d = fit_Dirichlet_std(α2, σ)
     @test mean(d)[1:length(α2)] ≈ α2

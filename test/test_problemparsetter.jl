@@ -23,7 +23,6 @@ psc = pset = ProblemParSetter(u1c, p1c, poptc)
 u1s = label_state(psc, SVector{3}(getdata(u1c)))
 p1s = label_par(psc, SVector{5}(getdata(p1c))) # convert to ComponentVector{SVector}
 
-
 @testset "_get_axis of ComponentVectors and Strings" begin
     popt_strings_tup = ("L", "k_L", "k_R")
     ps = ProblemParSetter(u1, p1, popt_strings_tup)
@@ -39,22 +38,18 @@ end;
 end;
 
 @testset "_ax_symbols" begin
-    cv = ComponentVector(
-        a = (a1 = 100, a2 = (a21 = 210, a22 = 220)),
-        c = (c1 = reshape(1:4, (2, 2)),),
-    )
+    cv = ComponentVector(a = (a1 = 100, a2 = (a21 = 210, a22 = 220)),
+        c = (c1 = reshape(1:4, (2, 2)),))
     ax = first(getaxes(cv))
     #tp = @inferred MTKHelpers._ax_symbols_tuple(ax; prefix = "_") # lastindex not inferable
     tp = MTKHelpers._ax_symbols_tuple(ax; prefix = "_")
-    @test tp == (
-        :a_a1,
+    @test tp == (:a_a1,
         :a_a2_a21,
         :a_a2_a22,
         Symbol("c_c1[1,1]"),
         Symbol("c_c1[2,1]"),
         Symbol("c_c1[1,2]"),
-        Symbol("c_c1[2,2]"),
-    )
+        Symbol("c_c1[2,2]"))
     v = @inferred MTKHelpers._ax_symbols_vector(ax, prefix = "_")
     @test v == collect(tp)
 end
@@ -63,11 +58,9 @@ end
     state_syms = keys(u1)
     par_syms = keys(p1)
     popt_syms = (:L, :k_L, :M1, :M2)
-    psw = @test_logs (:warn, r"missing optimization parameters") ProblemParSetter(
-        Axis(state_syms),
+    psw = @test_logs (:warn, r"missing optimization parameters") ProblemParSetter(Axis(state_syms),
         Axis(par_syms),
-        Axis(popt_syms),
-    )
+        Axis(popt_syms))
     #get_paropt(psw, u1, p1) # error, because Missing not allowed
     #test if setting parameters does work
 end;
@@ -76,11 +69,9 @@ end;
     state_syms = keys(p1)
     par_syms = keys(p1)
     popt_syms = (:k_L,)
-    psw = @test_logs (:warn, r"to be distinct") ProblemParSetter(
-        Axis(state_syms),
+    psw = @test_logs (:warn, r"to be distinct") ProblemParSetter(Axis(state_syms),
         Axis(par_syms),
-        Axis(popt_syms),
-    )
+        Axis(popt_syms))
     p2 = p1 .* 2
     res = get_paropt(psw, p2, p1)
     @test res == [p2[1]] # picked the state (u0) value
@@ -116,15 +107,13 @@ end;
 # ps.statemap
 # ps.optinfo
 
-function test_label_svectors(
-    pset,
+function test_label_svectors(pset,
     u0,
     p,
     popt,
     ::Val{NU0},
     ::Val{NP},
-    ::Val{NOPT},
-) where {NOPT,NU0,NP}
+    ::Val{NOPT}) where {NOPT, NU0, NP}
     @test label_paropt(pset, popt) == popt
     @test @inferred(label_paropt(pset, convert(Array, popt))) == popt
     @test @inferred(label_paropt(pset, SVector{NOPT}(getdata(popt)))) == popt

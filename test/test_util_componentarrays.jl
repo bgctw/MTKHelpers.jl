@@ -1,5 +1,4 @@
 
-
 # @testset "_update_cv" begin
 #     cv = ComponentVector(a=(a1=1,a2=2,a3=3),b=20)
 #     s = ComponentVector(a=(a1=11,a2=2,a3=3),b=20)
@@ -62,7 +61,6 @@
 #     cs = ComponentVector(a=(aTypo=1,)) # the "," is important to make it a tuple
 #     @test_throws ErrorException cv[first(axes(cs))] # has aTypo in error message
 
-
 #     cv = ComponentVector(a=(a1=100,a2=(a21=210, a22=reshape(1:4,(2,2))),a3=300), b=3, c=4)
 #     # extracting some of the nested a-components and the b component
 #     # note that I do not specify the structure of a2
@@ -71,9 +69,6 @@
 #     cv_sub = cv[ax]
 
 # end
-
-
-
 
 # @testset "_get_index_axis AxisArray" begin
 #     u1 = ComponentVector(L = 10.0,)
@@ -124,11 +119,9 @@
     ]
     x = first(getaxes(ComponentArray(c = (b = [1 2; 5 6]))))
     @test _labels(x) == [".c[1,1]", ".c[2,1]", ".c[1,2]", ".c[2,2]"]
-    nt2 = (
-        a = 5,
+    nt2 = (a = 5,
         b = [(a = (a = 20, b = 1), b = 0), (a = (a = 33, b = 1), b = 0)],
-        c = (a = (a = 2, b = [1, 2]), b = [1.0 2.0; 5 6]),
-    )
+        c = (a = (a = 2, b = [1, 2]), b = [1.0 2.0; 5 6]))
     ca2 = ComponentArray(nt2)
     x = first(getaxes(ca2))
     lab = _labels(x)
