@@ -1,6 +1,6 @@
 module MTKHelpers
 
-using ModelingToolkit, DifferentialEquations
+using ModelingToolkit, OrdinaryDiffEq
 using StaticArrays, LabelledArrays
 using NamedArrays
 using ComponentArrays
