@@ -19,7 +19,7 @@ e.g. `subcomp₊p` becomes `p`.
 struct ODEProblemParSetter{NS,NP,POPTA <: AbstractAxis,
     SA <: AbstractAxis,
     PA <: AbstractAxis,
-} <: AbstractProblemParSetter
+} <: AbstractODEProblemParSetter
     ax_paropt::POPTA
     ax_state::SA
     ax_par::PA
@@ -74,25 +74,16 @@ function assign_state_par(ax_state, ax_par, ax_paropt)
     # assume to refer to state only
     par_keys = setdiff(par_keys, duplicate_keys)
     tmp = attach_axis((1:axis_length(ax_paropt)), ax_paropt) 
-    tmp_state = @view tmp[state_keys]
+    # empty ComponentVector does not translate to tmp2
+    # tmp_state = isempty(state_keys) ? ComponentVector() : @view tmp[state_keys]
+    # tmp_par = isempty(par_keys) ? ComponentVector() : @view tmp[par_keys]
+    tmp_state =  @view tmp[state_keys]
     tmp_par = @view tmp[par_keys]
     tmp2 = CA.ComponentVector(state = tmp_state, par = tmp_par)
     return _get_axis(tmp2)
 end
 
 
-
-# function _get_axis(x::AbstractArray) 
-#     @info("Providing Parameters as Array was deprecated for performance?")
-#     # depr?: need a full-fledged axis
-#     Axis(Tuple(i for i in symbol_op.(x)))
-# end
-function _get_axis(x::Tuple)
-    Axis(Tuple(i for i in symbol_op.(x)))
-end
-_get_axis(x::ComponentVector) = first(getaxes(x))
-_get_axis(x::AbstractAxis) = x
-_get_axis(x::CA.CombinedAxis) = CA._component_axis(x)
 
 function ODEProblemParSetter(sys::ODESystem, paropt; strip = false)
     strip && error("strip in construction of ODEProblemparSetter currently not supported.")
@@ -111,43 +102,12 @@ function strip_deriv_num(num)
     num |> string |> (x -> replace(x, r"\(.+\)" => "")) |> Symbol
 end
 
-# count_state(::ODEProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = length(CA.indexmap(SA))
-# count_par(::ODEProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = length(CA.indexmap(PA))
-# count_paropt(::ODEProblemParSetter{N, POPTA, SA, PA}) where {N, POPTA, SA, PA} = N
-
-# TODO change to length(ax) when this becomes available in ComponentArrays
-count_state(pset::ODEProblemParSetter) = axis_length(pset.ax_state)
-count_par(pset::ODEProblemParSetter) = axis_length(pset.ax_par)
-count_paropt(pset::ODEProblemParSetter) = axis_length(pset.ax_paropt)
-
-# axis_state(::ODEProblemParSetter{POPTA, SA, PA}) where {POPTA, SA, PA} = SA
-# axis_par(::ODEProblemParSetter{POPTA, SA, PA}) where {POPTA, SA, PA} = PA
-# axis_paropt(::ODEProblemParSetter{POPTA, SA, PA}) where {POPTA, SA, PA} = POPTA
-
 axis_state(ps::ODEProblemParSetter) = ps.ax_state
 axis_par(ps::ODEProblemParSetter) = ps.ax_par
 axis_paropt(ps::ODEProblemParSetter) = ps.ax_paropt
 
-keys_state(ps::ODEProblemParSetter) = keys(ax_state)
-keys_par(ps::ODEProblemParSetter) = keys(ps.ax_par)
-function keys_paropt(ps::ODEProblemParSetter) 
-    ax = axis_paropt(ps)
-    # for each top-key access the subaxis and apply keys
-    gen = (getproperty(CA.indexmap(ax), k) |> x -> keys(x) for k in keys(ax))
-    tuplejoin(gen...)
-end
+classes_paropt(pset::ODEProblemParSetter) = (:state, :par)
 
-symbols_state(pset::ODEProblemParSetter) = _ax_symbols_tuple(axis_state(pset))
-symbols_par(pset::ODEProblemParSetter) = _ax_symbols_tuple(axis_par(pset))
-#symbols_paropt(pset::ODEProblemParSetter) = _ax_symbols_tuple(axis_paropt(pset))
-# concatenate the symbols of subaxes
-function symbols_paropt(pset::ODEProblemParSetter)
-    ax = axis_paropt(pset)
-    # for each key access the subaxis and apply _ax_symbols_tuple
-    gen = (getproperty(CA.indexmap(ax), k) |> x -> _ax_symbols_tuple(x) for k in keys(ax))
-    # concatenate the generator of tuples
-    tuplejoin(gen...)
-end
 
 # # Using unexported interface of ComponentArrays.axis, one place to change
 # "Accessor function for index from ComponentIndex"
@@ -163,8 +123,13 @@ function update_statepar(pset::ODEProblemParSetter, popt, u0, p)
     poptc = attach_axis(popt, axis_paropt(pset))
     u0c = attach_axis(u0, axis_state(pset)) # no need to copy 
     pc = attach_axis(p, axis_par(pset))
-    u0_new = _update_cv_top(u0c, poptc.state, pset.is_updated_state_i)
-    p_new = _update_cv_top(pc, poptc.par, pset.is_updated_par_i)
+    #Main.@infiltrate_main
+    u0_new = isempty(poptc.state) ?
+             copy(u0c) :
+             _update_cv_top(u0c, poptc.state, pset.is_updated_state_i)
+    p_new = isempty(poptc.par) ?
+            copy(pc) :
+            _update_cv_top(pc, poptc.par, pset.is_updated_par_i)
     # if u0 was not a ComponentVector, return then data inside
     return (u0 isa ComponentVector) ? u0_new : getfield(u0_new, :data), 
         (p isa ComponentVector) ? p_new : getfield(p_new, :data)
@@ -257,50 +222,6 @@ end
 # end
 
 """
-    get_u_map(names_u, pset::ODEProblemParSetter)
-    get_p_map(names_p, pset::ODEProblemParSetter)
-
-Map each state and parameter the `ODEProblemParSetter` `pset` to a position in names.
-
-When construction an ODEProblem from a ODESystem, the order of states and 
-parameters may have changed compared with a previous construction.
-
-In order to set entire state or parameter vectors, a mapping from current
-to previous positions, i.e. integer indices, is required, 
-so that one can get a vectors in the new format by 
-- `u0_old[u_map]`
-- `p_old[p_map]`
-
-The mapping is constructed by supplying the names of u0_old and p_old to
-a ProblemParameterSetter constructed with the current ODESystem.
-
-## Keyword arguments
-- `do_warn_missing`: set to true to issue warnings if some ODESystem state or 
-  parameter names are not found in the old names. This may give false warnings
-  for System parameters that have defaults and do not need to be part
-  of the parameter vector.
-"""
-function get_u_map(names_u, pset::ODEProblemParSetter; do_warn_missing = false)
-    names_uprob = symbols_state(pset)
-    u_map = map(name_uprob -> findfirst(isequal(name_uprob), names_u), names_uprob)
-    do_warn_missing &&
-        any(isnothing.(u_map)) &&
-        warning("problem states $(names_pprob[findall(isnothing.(u_map))]) not in names_u.")
-    SVector(u_map)
-end,
-function get_p_map(names_p, pset::ODEProblemParSetter; do_warn_missing = false)
-    names_pprob = symbols_par(pset)
-    p_map = map(name_pprob -> findfirst(isequal(name_pprob), names_p), names_pprob)
-    # usually the default parameters, such as u_PlantPmax ~ i_L0 / β_Pi0 - imbalance_P
-    # are not part of names_p -> false warning
-    do_warn_missing &&
-        any(isnothing.(p_map)) &&
-        warning("problem parameters $(names_pprob[findall(isnothing.(p_map))]) not " * 
-        "in names_p.")
-    SVector(p_map)
-end
-
-"""
     validate:keys(pset)
 
 Checks whether all components of paropt-Axis are occuring
@@ -312,10 +233,10 @@ end
 
 function validate_keys_state_par(ax_paropt::AbstractAxis, ax_state::AbstractAxis, ax_par::AbstractAxis)
     paropt = attach_axis((1:axis_length(ax_paropt)), ax_paropt)
-    :state ∉ keys(paropt) && return (;isvalid=false, 
-        msg=String127("Expected paropt to contain state key, but did not."))
-    :par ∉ keys(paropt) && return (;isvalid=false, 
-         msg=String127("Expected paropt to contain par key, but did not."))
+    if keys(ax_paropt) != (:state,:par) return (;isvalid=false, 
+        msg=String127("Expected paropt to have classification keys (:state,:par) but was " *
+        string(keys(paropt))))
+    end
     paropt.state isa CA.ComponentVector ||
         length(paropt.state) == 0 ||  # special case of empty ComponentVector, e.g. 2:1
         return return (; isvalid=false,

@@ -44,16 +44,18 @@ function embed_system(m; name, simplify = true)
 end
 
 """
-    symbol(t)
+    symbol_op(t)
 
-Extract the inner symbol from a Term, Num, or BasicSymbolic object.
+Extract the inner symbol_op from a Term, Num, or BasicSymbolic object.
 """
-function symbol(t::Term)
-    symbol(t.f)
+function symbol_op(t::Term)
+    symbol_op(t.f)
 end
-symbol(s::SymbolicUtils.BasicSymbolic) = istree(s) ? Symbol(operation(s)) : Symbol(s)
-symbol(num::Num) = symbol(num.val)
-symbol(s) = Symbol(s)
+symbol_op(s::SymbolicUtils.BasicSymbolic) = !istree(s) ? Symbol(s) :
+    operation(s) == getindex ? symbol_op(first(arguments(s))) : symbol_op(operation(s)) 
+symbol_op(s::Symbolics.Arr) = symbol_op(s.value)
+symbol_op(num::Num) = symbol_op(num.val)
+symbol_op(s) = Symbol(s)
 
 """
     strip_namespace(s)
@@ -74,9 +76,9 @@ end
 Extract the basic symbols without namespace of system states and system parameters.
 """
 function symbols_state(sys::ODESystem)
-    symbol.(states(sys))
+    symbol_op.(states(sys))
 end
-symbols_par(sys::ODESystem) = symbol.(parameters(sys))
+symbols_par(sys::ODESystem) = symbol_op.(parameters(sys))
 
 # "apply fun to x until fun(x) == x"
 # function fixpoint(fun, x, nrecur_max=12; fmap=identity)
@@ -156,3 +158,8 @@ function override_system(eqs, basesys::AbstractSystem;
             continuous_events = evs_ext)
     end
 end
+
+# https://discourse.julialang.org/t/efficient-tuple-concatenation/5398/8
+@inline tuplejoin(x) = x
+@inline tuplejoin(x, y) = (x..., y...)
+@inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)

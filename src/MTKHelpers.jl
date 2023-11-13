@@ -1,21 +1,27 @@
 module MTKHelpers
 
 using ModelingToolkit, OrdinaryDiffEq
+using SciMLBase: SciMLBase
 using StaticArrays, LabelledArrays
-using NamedArrays
+using NamedArrays: NamedArrays
 using ComponentArrays
 using Distributions
+using SymbolicUtils: SymbolicUtils
+using InlineStrings
 #using Infiltrator
 
 export AbstractProblemParSetter,
-    ProblemParSetter_sym,
-    ProblemParSetter,
+    AbstractODEProblemParSetter,
+    ODEProblemParSetter,
     count_state,
     count_par,
     count_paropt,
     axis_paropt,
     axis_par,
     axis_state,
+    keys_paropt,
+    keys_par,
+    keys_state,
     symbols_paropt,
     symbols_state,
     symbols_par,
@@ -31,7 +37,6 @@ export AbstractProblemParSetter,
     get_u_map,
     get_p_map
 
-export _get_index_axis, _set_index_axis!, attach_axis, _update_cv, _labels
 
 export smoothstep
 
@@ -43,20 +48,23 @@ export getlast
 import Base: merge, getindex
 import ComponentArrays: getdata
 
-export symbol, symbols_state, symbols_par, strip_namespace, embed_system, override_system
+export symbol_op, symbols_state, symbols_par, strip_namespace, embed_system, override_system
 include("util.jl")
 
+#export _get_index_axis, _set_index_axis!, attach_axis, _update_cv, _labels
 include("util_componentarrays.jl")
+
 include("abstractproblemparsetter.jl")
-include("problemparsetter_sym.jl")
-include("problemparsetter.jl")
+include("abstractodeproblemparsetter.jl")
+include("odeproblemparsetter.jl")
 include("smoothstep.jl")
 include("solution.jl")
 
 export AbstractProblemUpdater,
     AbstractProblemParGetter, ProblemUpdater, KeysProblemParGetter, NullProblemUpdater
 export par_setter, par_setter
-export strip_deriv_num
+export get_ode_problemupdater
+#export strip_deriv_num
 include("problem_updater.jl")
 
 export get_system_symbol_dict, system_num_dict
@@ -68,6 +76,10 @@ include("prior_util.jl")
 export series_sol!
 include("makie_util.jl")
 
+#export samplesystem_vec, indices_of_nums
+include("example_systems.jl")
+
+
 if !isdefined(Base, :get_extension)
     using Requires
 end
@@ -78,4 +90,4 @@ end
     end
 end
 
-end
+end # module

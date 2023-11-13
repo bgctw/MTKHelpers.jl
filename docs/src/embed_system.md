@@ -56,7 +56,7 @@ override_system
 
 # Utilities
 ```@docs
-symbol
+symbol_op
 strip_namespace
 symbols_state(::ODESystem)
 ```

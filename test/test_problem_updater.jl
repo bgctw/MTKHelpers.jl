@@ -9,12 +9,13 @@ prob = ODEProblem(f, collect(u0), tspan, collect(p))
     sk = (:k_L, :k_L)
     dk = (:k_R, :k_P)
     pg = KeysProblemParGetter(sk, dk)
-    # pset = ProblemParSetter(Axis(keys(u0)),Axis(keys(p)),Axis(keys(pg)))
+    # pset = ODEProblemParSetter(Axis(keys(u0)),Axis(keys(p)),Axis(keys(pg)))
     # pu = ProblemUpdater(pg, pset)
-    pu = ProblemUpdater(pg, keys(u0), keys(p))
+    pu = get_ode_problemupdater(pg, keys(u0), keys(p))
     prob2 = pu(prob)
     @test label_par(par_setter(pu), prob2.p).k_R == p.k_L
     @test label_par(par_setter(pu), prob2.p).k_P == p.k_L
+    @test label_state(par_setter(pu), prob2.u0) == ComponentVector(u0)
 end;
 
 @testset "KeysProblemParGetter error on length(source) != length(dest)" begin
@@ -25,7 +26,7 @@ end;
 
 @testset "DummyParGetter" begin
     pg = CP.DummyParGetter()
-    pu = ProblemUpdater(pg, keys(u0), keys(p))
+    pu = get_ode_problemupdater(pg, keys(u0), keys(p))
     prob2 = pu(prob)
-    @test prob2.p == [1.0, 1.0, 10.0]
+    @test prob2.p == [1.0, 1.0, 10.0] # specific to DummyParGetter in problem_updater.jl
 end;

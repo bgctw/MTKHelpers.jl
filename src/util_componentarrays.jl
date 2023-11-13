@@ -1,6 +1,36 @@
 import ComponentArrays as CA
 #import ComponentArrays: _get_index_axis
 
+axis_length(ax::AbstractAxis) = lastindex(ax) - firstindex(ax) + 1
+axis_length(::FlatAxis) = 0
+
+# function _get_axis(x::AbstractArray) 
+#     @info("Providing Parameters as Array was deprecated for performance?")
+#     # depr?: need a full-fledged axis
+#     Axis(Tuple(i for i in symbol_op.(x)))
+# end
+function _get_axis(x::Tuple)
+    Axis(Tuple(i for i in symbol_op.(x)))
+end
+_get_axis(x::ComponentVector) = first(getaxes(x))
+_get_axis(x::AbstractAxis) = x
+_get_axis(x::CA.CombinedAxis) = CA._component_axis(x)
+
+
+# TODO move to ComponentArrays.jl
+# type piracy: https://github.com/jonniedie/ComponentArrays.jl/issues/141
+#@inline CA.getdata(x::ComponentVector) = getfield(x, :data)
+attach_axis(x::AbstractVector, ax::CA.CombinedAxis) = ComponentArray(x, (CA._component_axis(ax),))
+attach_axis(x::AbstractVector, ax::AbstractAxis) = ComponentArray(x, (ax,))
+#attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getdata(x), (ax,))
+function attach_axis(x::ComponentVector, ax::AbstractAxis)
+    ComponentArray(getfield(x, :data), (ax,))
+end
+attach_x_axis(x::ComponentMatrix, ax::AbstractAxis) = ComponentArray(x, (ax, FlatAxis()))
+
+
+
+
 # function _get_index_axis(cv::ComponentVector, ax::AbstractAxis)
 #     first(getaxes(cv)) == ax && return(cv) # no need to reassamble
 #     # extract subvectors and reassamble
@@ -197,27 +227,49 @@ function _labels(x::CA.ComponentIndex{N, <:AbstractAxis}, nview::Int = 0) where 
     _labels(x.ax, length(x.idx))
 end
 
-function _update_cv_top(cv::ComponentVector{TD}, s::ComponentVector{TS}) where {TD, TS}
+function _update_cv_top(cv::ComponentVector, s::ComponentVector)
     keyss = keys(s)
     mkeys = (!(k ∈ keys(cv)) for k in keyss)
     any(mkeys) && error("The following keys to update were not found in destination " *
-          string(keyss[collect(mkeys)]))
-    # assigning a Dual to existing cv does not work, cannot use constructor
-    #t = Tuple(getproperty(s,k) for k in keyss)
-    #nt = NamedTuple{keyss}(t)
-    #cvn = ComponentVector(cv; nt...)
+        string(keyss[collect(mkeys)]))
+    gen_is_updated = (k ∈ keys(s) for k in keys(cv))
+    #is_updated = collect(gen_is_updated)
+    is_updated = SVector{length(keys(_get_axis(cv)))}(gen_is_updated...)
+    _update_cv_top(cv, s, is_updated)
+end
+
+"""
+    _update_cv_top(cv::ComponentVector{TD}, s::ComponentVector{TS}, is_updated)
+
+Return a new ComponentVector of eltype romote_type(TD, TS) with those components at position, i,
+, for which is_key_updated[i] is true, are replaced by the corresponding name of 
+source s. 
+"""
+function _update_cv_top(cv::ComponentVector{TD,TAD}, s::ComponentVector{TS}, is_updated::AbstractVector{Bool}) where {TD, TAD, TS}
+    # s has not entries, return a copy
+    axis_length(_get_axis(s)) == 0 && copy(cv)
     T_EL = promote_type(TD, TS)
-    #k = first(keys(cv))
-    tmp = map(keys(cv)) do k
-        val_cv = val_cv0 = cv[KeepIndex(k)]
-        # until KeepIndex behaviour is fixed in ComponentArrays
-        res1 = !(k ∈ keyss) ? val_cv : begin
-            TTS = typeof(similar(val_cv, T_EL))
-            convert(TTS, s[KeepIndex(k)])::TTS
+    #(i,k) = first(enumerate(keys(cv)))
+    #(i,k) = last(enumerate(keys(cv)))
+    ftmp = (i,k) -> begin
+        if is_updated[i] 
+            # extrating underlying array does not gain performance but makes problems
+            # in vcat: #val = @view s[k]
+            val_s = @view s[KeepIndex(k)]
+            #MVector{axis_length(_get_axis(val_s)),T_EL}(getdata(val_s)) 
+        else
+            val_cv = @view cv[KeepIndex(k)]
         end
     end
-    T_C = typeof(similar(cv, T_EL))
-    res = reduce(vcat, tmp)::T_C
+    g = (ftmp(i,k) for (i,k) in enumerate(keys(cv))) 
+    data = vcat(g...)
+    # data = reduce(vcat,g) # takes more resources from small vectors
+    #Main.@infiltrate_main
+    T_C = TAD <: StaticArray ?
+        similar_type(TAD, T_EL) :
+        typeof(similar(getdata(cv), T_EL))
+    data_conv = convert(T_C, data)::T_C
+    attach_axis(data_conv, _get_axis(cv))
 end
 
 # # TODO: wait for ComponentArrays implement length(Axis)
@@ -248,3 +300,4 @@ end
 #     end
 #     Axis(NamedTuple{syms}(nts))
 # end
+

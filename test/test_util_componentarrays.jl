@@ -1,3 +1,30 @@
+@testset "_update_cv_top" begin
+    p1 = ComponentVector(a=1, b=[2,3,4], c=5)
+    ptmp = p1[(:c,:b)] .* 10
+    pup = MTKHelpers._update_cv_top(p1, ptmp)
+    MTKHelpers._get_axis(pup) == MTKHelpers._get_axis(p1)
+    @test typeof(getdata(pup)) == typeof(getdata(p1))
+    @test pup.a == p1.a
+    @test pup.b == ptmp.b
+    @test pup.c == ptmp.c
+    #
+    # empty updater - nothing to update
+    ptmp = ComponentVector()
+    pup = MTKHelpers._update_cv_top(p1, ptmp)
+    @test pup == p1
+    @test !(pup === p1) # is not a reference to p1
+end;
+
+benchmark_update_cv_top = () -> begin
+    ptmp = p1.*2 
+    is_updated = [true,true,false]
+    tmp = MTKHelpers._update_cv_top(p1, ptmp, is_updated)
+    #using BenchmarkTools
+    #@btime MTKHelpers._update_cv_top($p1, $ptmp, $is_updated) 
+    #
+    tmp = MTKHelpers._update_cv_top(u0, u0, is_updated)
+
+end
 
 # @testset "_update_cv" begin
 #     cv = ComponentVector(a=(a1=1,a2=2,a3=3),b=20)
@@ -103,13 +130,13 @@
 
 @testset "_labels" begin
     x = first(getaxes(ComponentArray(a = 1, b = [1, 2])))
-    @test _labels(x) == [".a", ".b[1]", ".b[2]"]
+    @test MTKHelpers._labels(x) == [".a", ".b[1]", ".b[2]"]
     x = first(getaxes(ComponentArray(c = (a = 1, b = [1, 2]))))
-    @test _labels(x) == [".c.a", ".c.b[1]", ".c.b[2]"]
+    @test MTKHelpers._labels(x) == [".c.a", ".c.b[1]", ".c.b[2]"]
     x = (a = 1, b = [1, 2])
-    @test _labels(x) == [".a", ".b[1]", ".b[2]"]
+    @test MTKHelpers._labels(x) == [".a", ".b[1]", ".b[2]"]
     x = first(getaxes(ComponentArray(c = [(a = [1, 2],), (a = [2, 3],), (a = [3, 4],)])))
-    @test _labels(x) == [
+    @test MTKHelpers._labels(x) == [
         ".c[1].a[1]",
         ".c[1].a[2]",
         ".c[2].a[1]",
@@ -118,13 +145,13 @@
         ".c[3].a[2]",
     ]
     x = first(getaxes(ComponentArray(c = (b = [1 2; 5 6]))))
-    @test _labels(x) == [".c[1,1]", ".c[2,1]", ".c[1,2]", ".c[2,2]"]
+    @test MTKHelpers._labels(x) == [".c[1,1]", ".c[2,1]", ".c[1,2]", ".c[2,2]"]
     nt2 = (a = 5,
         b = [(a = (a = 20, b = 1), b = 0), (a = (a = 33, b = 1), b = 0)],
         c = (a = (a = 2, b = [1, 2]), b = [1.0 2.0; 5 6]))
     ca2 = ComponentArray(nt2)
     x = first(getaxes(ca2))
-    lab = _labels(x)
+    lab = MTKHelpers._labels(x)
     @test lab == [
         ".a",
         ".b[1].a.a",

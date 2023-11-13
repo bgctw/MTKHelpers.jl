@@ -4,10 +4,10 @@
     @test symbols_par(m) == [:τ, :p1, :p2, :i]
 end
 
-@testset "symbol" begin
+@testset "symbol_op" begin
     @named m = samplesystem()
-    @test symbol(m.x) == :m₊x # calls Num which calls Par
-    @test symbol(m.τ) == :m₊τ
+    @test symbol_op(m.x) == :m₊x # calls Num which calls Par
+    @test symbol_op(m.τ) == :m₊τ
 end;
 
 @testset "strip_namespace" begin
@@ -21,11 +21,11 @@ end;
     @named m2 = samplesystem()
     @named sys = embed_system(m2)
     prob = ODEProblem(sys, [m2.x => 0.0], (0.0, 10.0), [m2.τ => 3.0])
-    sol = solve(prob);
+    sol = solve(prob, Tsit5());
     @test first(sol[m2.x]) == 0.0
     #plot(sol, vars=[m2.x,m2.RHS])    
     #
-    # specify by symbol instead of num
+    # specify by symbol_op instead of num
     _dict_nums = get_system_symbol_dict(m2)
     prob = ODEProblem(sys, [_dict_nums[:m2₊x] => 0.0], (0.0, 10.0), [m2.τ => 3.0])
 end;
@@ -34,7 +34,7 @@ end;
     @named mc = samplesystem_const(-0.1)
     @named sys = embed_system(mc)
     prob = ODEProblem(sys, [mc.x => 1.0], (0.0, 10.0))
-    sol = solve(prob)
+    sol = solve(prob, Tsit5())
     #@test sol(8)[1] ≈ 1-0.1*8
     @test isapprox(sol(8)[1], exp(-0.1 * 8), atol = 1e-5)
 end;
@@ -51,3 +51,4 @@ end;
     ]
     @test_throws ErrorException sys_ext=override_system(eqs, m; name, ps)
 end;
+

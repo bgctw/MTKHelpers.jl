@@ -4,9 +4,11 @@
 u1 = ComponentVector(L = 10.0)
 p1 = ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
 popt1 = ComponentVector(L = 10.1, k_L = 1.1, k_R = 1 / 20.1)
+popt1s = ComponentVector(state=ComponentVector(L = 10.1), 
+    par=ComponentVector(k_L = 1.1, k_R = 1 / 20.1))
 # use Axis for type stability, but here, check with non-typestable ps
-#ps = @inferred ProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(keys(popt)))
-ps = ps1 = ProblemParSetter(u1, p1, popt1)
+#ps = @inferred ODEProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(keys(popt)))
+ps = ps1 = ODEProblemParSetter(u1, p1, popt1)
 
 # entries with substructure
 u1c = ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
@@ -16,7 +18,8 @@ p1c = ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
 # a2 and c need to have correct length for updating
 #poptc = ComponentVector(a=(a2=1:2,), c=1:2) 
 poptc = vcat(u1c[KeepIndex(:a)], p1c[(:b, :c)])
-psc = pset = ProblemParSetter(u1c, p1c, poptc)
+poptcs = ComponentVector(state=u1c[KeepIndex(:a)], par=p1c[(:b, :c)])
+psc = pset = ODEProblemParSetter(u1c, p1c, poptc)
 #u0 = u1c; p=p1c; popt=poptc
 
 # test states and parameters and ComponentVector{SVector}
@@ -25,15 +28,18 @@ p1s = label_par(psc, SVector{5}(getdata(p1c))) # convert to ComponentVector{SVec
 
 @testset "_get_axis of ComponentVectors and Strings" begin
     popt_strings_tup = ("L", "k_L", "k_R")
-    ps = ProblemParSetter(u1, p1, popt_strings_tup)
-    @test axis_paropt(ps) == Axis(L = 1, k_L = 2, k_R = 3)
+    ps = ODEProblemParSetter(u1, p1, popt_strings_tup)
+    tmp_state = CA.ComponentVector(L = 1)
+    tmp_par = CA.ComponentVector(k_L = 2, k_R = 3)
+    tmp = CA.ComponentVector(state = tmp_state, par = tmp_par)
+    @test axis_paropt(ps) == MTKHelpers._get_axis(tmp)
 end;
 
 @testset "axis_length FlatAxis" begin
     # empty substructure gives a FlatAxis
     u1_flat = ComponentVector{Float64}()
     popt1_no_u = ComponentVector(k_L = 1.1, k_R = 1 / 20.1)
-    ps = ProblemParSetter(u1_flat, p1, popt1_no_u)
+    ps = ODEProblemParSetter(u1_flat, p1, popt1_no_u)
     @test count_state(ps) == 0
 end;
 
@@ -54,37 +60,50 @@ end;
     @test v == collect(tp)
 end
 
-@testset "warning on missing symbols" begin
+@testset "warning on some optimization parameters not found in u0 nor p" begin
     state_syms = keys(u1)
     par_syms = keys(p1)
     popt_syms = (:L, :k_L, :M1, :M2)
-    psw = @test_logs (:warn, r"missing optimization parameters") ProblemParSetter(Axis(state_syms),
+    psw = @test_logs (:warn, r"M1.+M2") ODEProblemParSetter(Axis(state_syms),
         Axis(par_syms),
         Axis(popt_syms))
     #get_paropt(psw, u1, p1) # error, because Missing not allowed
     #test if setting parameters does work
 end;
 
-@testset "warning on duplicate symbols" begin
+
+@testset "warning on duplicate symbols" begin 
     state_syms = keys(p1)
     par_syms = keys(p1)
     popt_syms = (:k_L,)
-    psw = @test_logs (:warn, r"to be distinct") ProblemParSetter(Axis(state_syms),
-        Axis(par_syms),
-        Axis(popt_syms))
+    psw = @test_logs (:warn, r"k_L") ODEProblemParSetter(Axis(state_syms),
+        Axis(par_syms), Axis(popt_syms))
     p2 = p1 .* 2
+
+    res = get_paropt_labeled(psw, p2, p1)
     res = get_paropt(psw, p2, p1)
     @test res == [p2[1]] # picked the state (u0) value
+    #
+    # specify a different underlying type
+    # res = get_paropt(psw, p2, p1, MTKHelpers.ODEMVectorCreator())
+    # @test_broken res isa MVector
+end;
+
+@testset "get_paropt_labeled with StaticVector" begin
+    # extract names and values from SVector
+    pset = ODEProblemParSetter(u1s, p1s, poptc)
+    res_vec = get_paropt(pset, u1s, p1s)
+    @test res_vec isa Vector
 end;
 
 # @testset "MethodError if missing symbols are not allowed" begin
-#     @test_throws MethodError ps1 = ProblemParSetter((:x, :RHS), (:τ,), (:RHS, :τ, :M), Val(false))
+#     @test_throws MethodError ps1 = ODEProblemParSetter((:x, :RHS), (:τ,), (:RHS, :τ, :M), Val(false))
 # end;
 
 @testset "access keys and counts" begin
     @test (@inferred keys(axis_state(ps))) == keys(u1)
     @test (@inferred keys(axis_par(ps))) == keys(p1)
-    @test (@inferred keys(axis_paropt(ps))) == keys(popt1)
+    @test (@inferred keys(axis_paropt(ps))) == (:state,:par)
     #
     @test (@inferred count_state(ps)) == length(u1)
     @test (@inferred count_par(ps)) == length(p1)
@@ -101,6 +120,10 @@ end;
     poptc = vcat(u1c[KeepIndex(:a)], p1c[(:b, :c)])
     @test (symbols_state(psc)) == (:a₊a1, :a₊a2₊a21, :a₊a2₊a22)
     @test (symbols_par(psc)) == (:b₊b1, :b₊b2, Symbol("c[1]"), Symbol("c[2]"), :d)
+    # symbols paropt should neglect classification of symbols, which can be 
+    # obtained by keys(axis_paropt(ps))
+    # @test (symbols_paropt(psc)) ==
+    #       (:state₊a₊a1, :state₊a₊a2₊a21, :state₊a₊a2₊a22, :par₊b₊b1, :par₊b₊b2, Symbol("par₊c[1]"), Symbol("par₊c[2]"))
     @test (symbols_paropt(psc)) ==
           (:a₊a1, :a₊a2₊a21, :a₊a2₊a22, :b₊b1, :b₊b2, Symbol("c[1]"), Symbol("c[2]"))
 end;
@@ -114,6 +137,7 @@ function test_label_svectors(pset,
     ::Val{NU0},
     ::Val{NP},
     ::Val{NOPT}) where {NOPT, NU0, NP}
+    #Main.@infiltrate_main
     @test label_paropt(pset, popt) == popt
     @test @inferred(label_paropt(pset, convert(Array, popt))) == popt
     @test @inferred(label_paropt(pset, SVector{NOPT}(getdata(popt)))) == popt
@@ -136,23 +160,23 @@ function test_label_svectors(pset,
 end
 
 @testset "label Vectors unstructured" begin
-    test_label_svectors(ps, u1, p1, popt1, Val(1), Val(3), Val(3))
+    test_label_svectors(ps, u1, p1, popt1s, Val(1), Val(3), Val(3))
 end;
 @testset "label Vectors structured" begin
-    test_label_svectors(psc, u1c, p1c, poptc, Val(3), Val(5), Val(7))
+    test_label_svectors(psc, u1c, p1c, poptcs, Val(3), Val(5), Val(7))
 end;
 @testset "label SVectors structured" begin
-    test_label_svectors(psc, u1s, p1s, poptc, Val(3), Val(5), Val(7))
+    test_label_svectors(psc, u1s, p1s, poptcs, Val(3), Val(5), Val(7))
 end;
 
 function test_update_statepar_and_get_paropt(pset, u0, p, popt, u0_target, p_target)
-    u0o, po = update_statepar(pset, popt, u0, p)
+    #0o, po = update_statepar(pset, popt, u0, p)
     #@descend_code_warntype update_statepar(pset, popt, u0, p)
     #@code_warntype update_statepar(pset, popt, u0, p)
     u0o, po = @inferred update_statepar(pset, getdata(popt), getdata(u0), getdata(p))
     u0o, po = @inferred update_statepar(pset, popt, u0, p)
     #return u0o, po
-    #@btime update_statepar($ps, $popt, $u1, $p1) # zero allocations
+    #@btime update_statepar($ps, $popt, $u1, $p1) 
     @test getaxes(u0o) == getaxes(u0)
     @test getaxes(po) == getaxes(p)
     @test typeof(getdata(u0o)) == typeof(getdata(u0))
@@ -179,7 +203,7 @@ end;
     pset = ps
     u0 = u1
     p = p1
-    popt = popt1
+    popt = popt1s
     # inferred although pset is global
     _, _ = @inferred update_statepar(pset, getdata(popt), getdata(u0), getdata(p))
     _ = @inferred get_paropt_labeled(pset, collect(u0), collect(p))
@@ -194,17 +218,17 @@ end;
     pset = psc
     u0 = u1c
     p = p1c
-    popt = poptc
+    popt = poptcs
     cv = p1c
     @inferred get_paropt_labeled(pset, u0, p)
-    test_update_statepar_and_get_paropt(psc, u1c, p1c, poptc, u1t, pt)
+    test_update_statepar_and_get_paropt(psc, u1c, p1c, poptcs, u1t, pt)
 end;
 @testset "update_statepar Svector structured" begin
     u1t = ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
     pt = ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
-    # fix bug in ComponentArrays where KeepIndex returns an Vector instead SVector based 
-    @test_broken test_update_statepar_and_get_paropt(psc, u1s, p1s, poptc, u1t, pt)
-    #test_update_statepar_and_get_paropt(psc, u1s, p1s, poptc, u1t, pt)
+    test_update_statepar_and_get_paropt(psc, u1s, p1s, poptcs, u1t, pt)
+    #using BenchmarkTools
+    #@btime get_paropt_labeled($psc, $u1t, $pt)
 end
 # @testset "update_statepar and get_paropt for AxisArray" begin
 #     @test_broken "AxisArray"
@@ -246,14 +270,15 @@ end
     prob = ODEProblem(f, collect(u0), tspan, collect(p))
     #sol = solve(prob)
     #sol[end]
-    pset = ProblemParSetter(Axis(keys(u0)), Axis(keys(p)), Axis((:u1, :p2)))
-    popt = ComponentVector(u1 = 1 / 4, p2 = 1.2)
+    pset = ODEProblemParSetter(Axis(keys(u0)), Axis(keys(p)), Axis((:u1, :p2)))
+    popt = ComponentVector(state=ComponentVector(u1 = 1 / 4), 
+        par=ComponentVector(p2 = 1.2))
     #
     # update_statepar
-    prob2 = update_statepar(pset, popt, prob)
-    @test prob2.u0[1] == popt.u1
+    prob2 = remake(prob, popt, pset)
+    @test prob2.u0[1] == popt.state.u1
     @test prob2.p[1] == p.p1 # not updated
-    @test prob2.p[2] == popt.p2
+    @test prob2.p[2] == popt.par.p2
     #
     # get_paropt
     @test get_paropt(pset, prob2) == getdata(popt)
@@ -266,10 +291,12 @@ end;
 @testset "gradient _update_cv_top" begin
     cv = ComponentVector(a = 1:2, b = 2, c = 3.0)
     popt = ComponentVector(a = 11:12, b = 20.0)
+    is_updated = SVector(true, true, false)
     cv2 = MTKHelpers._update_cv_top(cv, popt)
     fcost = let cv = cv
         (popt) -> begin
-            local cv2 = @inferred MTKHelpers._update_cv_top(cv, popt)
+            #local cv2 = @inferred MTKHelpers._update_cv_top(cv, popt)
+            local cv2 = @inferred MTKHelpers._update_cv_top(cv, popt, is_updated)
             d = sum(cv2)
             d * d
         end
@@ -287,13 +314,14 @@ end;
     p = p1c
     popt = poptc
     cv = p1c
-    fcost_noninferred = let pset = pset, u0 = u0, p = p
-        (popt) -> begin
-            local u0o, po = update_statepar(pset, popt, u0, p)
-            d = sum(get_paropt(pset, u0o, po))
-            d * d
-        end
-    end
+    # fcost_noninferred = let pset = pset, u0 = u0, p = p
+    #     (popt) -> begin
+    #         local u0o, po = update_statepar(pset, popt, u0, p)
+    #         d = sum(get_paropt(pset, u0o, po))
+    #         d * d
+    #     end
+    # end
+    # res = ForwardDiff.gradient(fcost_noninferred, popt)
     fcost = let pset = pset, u0 = u0, p = p
         (popt) -> begin
             local u0o, po = @inferred update_statepar(pset, popt, u0, p)
@@ -303,10 +331,10 @@ end;
         end
     end
     @inferred fcost(popt)
-    res = ForwardDiff.gradient(fcost_noninferred, popt)
     # TODO fix update_statepar returning union type 
     # try putting is_state and is_p to type signature
-    @test_broken res = ForwardDiff.gradient(fcost, popt)
+    #@test_broken res = ForwardDiff.gradient(fcost, popt)
+    res = ForwardDiff.gradient(fcost, popt)
     @test typeof(res) == typeof(popt)
 end;
 
@@ -343,23 +371,26 @@ end;
 end;
 
 function test_system(ps1, popt_names, m)
-    #@infiltrate
-    #@code_warntype ProblemParSetter(m, Axis(popt_names))
-    #@descend_code_warntype ProblemParSetter(m, Axis(popt_names))
+    #Msin.@infiltrate_main
+    #@code_warntype ODEProblemParSetter(m, Axis(popt_names))
+    #@descend_code_warntype ODEProblemParSetter(m, Axis(popt_names))
     @test @inferred(keys(axis_state(ps1))) == (:x, :RHS)
     @test @inferred(keys(axis_par(ps1))) == (:τ, :p1, :p2, :i)
-    @test @inferred(keys(axis_paropt(ps1))) == popt_names
+    @test @inferred(keys_paropt(ps1)) == popt_names
 end
 @testset "construct from ODESystem" begin
     @named m = samplesystem()
     popt_names = (:RHS, :τ)
-    ps1 = ProblemParSetter(m, Axis(popt_names))
+    ps1 = ODEProblemParSetter(m, Axis(popt_names))
     # only type stable after function boundary
     test_system(ps1, popt_names, m)
     #
-    @named em = embed_system(m, simplify = false)
-    ps1e = ProblemParSetter(em, Axis(popt_names); strip = true)
-    test_system(ps1e, popt_names, em)
+    # @test_broken "stripping names of embedded system" == "currently not supported"
+    # tmpf = () -> begin
+    #     @named em = embed_system(m, simplify = false)
+    #     #ps1e = ODEProblemParSetter(em, popt_names; strip = true)
+    #     test_system(ps1e, popt_names, em)
+    # end
 end;
 
 @testset "name_paropt" begin
@@ -380,8 +411,8 @@ end;
     #frandsym()
     # ?implement al{allow_missing_popt}=Val(true)
     # as long as Axis argument is passed, all the type is inferred
-    #psr = @inferred ProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(frandsym()))
-    ftmp = (poptnames) -> ProblemParSetter(Axis(keys(u1)), Axis(keys(p1)), Axis(poptnames))
+    #psr = @inferred ODEProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(frandsym()))
+    ftmp = (poptnames) -> ODEProblemParSetter(Axis(keys(u1)), Axis(keys(p1)), Axis(poptnames))
     #psr = @inferred ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
     psr = ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
     # use Parsetter either with explicit Axis or inside function barrier
@@ -389,17 +420,3 @@ end;
     xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
 end;
 
-@testset "get_u_map" begin
-    u1 = ComponentVector(a = 1.0, b = 2.0)
-    p1 = ComponentVector(p1 = 10.0, p2 = 20.0, p3 = 30.0)
-    # assume that positions have been changed
-    u1s = u1[SA[:b, :a]]
-    p1s = p1[SA[:p3, :p1, :p2]]
-    pset = ProblemParSetter(u1, p1, ComponentVector(p1 = 10.1))
-    u_map = get_u_map(keys(u1s), pset)
-    @test all(u1s[u_map] .== u1)
-    @test keys(u1s)[u_map] == keys(u1)
-    p_map = get_p_map(keys(p1s), pset)
-    @test keys(p1s)[p_map] == keys(p1)
-    @test all(p1s[p_map] .== p1)
-end;

@@ -10,29 +10,31 @@ Callable `(pu::ProblemUpdater)(prob)`.
 
 Must be initialized with a callable `AbstractProblemParGetter`, 
 e.g. [`KeysProblemParGetter`](@ref)
-and on a `AbstractProblemParSetter`,
-e.g. [`ProblemParSetter`](@ref).
+and on a `AbstractODEProblemParSetter`,
+e.g. [`ODEProblemParSetter`](@ref).
 
-The second form of the constructor creates a ProblemParSetter based on 
+The second form of the constructor creates a ODEProblemParSetter based on 
 `keys(par_getter)`.
 """
-struct ProblemUpdater{PG <: AbstractProblemParGetter, PS <: AbstractProblemParSetter} <:
+struct ProblemUpdater{PG <: AbstractProblemParGetter, PS <: AbstractODEProblemParSetter} <:
        AbstractProblemUpdater
     pget::PG
     pset::PS
 end
 
-function ProblemUpdater(par_getter::AbstractProblemParGetter, u0_keys, p_keys)
+function get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0_keys, p_keys)
     ProblemUpdater(par_getter,
-        ProblemParSetter(Axis(u0_keys), Axis(p_keys), Axis(keys(par_getter))))
+        ODEProblemParSetter(Axis(u0_keys), Axis(p_keys), Axis(keys(par_getter))))
 end
+
+@deprecate ProblemUpdater(par_getter, u0_keys, p_keys) get_ode_problemupdater(par_getter, u0_keys, p_keys)
 
 par_setter(pu::ProblemUpdater) = pu.pset
 par_getter(pu::ProblemUpdater) = pu.pget
 
 function (pu::ProblemUpdater)(prob)
     x = pu.pget(pu, prob)
-    update_statepar(pu.pset, x, prob)
+    remake(prob, x, pu.pset)
 end
 
 "AbstractProblemUpdater that returns the original ODEProblem."
@@ -68,7 +70,10 @@ function (pg::KeysProblemParGetter)(pu::ProblemUpdater, prob)
     SVector(getproperty.(Ref(p), pg.source_keys))
 end
 
-"Custom AbstractProblemParGetter used in tests that computes parameters to set."
+"""
+Custom AbstractProblemParGetter used in tests that computes parameters to set.
+update k_R = k_L and k_P = k_L[1]*10
+"""
 struct DummyParGetter <: AbstractProblemParGetter end
 function (pg::DummyParGetter)(pu::ProblemUpdater, prob)
     p = label_par(pu.pset, prob.p)
