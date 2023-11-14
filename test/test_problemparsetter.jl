@@ -268,7 +268,7 @@ end
     tspan = (0.0, 1.0)
     #prob = ODEProblem(f,SVector(Tuple(u0)),tspan,SVector(Tuple(p))) # SVector broken
     prob = ODEProblem(f, collect(u0), tspan, collect(p))
-    #sol = solve(prob)
+    #sol = solve(prob, Tsit5())
     #sol[end]
     pset = ODEProblemParSetter(Axis(keys(u0)), Axis(keys(p)), Axis((:u1, :p2)))
     popt = ComponentVector(state=ComponentVector(u1 = 1 / 4), 

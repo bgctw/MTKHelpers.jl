@@ -13,7 +13,7 @@ The following functions help to translate symbols to Nums of the system.
 
 ```@example doc
 # setting up a simple example composite system and problem
-using ModelingToolkit, DifferentialEquations, ComponentArrays
+using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
 using MTKHelpers
 function samplesystem(;name,τ = 3.0, p1=1.1, p2=1.2) 
     @variables t 

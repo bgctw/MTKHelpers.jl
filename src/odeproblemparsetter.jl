@@ -8,8 +8,8 @@ Helps keeping track of a subset of initial states and parameters to be optimized
 - `state_template`: ComponentVector or Axis of all the initial states of the problem
 - `par_template`: all the parameters of the problem
 - `popt_template`: the parameter/initial states to be optimized. 
-  If given as Tuple or AbstractVector of Symbols, then a template ComponentVector
-  is extracted from state_template and par_tempalte.
+  If given as Tuple or AbstractVector of symbols, then a template ComponentVector
+  is extracted from `state_template` and `par_template`.
 
 If all of `state_template`, `par_template`, and `popt_template` are type-inferred Axes,
 then also the constructed ODEProblemParSetter is type-inferred.

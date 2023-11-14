@@ -11,7 +11,7 @@ for AbstractODEProblems.
 AbstractODEProblemParSetter
 ```
 
-See the specific implementation `ODEProblemParSetter`.
+See the specific implementation [`ODEProblemParSetter`](@ref). 
 
 
 ## Helper functions to access state and parameters

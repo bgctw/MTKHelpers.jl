@@ -1,4 +1,12 @@
 abstract type AbstractProblemUpdater end
+
+
+"""
+Supertype for callables that implement 
+    `(::AbstractProblemParGetter)(problem) -> updated_problem`
+
+Concrete subtypes should implement function `keys`, so that an appropriate `AbstractODEProblemParSetter` can be constructed for [`ProblemUpdater`](@ref).
+"""
 abstract type AbstractProblemParGetter end
 
 """
@@ -23,13 +31,18 @@ struct ProblemUpdater{PG <: AbstractProblemParGetter, PS <: AbstractODEProblemPa
 end
 
 """
-    get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0_keys, p_keys)
+    get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0, p)
+    get_ode_problemupdater(par_getter::AbstractProblemParGetter, sys::AbstractODESystem)
 
 Construct a `ProblemUpdater` based on an constructed `ODEProblemParSetter`.     
 """
-function get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0_keys, p_keys)
+function get_ode_problemupdater(par_getter::AbstractProblemParGetter, sys::AbstractODESystem)
     ProblemUpdater(par_getter,
-        ODEProblemParSetter(Axis(u0_keys), Axis(p_keys), Axis(keys(par_getter))))
+        ODEProblemParSetter(sys, keys(par_getter)))
+end,
+function get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0, p)
+    ProblemUpdater(par_getter,
+        ODEProblemParSetter(u0, p, keys(par_getter)))
 end
 
 @deprecate ProblemUpdater(par_getter, u0_keys, p_keys) get_ode_problemupdater(par_getter, u0_keys, p_keys)
@@ -49,32 +62,34 @@ struct NullProblemUpdater <: AbstractProblemUpdater end
 (pu::NullProblemUpdater)(prob) = prob
 
 """
-    KeysProblemParGetter(source_keys::NTuple{N,Symbol})
+    KeysProblemParGetter(mapping::NTuple{N,Pair{Symbol, Symbol})
 
 Provices callable `(pg::KeysProblemParGetter)(pu::ProblemUpdater, prob)]`.    
 To be used to get the parameters/state vector to be set by `ProblemUpdater`.
 
-Initialize with an NTuple of symbols that index into 
+Initialize with an mapping of NTuples of symbols (source -> target) that index into 
 `vcat(label_state(pu.pset, prob.u0), label_par(pu.pset, prob.p))`.
 """
 struct KeysProblemParGetter{N} <: AbstractProblemParGetter
     source_keys::NTuple{N, Symbol}
     dest_keys::NTuple{N, Symbol}
     # type parameter already enfources same length
-    # KeysProblemParGetter(source::NTuple{N,Symbol},dest::NTuple{N,Symbol}) 
-    #     length(source) == length(dest) || error(
-    #         "KeysProblemParGetter expected same length of source and dest keys," *
-    #         "but was supplied with source=("*join(source,",")*") and dest=("*join(dest,",")*")")
-    #     new{N}(source,dest)
-    # end
 end
+
+function KeysProblemParGetter(mapping::NTuple{N,Pair{Symbol, Symbol}}) where N
+    source_keys = ntuple(i -> first(mapping[i]), N)
+    dest_keys = ntuple(i -> last(mapping[i]), N)
+    KeysProblemParGetter(source_keys, dest_keys)
+end
+
 # also implement the keys methods of a new AbstractProblemParGetter
 # so that it can be used by constructing a ProblemUpdater
 Base.keys(pg::KeysProblemParGetter) = pg.dest_keys
 
+
 function (pg::KeysProblemParGetter)(pu::ProblemUpdater, prob)
-    p = vcat(label_state(pu.pset, prob.u0), label_par(pu.pset, prob.p))
-    SVector(getproperty.(Ref(p), pg.source_keys))
+    u0p = vcat(label_state(pu.pset, prob.u0), label_par(pu.pset, prob.p))
+    vcat((u0p[k] for k in pg.source_keys)...)
 end
 
 """

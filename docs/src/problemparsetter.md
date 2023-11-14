@@ -11,14 +11,19 @@ NullProblemUpdater
 # ProblemParGetter
 
 In order to provide computations for parameters to set, declare a
-concrete subtype of `KeysProblemParGetter`, and implement a custom 
+concrete subtype of `AbstractProblemParGetter`, and implement a custom 
 method `(pg::MyProblemParGetter)(pu::ProblemUpdater, prob)` that returns
 a vector of parameter values. 
 
-One simple subtype, `KeysProblemParGetter`, just extracts variables from the 
+```@docs
+AbstractProblemParGetter
+```
+
+One simple subtype of `AbstractProblemParGetter` is `KeysProblemParGetter`, 
+which just extracts variables from the 
 original problem to update other parameters.
-It can be make sure that some parameter of a problem will always equal 
-another parameter of the problem.
+It can be used to ensure that some parameter of a problem will always equal 
+another parameter of the problem. 
 
 ```@docs
 KeysProblemParGetter

@@ -9,29 +9,32 @@ states,`u0`, and a subset of parameters,`p`, of an ODEProblem during an optimiza
 
 Given `u0` and `p` can be expressed as ComponentVectors, 
 and `popt` can be expressed as a ComponentVector of optimized parameters, 
-which may include initial states,
-the following class helps updating the corresponding positions in 
-an ODEProblem.
+which may include initial states. The initial states and parameter components 
+must have different names.
 
-Initial states and parameter components must have different names.
-
+The following example system employs a scalar and a vector-valued parameter.
 ```@example doc
-# setting up a simple example composite system and problem
-using ModelingToolkit, DifferentialEquations, ComponentArrays
+using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
 using MTKHelpers
-function samplesystem(;name,τ = 3.0, p1=1.1, p2=1.2) 
+function samplesystem(;name,τ = 3.0, p=[1.1, 1.2]) 
     @variables t 
     D = Differential(t) 
-    sts = @variables x(t) RHS(t)             # RHS is observed
-    ps = @parameters τ=τ p1=p1 p2=p2       # parameters
-    ODESystem([ RHS  ~ p1/p2 * (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)
+    sts = @variables x(t) RHS(t)        # RHS is observed
+    ps = @parameters τ=τ p[1:2] = p 
+    ODESystem([ RHS  ~ p[1] + -p[2]*x + (1 - x)/τ, D(x) ~ RHS ], t, sts, vcat(ps...); name)
 end                     
 @named m = samplesystem()
 @named sys = embed_system(m)
 prob = ODEProblem(sys, [m.x => 0.0], (0.0,10.0))
+nothing # hide
+```
 
-# setup position matching
-popt = ComponentVector(m₊x=0.1, m₊p1=2.1)
+An [`ODEProblemParSetter`](@ref) then can be used to update a subset of states
+and parametes in the derived problem.
+
+```@example doc
+# setup position matching, note τ is not in parameters optimized
+popt = ComponentVector(state=(m₊x=0.1,), par=(m₊p=[2.1,2.2],)) 
 pset = ODEProblemParSetter(sys, popt) # pass through function barrier to use type inference
 
 # extract optimized 
@@ -42,9 +45,10 @@ name_paropt(pset, prob)         # NamedVector
 # update states and parameters
 prob2 = remake(prob, popt, pset)
 prob2.p # p is still a plain vector
-label_par(pset, prob2.p).m₊p1 == popt.m₊p1 # attach labels and access properties
-label_state(pset, prob2.u0).m₊x == popt.m₊x # attach labels and access properties
+label_par(pset, prob2.p).m₊p == popt.par.m₊p # attach labels and access properties
+label_state(pset, prob2.u0).m₊x == popt.state.m₊x # attach labels and access properties
 get_paropt_labeled(pset, prob2) == popt
+nothing # hide
 ```
 
 Note that constructing and ODEProblemParSetter, `pset`, is only fully type-inferred 
@@ -55,7 +59,7 @@ where performance matters.
 
 ## ProblemUpdater
 A [`ODEProblemParSetter`](@ref) can be combined with a [`KeysProblemParGetter`](@ref)
-or other specific implementations of `AbstractProblemParGetter` to 
+or other specific implementations of [`AbstractProblemParGetter`](@ref) to 
 update an ODEProblem based on information already present in the ODEProblem.
 
 The following example updates parameters `k_R` and `k_P` in the ODEProblem
@@ -68,17 +72,20 @@ so that when constructing the ProblemUpdater, consistent keys are used,
 as in the example below.
 
 ```@example doc
+using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
+using MTKHelpers
 f = (u,p,t) -> p[1]*u
-u0 = (L=1/2,)
-p = (k_L = 1.0, k_R = 2.0, k_P = 3.0)
-tspan = (0.0,1.0)
-prob = ODEProblem(f,collect(u0),tspan,collect(p))
-
-source = (:k_L,:k_L)
-dest = (:k_R,:k_P)
-pu = get_ode_problemupdater(KeysProblemParGetter(source, dest), keys(u0), keys(p))
+u0 = ComponentVector(L=1/2)
+p = ComponentVector(k_L = 1.0, k_R = [2.0,3.0], k_P = [4.0,5.0], k_L2 = 6.0)
+tspan = (0.,1.)
+prob = ODEProblem(f,getdata(u0),tspan,getdata(p))
+#
+mapping = (:k_L => :k_L2, :k_R => :k_P)
+pu = get_ode_problemupdater(KeysProblemParGetter(mapping), u0, p)
+#axis_par(par_setter(pu))
 prob2 = pu(prob)
 p2 = label_par(par_setter(pu), prob2.p)
-p2.k_R == p.k_L
-p2.k_P == p.k_L
+p2.k_P == p.k_R
+p2.k_L2 == p.k_L
+nothing # hide
 ```

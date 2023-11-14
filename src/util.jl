@@ -6,7 +6,7 @@ This helps to match the naming of the states, parameters, observables to
 the namespace of the system. 
 
 ```jldocstest; output=false
-using ModelingToolkit, DifferentialEquations
+using ModelingToolkit, OrdinaryDiffEq
 using MTKHelpers
 function samplesystem(;name) 
     @variables t 
@@ -22,7 +22,7 @@ end
 # Hence only m needs to be defined rather than all the states, parameters, 
 # and observables of the system.
 prob = ODEProblem(sys, [m.x => 0.0], (0.0,10.0), [m.τ => 3.0])
-sol = solve(prob);
+sol = solve(prob, Tsit5());
 dx1 = sol[m.RHS][1:3] 
 dx2 = sol[getproperty(m,:RHS)][1:3]  # access by symbols
 

@@ -8,6 +8,7 @@
     prob = ODEProblem(sys, st, (0.0, 10.0), p_new)
     @test prob.p == [3.0, 0.1, 2.1, 2.2, 2.3]
     sol = solve(prob, Tsit5());
+    # first solution state equals the second entry in the mapping of initial state
     @test first(sol[m2.x]) == last.(st)
     #sol[m2.x[1]]
     #plot(sol, vars=[m2.x,m2.RHS])    
@@ -106,8 +107,9 @@ end;
     #_dict_nums = get_system_symbol_dict(m2)
     st = Symbolics.scalarize(m2.x .=> [1.0,2.0])
     prob = ODEProblem(sys, st, (0.0, 10.0))
-    paropt = CA.ComponentArray(state=CA.ComponentArray(m2₊x=[1.1, 1.2]), 
-        par=CA.ComponentArray(m2₊p=[10.1, 10.2, 10.3]))
+    # paropt = CA.ComponentArray(state=CA.ComponentArray(m2₊x=[1.1, 1.2]), 
+    #     par=CA.ComponentArray(m2₊p=[10.1, 10.2, 10.3]))
+    paropt = ComponentArray(state=(m2₊x=[1.1, 1.2],), par=(m2₊p=[10.1, 10.2, 10.3],))
     ax_state = MTKHelpers.axis_of_nums(states(sys))  
     ax_par = MTKHelpers.axis_of_nums(parameters(sys))  
     ax_paropt = first(getaxes(paropt))
@@ -131,6 +133,11 @@ end;
     @test typeof(prob_opt.p) == typeof(prob.p)
     paropt2 = get_paropt_labeled(pset, prob_opt)
     @test paropt2 == paropt
+    #
+    # initialized pset with symbols
+    paropt_keys = keys_paropt(pset)
+    pset2 = ODEProblemParSetter(sys, paropt_keys)
+    @test axis_paropt(pset2) == ax_paropt
 end;
 
 @testset "assign_state_par" begin
