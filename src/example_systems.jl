@@ -14,7 +14,7 @@ function samplesystem_vec(; name, τ = 3.0, i=0.1, p = [1.1, 1.2, 1.3])
      ]
      #ODESystem(eq, t; name)
      #ODESystem(eq, t, sts, [τ, p[1], p[2], i]; name)
-     sys = ODESystem(eq, t, sts, vcat(ps_scalars, Symbolics.scalarize(p)); name)
+     sys = ODESystem(eq, t, sts, vcat(ps_scalars, ps_arr...); name)
      return sys
 end
 
