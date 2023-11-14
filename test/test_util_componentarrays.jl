@@ -1,3 +1,25 @@
+@testset "_get_axis" begin
+    p1 = ComponentVector(ComponentVector(x=[1,2,3]), par=ComponentVector(a=1, b=[2,3,4], c=5))
+    # axes returns a CombinedAxis, whld getaxes returns ComponentAxis directly
+    cax = first(axes(p1))
+    res = MTKHelpers._get_axis(cax)
+    @test res == MTKHelpers._get_axis(p1)
+end;
+
+@testset "attach_axis" begin
+    c = (a=2, b=[1, 2]);
+    x = ComponentArray(a=1, b=[2, 1, 4.0], c=c)
+    x2 = x .* x'
+    x2bc = x2[:b,:c]
+    tmp = getaxes(x2bc)
+    # b has no axis, create one
+    ax = Axis(b1=1, b2=2, b3=3)
+    res = MTKHelpers.attach_x_axis(x2bc, ax)
+    @test res[:b1,:] == x2bc[1,:]
+end;
+
+
+
 @testset "_update_cv_top" begin
     p1 = ComponentVector(a=1, b=[2,3,4], c=5)
     ptmp = p1[(:c,:b)] .* 10

@@ -42,7 +42,8 @@ end
 function axis_of_nums(nums)
     pos_nums = indices_of_nums(nums)
     pos_nums_scalar = [first(pr) => length(last(pr)) == 1 ? first(last(pr)) : last(pr) for pr in pos_nums]
-    CA._component_axis(first(axes(CA.ComponentArray(;pos_nums_scalar...))))
+    #CA._component_axis(first(axes(CA.ComponentArray(;pos_nums_scalar...))))
+    first(getaxes(CA.ComponentArray(;pos_nums_scalar...)))
 end
 
 

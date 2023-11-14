@@ -20,7 +20,8 @@ _get_axis(x::CA.CombinedAxis) = CA._component_axis(x)
 # TODO move to ComponentArrays.jl
 # type piracy: https://github.com/jonniedie/ComponentArrays.jl/issues/141
 #@inline CA.getdata(x::ComponentVector) = getfield(x, :data)
-attach_axis(x::AbstractVector, ax::CA.CombinedAxis) = ComponentArray(x, (CA._component_axis(ax),))
+# twutz 2311: remove CombinedAxis but only work with AbstractAxis (getaxes vs axes)
+#attach_axis(x::AbstractVector, ax::CA.CombinedAxis) = ComponentArray(x, (CA._component_axis(ax),))
 attach_axis(x::AbstractVector, ax::AbstractAxis) = ComponentArray(x, (ax,))
 #attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getdata(x), (ax,))
 function attach_axis(x::ComponentVector, ax::AbstractAxis)

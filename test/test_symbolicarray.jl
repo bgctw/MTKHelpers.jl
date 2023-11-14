@@ -110,12 +110,12 @@ end;
         par=CA.ComponentArray(m2₊p=[10.1, 10.2, 10.3]))
     ax_state = MTKHelpers.axis_of_nums(states(sys))  
     ax_par = MTKHelpers.axis_of_nums(parameters(sys))  
-    ax_paropt = first(axes(paropt))
+    ax_paropt = first(getaxes(paropt))
     # tmp = attach_axis(collect(1:length(ax_paropt)) * 10, ax_paropt)
     # tmp.state.m2₊x
     #pset1 = ODEProblemParSetter(ax_state, ax_par, paropt)
     pset = ODEProblemParSetter(sys, paropt)
-    @test axis_paropt(pset) == ax_paropt.component_axis
+    @test axis_paropt(pset) == ax_paropt
     explore_create_SVector = () -> begin
         tmpf = (paropt) -> begin
             # extract as StaticArray
