@@ -1,15 +1,17 @@
 """
-    ODEProblemParSetter(state_names,par_names,popt_names) 
-    ODEProblemParSetter(sys::ODESystem, popt_names; strip=false) 
+    ODEProblemParSetter(state_template,par_template,popt_template) 
+    ODEProblemParSetter(sys::ODESystem, popt_template; strip=false) 
 
 Helps keeping track of a subset of initial states and parameters to be optimized.
 
 # Arguments
-- `state_names`: ComponentVector or Axis of all the initial states of the problem
-- `par_names`: all the parameters of the problem
-- `popt_names`: the parameter/initial states to be optimized.
+- `state_template`: ComponentVector or Axis of all the initial states of the problem
+- `par_template`: all the parameters of the problem
+- `popt_template`: the parameter/initial states to be optimized. 
+  If given as Tuple or AbstractVector of Symbols, then a template ComponentVector
+  is extracted from state_template and par_tempalte.
 
-If all of `state_names`, `par_names`, and `popt_names` are type-inferred Axes,
+If all of `state_template`, `par_template`, and `popt_template` are type-inferred Axes,
 then also the constructed ODEProblemParSetter is type-inferred.
 
 The states and parameters can be extracted from an `ModelingToolkit.ODESystem`.
@@ -57,6 +59,18 @@ function ODEProblemParSetter(state_template, par_template, popt_template;
     ODEProblemParSetter(ax_state, ax_par, ax_paropt, is_validating)
 end
 
+function ODEProblemParSetter(state_template, 
+    par_template, popt_template::Union{NTuple{N,Symbol},AbstractVector{Symbol}}; 
+    is_validating = Val{true}()) where N
+    ax_par = _get_axis(par_template)
+    ax_state = _get_axis(state_template)
+    # construct a template by extracting the components of u0 and p
+    u0 = attach_axis(1:axis_length(ax_state), ax_state)
+    p = attach_axis(1:axis_length(ax_par), ax_par)
+    popt_template_new = vcat(u0,p)[popt_template]
+    ODEProblemParSetter(ax_state, ax_par, popt_template_new; is_validating)
+end
+
 function assign_state_par(ax_state, ax_par, ax_paropt)
     state_keys = Vector{Symbol}()
     par_keys = Vector{Symbol}()
@@ -88,18 +102,6 @@ end
 function ODEProblemParSetter(sys::ODESystem, paropt; strip = false)
     strip && error("strip in construction of ODEProblemparSetter currently not supported.")
     ODEProblemParSetter(axis_of_nums(states(sys)), axis_of_nums(parameters(sys)), paropt)
-end
-
-"""
-    strip_deriv_num(num)
-
-Provide a Symbol that omits the derivative part of a Num
-- x(t,s) -> :x
-
-E.g. used in `ODEProblemParSetter(system, strip_deriv_num.(popt_names))`
-"""
-function strip_deriv_num(num)
-    num |> string |> (x -> replace(x, r"\(.+\)" => "")) |> Symbol
 end
 
 axis_state(ps::ODEProblemParSetter) = ps.ax_state
