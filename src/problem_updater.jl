@@ -3,7 +3,6 @@ abstract type AbstractProblemParGetter end
 
 """
     ProblemUpdater(par_getter, par_setter) 
-    ProblemUpdater(par_getter, u0_keys, p_keys)
 
 Encapsulates updating an ODEProblem based on the problem itself by 
 Callable `(pu::ProblemUpdater)(prob)`.
@@ -13,8 +12,9 @@ e.g. [`KeysProblemParGetter`](@ref)
 and on a `AbstractODEProblemParSetter`,
 e.g. [`ODEProblemParSetter`](@ref).
 
-The second form of the constructor creates a ODEProblemParSetter based on 
-`keys(par_getter)`.
+There are special functions to construct ProblemUpdater based on
+a given Problem:
+- [`get_ode_problemupdater`](@ref)
 """
 struct ProblemUpdater{PG <: AbstractProblemParGetter, PS <: AbstractODEProblemParSetter} <:
        AbstractProblemUpdater
@@ -22,6 +22,11 @@ struct ProblemUpdater{PG <: AbstractProblemParGetter, PS <: AbstractODEProblemPa
     pset::PS
 end
 
+"""
+    get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0_keys, p_keys)
+
+Construct a `ProblemUpdater` based on an constructed `ODEProblemParSetter`.     
+"""
 function get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0_keys, p_keys)
     ProblemUpdater(par_getter,
         ODEProblemParSetter(Axis(u0_keys), Axis(p_keys), Axis(keys(par_getter))))
@@ -37,7 +42,9 @@ function (pu::ProblemUpdater)(prob)
     remake(prob, x, pu.pset)
 end
 
-"AbstractProblemUpdater that returns the original ODEProblem."
+"""
+AbstractProblemUpdater that returns the original ODEProblem.
+"""
 struct NullProblemUpdater <: AbstractProblemUpdater end
 (pu::NullProblemUpdater)(prob) = prob
 

@@ -18,7 +18,8 @@ makedocs(;
         "Home" => "index.md",
         "Embedding a system" => "embed_system.md",
         "Update parameters" => [
-            "Abstract" => "problemparsetter.md",
+            "Updating problems" => "updating_problems.md",
+            "AbstractProblem" => "problemparsetter.md",
             "ODEProblem" => "odeproblemparsetter.md",
         ],
         "Translating symbols and Nums" => "system_num_dict.md",

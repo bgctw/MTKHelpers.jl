@@ -224,7 +224,7 @@ end
 """
     validate:keys(pset)
 
-Checks whether all components of paropt-Axis are occuring
+Checks whether all components of paropt-Axis are occurring
 in corresponding axes.     
 """
 function validate_keys(pset::ODEProblemParSetter)

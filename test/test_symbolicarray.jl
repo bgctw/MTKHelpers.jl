@@ -79,7 +79,7 @@ end;
     res = @inferred MTKHelpers.validate_keys(pset)
     @test !res.isvalid
     @test occursin(r"part of state", res.msg)
-    # wrong lengh state key
+    # wrong length state key
     pset = ODEProblemParSetter(u1, p1, 
         vcat(CA.ComponentVector(state=CA.ComponentVector(y=11)), popt_par); 
         is_validating=Val(false))        
@@ -93,7 +93,7 @@ end;
     res = @inferred MTKHelpers.validate_keys(pset)
     @test !res.isvalid
     @test occursin(r"part of parameters", res.msg)
-    # wrong lengh par key
+    # wrong length par key
     pset = ODEProblemParSetter(u1, p1, 
         vcat(popt_state, CA.ComponentVector(par=CA.ComponentVector(c=[41,42]))); 
         is_validating=Val(false))        

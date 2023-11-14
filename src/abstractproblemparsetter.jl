@@ -7,16 +7,20 @@ Further, the order of parameters after simplifying a system is not fixed.
 
 A AbstractProblemUpdater helps with 
 - [`remake`](@ref): translate the set of parameters -> an updated problem 
-- [`get_paropt`}(@ref): problem -> extract/approximate subset of parameters to optimize 
+- [`get_paropt`](@ref): problem -> extract/approximate subset of parameters to optimize 
 
 The structure of optimized parameter Vector is described by an Axis object 
-of ComponentArrays.jl. And several functions are defined to work with it:
-[`axis_paropt`](@ref), [`classes_paropt`](@ref), [`count_paropt`](@ref), 
-[`keys_paropt`](@ref), [`symbols_paropt`](@ref), [`label_paropt`](@ref), 
-[`name_paropt`](@ref), 
+of ComponentArrays.jl. And several functions are defined to work with it.
+Specifically, the ComponentVector it employs a classification ([`classes_paropt`](@ref)),
+,e.g. :`state` and `:par` for ODEProblems,
+below which, ComponentVectors of actual parameters are listed (`keys_paropt`](@ref)).
+Further functions extract information about the ComponentVector:
+[`axis_paropt`](@ref), , [`count_paropt`](@ref), 
+[`symbols_paropt`](@ref)
+or attach information to a plain vector for convenient access or display:
+[`label_paropt`](@ref), [`name_paropt`](@ref). 
 """
 abstract type AbstractProblemParSetter end
-
 
 """
     remake(prob::AbstractSciMLProblem, popt, ps::AbstractProblemParSetter) 
@@ -53,27 +57,25 @@ function axis_paropt(::AbstractProblemParSetter) end
 Get the classes (as NTuple{Symbol}) which the AbstractProblemParSetter 
 supports and requires in paropt.        
 """
-# need to implement in concrete types
 function classes_paropt(::AbstractProblemParSetter) end
+# need to implement in concrete types
 
 """
     count_paropt(::AbstractProblemParSetter) 
 
 Report length of the optimized parameters vector.    
-This generally is different from the lengh of keys, because each key
+This generally is different from the length of keys, because each key
 can describe a array.
 """
-# TODO change to length(ax) when this becomes available in ComponentArrays
 function count_paropt(pset::AbstractProblemParSetter) 
     axis_length(axis_paropt(pset))
 end
-
-@deprecate count_states(pset::AbstractProblemParSetter) count_state(pset)
+# TODO change to length(ax) when this becomes available in ComponentArrays
 
 """
     keys_paropt(::AbstractProblemParSetter) 
 
-Report the keys of paropt below this classification.
+Report the keys of paropt below the classification level.
 """
 function keys_paropt(ps::AbstractProblemParSetter) 
     ax = axis_paropt(ps)
@@ -90,8 +92,6 @@ i.e. the concatenation of components.
 Similar to `ComponentArrays.label`, but inferred from Axis object.  
 Returns a Vector of length [`count_paropt`](@ref)
 """
-#symbols_paropt(pset::AbstractProblemParSetter) = _ax_symbols_tuple(axis_paropt(pset))
-# concatenate the symbols of subaxes
 function symbols_paropt(pset::AbstractProblemParSetter)
     ax = axis_paropt(pset)
     # for each key access the subaxis and apply _ax_symbols_tuple
@@ -100,6 +100,8 @@ function symbols_paropt(pset::AbstractProblemParSetter)
     # concatenate the generator of tuples
     tuplejoin(gen...)
 end
+#symbols_paropt(pset::AbstractProblemParSetter) = _ax_symbols_tuple(axis_paropt(pset))
+# concatenate the symbols of subaxes
 
 @deprecate paroptsyms(pset::AbstractProblemParSetter) symbols_paropt(pset)
 

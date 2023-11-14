@@ -58,7 +58,6 @@ override_system
 ```@docs
 symbol_op
 strip_namespace
-symbols_state(::ODESystem)
 ```
 
 

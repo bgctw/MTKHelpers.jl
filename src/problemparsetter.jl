@@ -256,30 +256,7 @@ end
 #     return paropt
 # end
 
-"""
-    get_u_map(names_u, pset::ODEProblemParSetter)
-    get_p_map(names_p, pset::ODEProblemParSetter)
-
-Map each state and parameter the `ODEProblemParSetter` `pset` to a position in names.
-
-When construction an ODEProblem from a ODESystem, the order of states and 
-parameters may have changed compared with a previous construction.
-
-In order to set entire state or parameter vectors, a mapping from current
-to previous positions, i.e. integer indices, is required, 
-so that one can get a vectors in the new format by 
-- `u0_old[u_map]`
-- `p_old[p_map]`
-
-The mapping is constructed by supplying the names of u0_old and p_old to
-a ProblemParameterSetter constructed with the current ODESystem.
-
-## Keyword arguments
-- `do_warn_missing`: set to true to issue warnings if some ODESystem state or 
-  parameter names are not found in the old names. This may give false warnings
-  for System parameters that have defaults and do not need to be part
-  of the parameter vector.
-"""
+# docstring in abstractodeproblemparsetter.jl
 function get_u_map(names_u, pset::ODEProblemParSetter; do_warn_missing = false)
     names_uprob = symbols_state(pset)
     u_map = map(name_uprob -> findfirst(isequal(name_uprob), names_u), names_uprob)
@@ -303,7 +280,7 @@ end
 """
     validate:keys(pset)
 
-Checks whether all components of paropt-Axis are occuring
+Checks whether all components of paropt-Axis are occurring
 in corresponding axes.     
 """
 function validate_keys(pset::ODEProblemParSetter)

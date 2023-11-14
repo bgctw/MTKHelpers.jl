@@ -241,8 +241,8 @@ end
 """
     _update_cv_top(cv::ComponentVector{TD}, s::ComponentVector{TS}, is_updated)
 
-Return a new ComponentVector of eltype romote_type(TD, TS) with those components at position, i,
-, for which is_key_updated[i] is true, are replaced by the corresponding name of 
+Return a new ComponentVector of eltype `promote_type(TD, TS)` with those components at position, i,
+, for which `is_key_updated[i]` is true, are replaced by the corresponding name of 
 source s. 
 """
 function _update_cv_top(cv::ComponentVector{TD,TAD}, s::ComponentVector{TS}, is_updated::AbstractVector{Bool}) where {TD, TAD, TS}
@@ -253,7 +253,7 @@ function _update_cv_top(cv::ComponentVector{TD,TAD}, s::ComponentVector{TS}, is_
     #(i,k) = last(enumerate(keys(cv)))
     ftmp = (i,k) -> begin
         if is_updated[i] 
-            # extrating underlying array does not gain performance but makes problems
+            # extracting the underlying array does not gain performance but makes problems
             # in vcat: #val = @view s[k]
             val_s = @view s[KeepIndex(k)]
             #MVector{axis_length(_get_axis(val_s)),T_EL}(getdata(val_s)) 

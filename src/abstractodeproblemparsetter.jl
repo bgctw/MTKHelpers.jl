@@ -1,4 +1,21 @@
 
+
+"""
+Support translation between parameter vectors and 
+`AbstractODEProblem`.
+
+Takes care of mapping optimized parameters to subset of
+- state `u0`, and
+- parameters `p`
+
+In addition to the [`AbstractProblemParSetter`](@ref) functions,
+which accessing and labelling parameter vectors,
+it provides functions that access and label problem state and 
+parameters:
+[`axis_state`](@ref), [`count_state`](@ref), 
+[`keys_state`](@ref), [`symbols_state`](@ref), [`label_state`](@ref), 
+[`name_state`](@ref)
+"""
 abstract type AbstractODEProblemParSetter <: AbstractProblemParSetter end
 struct DummyProblemParSetter <: AbstractODEProblemParSetter end # for testing error message
 
@@ -11,11 +28,9 @@ Report the Axis, i.e. nested component symbols of problem states, and problem pa
 respectively.
 Returns an AbstractAxis.
 """
-# need to implement in concrete types
 function axis_state(::AbstractODEProblemParSetter) end,
 function axis_par(::AbstractODEProblemParSetter) end
-#function axis_paropt(::AbstractODEProblemParSetter) end # moved to AbstractProblemParSetter
-
+# need to implement in concrete types
 
 #abstract type AbstractVectorCreator end
 
@@ -26,25 +41,27 @@ function axis_par(::AbstractODEProblemParSetter) end
 Report the number of problem states, problem parameters and optimized parameters
 respectively.    
 """
-# TODO change to length(ax) when this becomes available in ComponentArrays
 function count_state(pset::AbstractODEProblemParSetter) 
     axis_length(axis_state(pset))
 end,
 function count_par(pset::AbstractODEProblemParSetter) 
     axis_length(axis_par(pset))
 end
+# TODO change to length(ax) when this becomes available in ComponentArrays
 # moved to AbstractProblemParSetter
 # function count_paropt(pset::AbstractODEProblemParSetter) 
 #     axis_length(axis_paropt(pset))
 # end
+
+@deprecate count_states(pset::AbstractProblemParSetter) count_state(pset)
 
 """
     keys_state(::AbstractODEProblemParSetter) 
     keys_par(::AbstractODEProblemParSetter) 
 
 Report the keys problem states, problem parameters. 
-This usually correspdonds to keys(axis), but if there is a
-classification, similar to paropt(state,par), report the keys below
+This usually correspdonds to `keys(axis)`, but if there is a
+classification, similar to [`keys_paropt`](@ref), report the keys below
 this classification.
 """
 function keys_state(ps::AbstractODEProblemParSetter) 
@@ -148,10 +165,10 @@ In order to set entire state or parameter vectors, a mapping from current
 to previous positions, i.e. integer indices, is required, 
 so that one can get a vectors in the new format by 
 - `u0_old[u_map] .= u_new`
-- `p_old[p_map]`
+- `p_old[p_map] .= p_new`
 
-u_new can be anything for which an axis can be extracted, whose keys are used.
-Specifically it can be the ComponentVector of new states itself, or a Vector of symbols.
+`u_new` can be anything for which an axis can be extracted, whose keys are used.
+Specifically it can be the ComponentVector of new states itself, or a vector of symbols.
 
 ## Keyword arguments
 - `is_warn_missing`: set to true to issue warnings if some ODESystem state or 
