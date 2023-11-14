@@ -10,6 +10,10 @@ end
     @test symbol_op(m.τ) == :m₊τ
 end;
 
+@testset "tuplejoin" begin
+    @test MTKHelpers.tuplejoin((1,2),(3,),(4,5,6)) == Tuple(i for i in 1:6)
+end;
+
 @testset "strip_namespace" begin
     @test strip_namespace(:x) == :x
     @test strip_namespace(:m₊x) == :x
