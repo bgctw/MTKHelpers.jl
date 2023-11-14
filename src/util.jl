@@ -49,7 +49,8 @@ end
 Extract the inner symbol_op from a Term, Num, or BasicSymbolic object.
 """
 function symbol_op(t::Term)
-    symbol_op(t.f)
+    error("Case not yet implemented. Should not dispatch on Term.")
+    #symbol_op(t.f)
 end
 symbol_op(s::SymbolicUtils.BasicSymbolic) = !istree(s) ? Symbol(s) :
     operation(s) == getindex ? symbol_op(first(arguments(s))) : symbol_op(operation(s)) 
