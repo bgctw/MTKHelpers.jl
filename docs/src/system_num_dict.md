@@ -4,7 +4,7 @@ CurrentModule = MTKHelpers
 
 # Translating symbols and Nums
 
-ModelingToolkit constructs and ODEProblem from an ODESystem by supplying Dictionaries
+ModelingToolkit constructs and AbstractODEProblem from an ODESystem by supplying Dictionaries
 that map Nums to values. 
 However, it is more convenient to store initial states and parameters
 as ComponentVectors with symbolic keys, instead of Dictionaries with Num keys.
@@ -29,7 +29,7 @@ end
 u0 = ComponentVector(m₊x=0.0)
 p = ComponentVector(m₊p1=1.11, m₊τ = 3.1,)
 
-# convert to Dict(Num -> value) in order to create the ODEProblem
+# convert to Dict(Num -> value) in order to create the AbstractODEProblem
 p_numdict = system_num_dict(p, m)
 prob = ODEProblem(sys, system_num_dict(u0,m), (0,2), p_numdict);
 

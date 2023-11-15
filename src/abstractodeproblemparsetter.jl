@@ -92,10 +92,10 @@ end
 
 
 # dispatch to get_paropt_labeled(pset, u0, p)
-function get_paropt(pset::AbstractODEProblemParSetter, prob::ODEProblem; kwargs...)
+function get_paropt(pset::AbstractODEProblemParSetter, prob::AbstractODEProblem; kwargs...)
     get_paropt(pset, prob.u0, prob.p; kwargs...)
 end,
-function get_paropt_labeled(pset::AbstractODEProblemParSetter, prob::ODEProblem; kwargs...)
+function get_paropt_labeled(pset::AbstractODEProblemParSetter, prob::AbstractODEProblem; kwargs...)
     get_paropt_labeled(pset, prob.u0, prob.p; kwargs...)
 end,
 function get_paropt(pset::AbstractODEProblemParSetter, u0, p)
@@ -137,18 +137,18 @@ end
 """
     prob_new = remake(prob::AbstractODEProblem, popt, ps::AbstractODEProblemParSetter)
     u0new, pnew = update_statepar(ps::AbstractODEProblemParSetter, popt, u0, p) 
-    deprecated: prob_new = update_statepar(ps::AbstractODEProblemParSetter, popt, prob::ODEProblem) 
+    deprecated: prob_new = update_statepar(ps::AbstractODEProblemParSetter, popt, prob::AbstractODEProblem) 
 
 Return an updated problem by updating states and parameters where
 values corresponding to positions in `popt` hold the values of popt.
 The type is changed to the promotion type of popt, to allow working with dual numbers.
 """
-function remake_pset(prob::ODEProblem, popt, pset::AbstractODEProblemParSetter)
+function remake_pset(prob::AbstractODEProblem, popt, pset::AbstractODEProblemParSetter)
     u0, p = update_statepar(pset, popt, prob.u0, prob.p)
     remake(prob; u0, p)
 end
 # need to implement update_statepar in concrete subtypes
-@deprecate(update_statepar(pset::AbstractODEProblemParSetter, popt, prob::ODEProblem),
+@deprecate(update_statepar(pset::AbstractODEProblemParSetter, popt, prob::AbstractODEProblem),
     remake(prob, popt, pset))
 
 
@@ -158,7 +158,7 @@ end
 
 Map each state and parameter the `AbstractODEProblemParSetter` `pset` to a position in names.
 
-When construction an ODEProblem from a ODESystem, the order of states and 
+When construction an AbstractODEProblem from a ODESystem, the order of states and 
 parameters may have changed compared with a previous construction.
 
 In order to set entire state or parameter vectors, a mapping from current

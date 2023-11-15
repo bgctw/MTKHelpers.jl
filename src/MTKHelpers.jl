@@ -2,7 +2,7 @@ module MTKHelpers
 
 using ModelingToolkit, OrdinaryDiffEq
 using ModelingToolkit: AbstractODESystem
-using SciMLBase: SciMLBase
+using SciMLBase: SciMLBase, AbstractODEProblem
 using StaticArrays, LabelledArrays
 using NamedArrays: NamedArrays
 using ComponentArrays

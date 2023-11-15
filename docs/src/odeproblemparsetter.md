@@ -39,11 +39,5 @@ get_u_map
 ODEProblemParSetter
 ```
 
-Specific implementation of [AbstractODEProblemParSetter](@ref),
-where subvectors of the parameter vector directly correspond to
-subvectors of state and parameters in the ODEProblem.
-
-It can be initialized with directly providing Symbols
-TODO
 
 

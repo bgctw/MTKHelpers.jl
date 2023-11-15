@@ -5,7 +5,7 @@ CurrentModule = MTKHelpers
 # Setting Initial state and Parameters of a problem
 
 Often one wants to change a subset of the initial
-states,`u0`, and a subset of parameters,`p`, of an ODEProblem during an optimization.
+states,`u0`, and a subset of parameters,`p`, of an AbstractODEProblem during an optimization.
 
 Given `u0` and `p` can be expressed as ComponentVectors, 
 and `popt` can be expressed as a ComponentVector of optimized parameters, 
@@ -60,9 +60,9 @@ where performance matters.
 ## ProblemUpdater
 A [`ODEProblemParSetter`](@ref) can be combined with a [`KeysProblemParGetter`](@ref)
 or other specific implementations of [`AbstractProblemParGetter`](@ref) to 
-update an ODEProblem based on information already present in the ODEProblem.
+update an AbstractODEProblem based on information already present in the AbstractODEProblem.
 
-The following example updates parameters `k_R` and `k_P` in the ODEProblem
+The following example updates parameters `k_R` and `k_P` in the AbstractODEProblem
 to the value of `k_L`. This can be useful to ensure that these parameters
 are also changed when optimizing parameter `k_L`.
 

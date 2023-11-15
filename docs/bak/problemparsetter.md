@@ -10,7 +10,7 @@ remake(::SciMLBase.AbstractSciMLProblem, popt, pset::AbstractProblemParSetter)
 get_paropt(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem)
 ```
 
-Class [`ODEProblem`](@ref) implements this for an ODEProblem.
+Class [`AbstractODEProblem`](@ref) implements this for an AbstractODEProblem.
 
 ## Labeling 
 ```@docs

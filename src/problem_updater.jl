@@ -12,7 +12,7 @@ abstract type AbstractProblemParGetter end
 """
     ProblemUpdater(par_getter, par_setter) 
 
-Encapsulates updating an ODEProblem based on the problem itself by 
+Encapsulates updating an AbstractODEProblem based on the problem itself by 
 Callable `(pu::ProblemUpdater)(prob)`.
 
 Must be initialized with a callable `AbstractProblemParGetter`, 
@@ -56,7 +56,7 @@ function (pu::ProblemUpdater)(prob)
 end
 
 """
-AbstractProblemUpdater that returns the original ODEProblem.
+AbstractProblemUpdater that returns the original AbstractODEProblem.
 """
 struct NullProblemUpdater <: AbstractProblemUpdater end
 (pu::NullProblemUpdater)(prob) = prob
