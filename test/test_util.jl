@@ -6,6 +6,7 @@ end
 
 @testset "symbol_op" begin
     @named m = samplesystem()
+    Symbol(m.x)
     @test symbol_op(m.x) == :m₊x # calls Num which calls Par
     @test symbol_op(m.τ) == :m₊τ
 end;
@@ -20,6 +21,13 @@ end;
     @test strip_namespace(:s₊m₊x) == :x
     @test strip_namespace("s.m.x") == "x"
 end;
+
+# @testset "strip_deriv_num" begin
+#     @variables t
+#     @variables x(t)
+#     Symbol(x)
+#     @test strip_deriv_num(x) == :x
+# end;
 
 @testset "embed with name different than m" begin
     @named m2 = samplesystem()

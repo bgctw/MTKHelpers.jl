@@ -65,10 +65,10 @@ export AbstractProblemUpdater,
     AbstractProblemParGetter, ProblemUpdater, KeysProblemParGetter, NullProblemUpdater
 export par_setter, par_setter
 export get_ode_problemupdater
-#export strip_deriv_num
 include("problem_updater.jl")
 
 export get_system_symbol_dict, system_num_dict
+export strip_deriv_num
 include("util_nums.jl")
 
 export fit_Dirichlet_std, fit_Dirichlet_mode, simplex_grid

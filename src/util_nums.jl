@@ -20,6 +20,8 @@ function get_system_symbol_dict(systems...)
     merge(dicts...)
 end
 
+@deprecate strip_deriv_num(x) symbol_op(x)
+
 """
     system_num_dict(d, sys::AbstractSystem, string_sys=nameof(sys))
     system_num_dict(d, symbol_dict::AbstractDict)
