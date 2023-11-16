@@ -1,5 +1,3 @@
-#using Infiltrator
-
 # states and parameters are single entries
 u1 = ComponentVector(L = 10.0)
 p1 = ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
@@ -101,16 +99,27 @@ end;
 # end;
 
 @testset "access keys and counts" begin
-    @test (@inferred keys(axis_state(ps))) == keys(u1)
-    @test (@inferred keys(axis_par(ps))) == keys(p1)
-    @test (@inferred keys(axis_paropt(ps))) == (:state,:par)
+    # axis is not inferred (AbstractAxis)
+    # @test keys((@inferred axis_state(ps))) == keys(u1)
+    # @test keys((@inferred axis_par(ps))) == keys(p1)
+    # @test keys((@inferred axis_paropt(ps))) == (:state,:par)
+    # also not with function barrier
+    # tmpf = (ps) -> begin
+    #     @test keys((@inferred axis_state(ps))) == keys(u1)
+    #     @test keys((@inferred axis_par(ps))) == keys(p1)
+    #     @test keys((@inferred axis_paropt(ps))) == (:state,:par)
+    # end
+    # tmpf(ps)
+    @test keys((axis_state(ps))) == keys(u1)
+    @test keys((axis_par(ps))) == keys(p1)
+    @test keys((axis_paropt(ps))) == (:state,:par)
     #
     @test (@inferred count_state(ps)) == length(u1)
     @test (@inferred count_par(ps)) == length(p1)
     @test (@inferred count_paropt(ps)) == length(popt1)
 end;
 
-@testset "access symbols and counts" begin
+@testset "access symbols" begin
     # u1c = ComponentVector(a=(a1=1,a2=(a21=21, a22=22.0)))
     # p1c = ComponentVector(b=(b1=0.1, b2=0.2), c=[0.01, 0.02], d=3.0)
     # as long as ComponentArrays does not support Axis-indexing, focus on top-level components rather than implementing this indexing in MTKHelpers
@@ -138,21 +147,23 @@ function test_label_svectors(pset,
     ::Val{NP},
     ::Val{NOPT}) where {NOPT, NU0, NP}
     #Main.@infiltrate_main
+    # not inferred - compare to test_problemparsettertyped
     @test label_paropt(pset, popt) == popt
-    @test @inferred(label_paropt(pset, convert(Array, popt))) == popt
-    @test @inferred(label_paropt(pset, SVector{NOPT}(getdata(popt)))) == popt
+    @test (label_paropt(pset, convert(Array, popt))) == popt
+    @test (label_paropt(pset, SVector{NOPT}(getdata(popt)))) == popt
+    #@test @inferred(label_paropt(pset, SVector{NOPT}(getdata(popt)))) == popt
     @test (label_paropt(pset, SVector{NOPT}(getdata(popt))) |> getdata) isa SVector
     #
     @test label_state(pset, u0) == u0
-    @test @inferred(label_state(pset, convert(Array, u0))) == u0
-    ls = @inferred label_state(pset, SVector{NU0}(getdata(u0))) # error without getdata
+    @test (label_state(pset, convert(Array, u0))) == u0
+    ls = label_state(pset, SVector{NU0}(getdata(u0))) # error without getdata
     @test ls == u0
     @test getdata(ls) isa SVector
     #
     @test label_par(pset, p) == p
-    @test @inferred(label_par(pset, convert(Array, p))) == p
+    @test (label_par(pset, convert(Array, p))) == p
     psv = SVector{NP}(getdata(p))
-    @test @inferred(label_par(pset, psv)) == p
+    @test (label_par(pset, psv)) == p
     #@btime label_par($ps, $psv) # 3 allocations? creating views for subectors
     lp = label_par(pset, psv)
     @test getdata(lp) === psv
@@ -173,8 +184,8 @@ function test_update_statepar_and_get_paropt(pset, u0, p, popt, u0_target, p_tar
     #0o, po = update_statepar(pset, popt, u0, p)
     #@descend_code_warntype update_statepar(pset, popt, u0, p)
     #@code_warntype update_statepar(pset, popt, u0, p)
-    u0o, po = @inferred update_statepar(pset, getdata(popt), getdata(u0), getdata(p))
-    u0o, po = @inferred update_statepar(pset, popt, u0, p)
+    u0o, po = update_statepar(pset, getdata(popt), getdata(u0), getdata(p))
+    u0o, po = update_statepar(pset, popt, u0, p)
     #return u0o, po
     #@btime update_statepar($ps, $popt, $u1, $p1) 
     @test getaxes(u0o) == getaxes(u0)
@@ -184,16 +195,14 @@ function test_update_statepar_and_get_paropt(pset, u0, p, popt, u0_target, p_tar
     @test all(u0o .≈ u0_target)
     @test all(po .≈ p_target)
     #
-    #using Cthulhu
-    #@descend_code_warntype get_paropt_labeled(ps, u0o, po)
-    #inferred only works with CA.getdata 
-    popt2n = @inferred get_paropt_labeled(pset, u0o, po)
+    popt2n = get_paropt_labeled(pset, u0o, po)
     @test popt2n == popt
     #
+    # Main.@infiltrate_main
     popt2 = @inferred get_paropt(pset, u0o, po)
     @test all(popt2 .== popt)
     #
-    popt2m = @inferred get_paropt_labeled(pset, collect(u0o), collect(po))
+    popt2m = get_paropt_labeled(pset, collect(u0o), collect(po))
     @test popt2m == popt
 end;
 
@@ -204,11 +213,6 @@ end;
     u0 = u1
     p = p1
     popt = popt1s
-    # inferred although pset is global
-    _, _ = @inferred update_statepar(pset, getdata(popt), getdata(u0), getdata(p))
-    _ = @inferred get_paropt_labeled(pset, collect(u0), collect(p))
-    #@code_warntype get_paropt_labeled(pset, collect(u0), collect(p))
-    #@descend_code_warntype get_paropt_labeled(pset, collect(u0), collect(p))
     test_update_statepar_and_get_paropt(pset, u1, p1, popt, u1t, pt)
 end;
 @testset "update_statepar vector structured" begin
@@ -220,7 +224,6 @@ end;
     p = p1c
     popt = poptcs
     cv = p1c
-    @inferred get_paropt_labeled(pset, u0, p)
     test_update_statepar_and_get_paropt(psc, u1c, p1c, poptcs, u1t, pt)
 end;
 @testset "update_statepar Svector structured" begin
@@ -301,7 +304,7 @@ end;
             d * d
         end
     end
-    fcost(popt)
+    @inferred fcost(popt)
     ForwardDiff.gradient(fcost, popt)
     @test typeof(ForwardDiff.gradient(fcost, popt)) == typeof(popt)
     fb = (cv, popt) -> MTKHelpers._update_cv_top(cv, popt)
@@ -314,26 +317,21 @@ end;
     p = p1c
     popt = poptc
     cv = p1c
-    # fcost_noninferred = let pset = pset, u0 = u0, p = p
-    #     (popt) -> begin
-    #         local u0o, po = update_statepar(pset, popt, u0, p)
-    #         d = sum(get_paropt(pset, u0o, po))
-    #         d * d
-    #     end
-    # end
-    # res = ForwardDiff.gradient(fcost_noninferred, popt)
     fcost = let pset = pset, u0 = u0, p = p
         (popt) -> begin
-            local u0o, po = @inferred update_statepar(pset, popt, u0, p)
+            #local u0o, po = @inferred update_statepar(pset, popt, u0, p)
+            # not inferred: run-time dispatch on computations based on u0o and po
+            #   because popt.state -> Any after attach_axis
             local u0o, po = update_statepar(pset, popt, u0, p)
             d = sum(get_paropt(pset, u0o, po))
             d * d
         end
     end
-    @inferred fcost(popt)
-    # TODO fix update_statepar returning union type 
-    # try putting is_state and is_p to type signature
-    #@test_broken res = ForwardDiff.gradient(fcost, popt)
+    # not inferred 
+    #@inferred fcost(popt)  
+    fcost(popt)  
+    #using Cthulhu
+    #@descend_code_warntype update_statepar(pset, popt, u0, p)
     res = ForwardDiff.gradient(fcost, popt)
     @test typeof(res) == typeof(popt)
 end;
@@ -371,12 +369,12 @@ end;
 end;
 
 function test_system(ps1, popt_names, m)
-    #Msin.@infiltrate_main
+    #Main.@infiltrate_main
     #@code_warntype ODEProblemParSetter(m, Axis(popt_names))
-    #@descend_code_warntype ODEProblemParSetter(m, Axis(popt_names))
-    @test @inferred(keys(axis_state(ps1))) == (:x, :RHS)
-    @test @inferred(keys(axis_par(ps1))) == (:τ, :p1, :p2, :i)
-    @test @inferred(keys_paropt(ps1)) == popt_names
+    # not inferred
+    @test (keys(axis_state(ps1))) == (:x, :RHS)
+    @test (keys(axis_par(ps1))) == (:τ, :p1, :p2, :i)
+    @test (keys_paropt(ps1)) == popt_names
 end
 @testset "construct from ODESystem" begin
     @named m = samplesystem()
@@ -416,7 +414,7 @@ end;
     #psr = @inferred ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
     psr = ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
     # use Parsetter either with explicit Axis or inside function barrier
-    xl = @inferred label_paropt(psr, collect(1:count_paropt(psr))) # ok?
+    xl = label_paropt(psr, collect(1:count_paropt(psr))) # ok?
     xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
 end;
 

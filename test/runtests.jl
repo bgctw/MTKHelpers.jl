@@ -65,6 +65,12 @@ end;
     include("test_problemparsetter.jl")
 end;
 
+
+@testset "ODEProblemParSetterTyped" begin
+    #include("test/test_problemparsettertyped.jl")
+    include("test_problemparsettertyped.jl")
+end;
+
 @testset "ProblemUpdater" begin
     #include("test/test_problem_updater.jl")
     include("test_problem_updater.jl")

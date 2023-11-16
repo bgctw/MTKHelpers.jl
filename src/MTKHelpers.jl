@@ -14,6 +14,7 @@ using InlineStrings
 export AbstractProblemParSetter,
     AbstractODEProblemParSetter,
     ODEProblemParSetter,
+    ODEProblemParSetterTyped,
     count_state,
     count_par,
     count_paropt,
@@ -57,6 +58,7 @@ include("util_componentarrays.jl")
 
 include("abstractproblemparsetter.jl")
 include("abstractodeproblemparsetter.jl")
+include("odeproblemparsettertyped.jl")
 include("odeproblemparsetter.jl")
 include("smoothstep.jl")
 include("solution.jl")

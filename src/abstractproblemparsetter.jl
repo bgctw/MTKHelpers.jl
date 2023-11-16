@@ -68,7 +68,7 @@ This generally is different from the length of keys, because each key
 can describe a array.
 """
 function count_paropt(pset::AbstractProblemParSetter) 
-    axis_length(axis_paropt(pset))
+    axis_length(axis_paropt(pset))::Int
 end
 # TODO change to length(ax) when this becomes available in ComponentArrays
 

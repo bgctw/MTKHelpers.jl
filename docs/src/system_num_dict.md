@@ -33,7 +33,7 @@ p = ComponentVector(m₊p1=1.11, m₊τ = 3.1,)
 p_numdict = system_num_dict(p, m)
 prob = ODEProblem(sys, system_num_dict(u0,m), (0,2), p_numdict);
 
-pset = ODEProblemParSetter(sys, ComponentVector()) 
+pset = ODEProblemParSetterTyped(sys, ComponentVector()) 
 p_prob = label_par(pset, prob.p)
 p_prob.m₊p2 = 1.2 # from default
 p_prob.m₊τ == 3.1 # from p

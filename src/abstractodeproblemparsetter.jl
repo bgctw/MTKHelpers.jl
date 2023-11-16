@@ -42,10 +42,10 @@ Report the number of problem states, problem parameters and optimized parameters
 respectively.    
 """
 function count_state(pset::AbstractODEProblemParSetter) 
-    axis_length(axis_state(pset))
+    axis_length(axis_state(pset))::Int
 end,
 function count_par(pset::AbstractODEProblemParSetter) 
-    axis_length(axis_par(pset))
+    axis_length(axis_par(pset))::Int
 end
 # TODO change to length(ax) when this becomes available in ComponentArrays
 # moved to AbstractProblemParSetter
@@ -99,7 +99,9 @@ function get_paropt_labeled(pset::AbstractODEProblemParSetter, prob::AbstractODE
     get_paropt_labeled(pset, prob.u0, prob.p; kwargs...)
 end,
 function get_paropt(pset::AbstractODEProblemParSetter, u0, p)
-    getdata(get_paropt_labeled(pset, u0, p))
+    # depite pset may not be fully inferred, we can determine return type
+    T = promote_type(eltype(u0), eltype(p))
+    getdata(get_paropt_labeled(pset, u0, p))::Vector{T}
 end
 # need to implement in concrete types: get_paropt_labeled -> ComponentVector
 

@@ -17,16 +17,21 @@ then also the constructed ODEProblemParSetter is type-inferred.
 The states and parameters can be extracted from an `ModelingToolkit.ODESystem`.
 If `strip=true`, then namespaces of parameters of a composed system are removed, 
 e.g. `subcomp₊p` becomes `p`.
+
+Note the similar [`ODEProblemParSetterTyped`] with template parameters, which 
+supports type-stable calls (where x is is either state,par, or paropt)
+- axis_x(pset)
+- label_x(pset) (using attach_axis) -> leading to labeled_vector.key::Any
+- get_paropt, get_paropt_labelel
+- update_statepar and remake
+- count_x(pset) is inferred at compile time and be used to create StaticArrays
 """
-struct ODEProblemParSetter{NS,NP,POPTA <: AbstractAxis,
-    SA <: AbstractAxis,
-    PA <: AbstractAxis,
-} <: AbstractODEProblemParSetter
-    ax_paropt::POPTA
-    ax_state::SA
-    ax_par::PA
-    is_updated_state_i::StaticVector{NS,Bool}
-    is_updated_par_i::StaticVector{NP,Bool}
+struct ODEProblemParSetter <: AbstractODEProblemParSetter
+    ax_paropt::AbstractAxis
+    ax_state::AbstractAxis
+    ax_par::AbstractAxis
+    is_updated_state_i::AbstractVector
+    is_updated_par_i::AbstractVector
     function ODEProblemParSetter(ax_state::AbstractAxis,
         ax_par::AbstractAxis, ax_paropt::AbstractAxis,
         is_validating::Val{isval}) where {isval}
@@ -42,11 +47,11 @@ struct ODEProblemParSetter{NS,NP,POPTA <: AbstractAxis,
         is_updated_par_i = isempty(keys_paropt_par) ?
                            SVector{0,Bool}() :
                            SVector((k ∈ keys_paropt_par for k in keys(ax_par))...)
-        new{length(is_updated_state_i),length(is_updated_par_i),
-            typeof(ax_paropt),typeof(ax_state),typeof(ax_par)}(ax_paropt,
-            ax_state, ax_par, is_updated_state_i, is_updated_par_i)
+        new(ax_paropt, ax_state, ax_par, is_updated_state_i, is_updated_par_i)
     end
 end
+
+ODEProblemParSetterU = Union{ODEProblemParSetter, ODEProblemParSetterTyped}
 
 function ODEProblemParSetter(state_template, par_template, popt_template; 
     is_validating = Val{true}())
@@ -97,18 +102,16 @@ function assign_state_par(ax_state, ax_par, ax_paropt)
     return _get_axis(tmp2)
 end
 
-
-
 function ODEProblemParSetter(sys::ODESystem, paropt; strip = false)
     strip && error("strip in construction of ODEProblemparSetter currently not supported.")
     ODEProblemParSetter(axis_of_nums(states(sys)), axis_of_nums(parameters(sys)), paropt)
 end
 
-axis_state(ps::ODEProblemParSetter) = ps.ax_state
-axis_par(ps::ODEProblemParSetter) = ps.ax_par
-axis_paropt(ps::ODEProblemParSetter) = ps.ax_paropt
+axis_state(ps::ODEProblemParSetterU) = ps.ax_state
+axis_par(ps::ODEProblemParSetterU) = ps.ax_par
+axis_paropt(ps::ODEProblemParSetterU) = ps.ax_paropt
 
-classes_paropt(pset::ODEProblemParSetter) = (:state, :par)
+classes_paropt(pset::ODEProblemParSetterU) = (:state, :par)
 
 
 # # Using unexported interface of ComponentArrays.axis, one place to change
@@ -121,7 +124,7 @@ classes_paropt(pset::ODEProblemParSetter) = (:state, :par)
 Return an updated problem or updates states and parameters where
 values corresponding to positions in `popt` are set.
 """
-function update_statepar(pset::ODEProblemParSetter, popt, u0, p)
+function update_statepar(pset::ODEProblemParSetterU, popt, u0, p)
     poptc = attach_axis(popt, axis_paropt(pset))
     u0c = attach_axis(u0, axis_state(pset)) # no need to copy 
     pc = attach_axis(p, axis_par(pset))
@@ -180,7 +183,7 @@ For obtaining a StaticVector instead, pass MTKHelpers.ODEMVectorCreator()
 as the fourth argument. This method should work with any AbstractVectorCreator
 that returns a mutable AbstractVector.
 """
-function get_paropt_labeled(pset::ODEProblemParSetter, u0, p, 
+function get_paropt_labeled(pset::ODEProblemParSetterU, u0, p, 
     #vec_creator::AbstractVectorCreator=ODEVectorCreator()
     )
     u0c = attach_axis(u0, axis_state(pset))
@@ -229,7 +232,7 @@ end
 Checks whether all components of paropt-Axis are occurring
 in corresponding axes.     
 """
-function validate_keys(pset::ODEProblemParSetter)
+function validate_keys(pset::ODEProblemParSetterU)
     validate_keys_state_par(axis_paropt(pset), axis_state(pset), axis_par(pset))
 end
 

@@ -18,7 +18,7 @@ Callable `(pu::ProblemUpdater)(prob)`.
 Must be initialized with a callable `AbstractProblemParGetter`, 
 e.g. [`KeysProblemParGetter`](@ref)
 and on a `AbstractODEProblemParSetter`,
-e.g. [`ODEProblemParSetter`](@ref).
+e.g. [`ODEProblemParSetterTyped`](@ref).
 
 There are special functions to construct ProblemUpdater based on
 a given Problem:
@@ -34,15 +34,15 @@ end
     get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0, p)
     get_ode_problemupdater(par_getter::AbstractProblemParGetter, sys::AbstractODESystem)
 
-Construct a `ProblemUpdater` based on an constructed `ODEProblemParSetter`.     
+Construct a `ProblemUpdater` based on an constructed `ODEProblemParSetterTyped`.     
 """
 function get_ode_problemupdater(par_getter::AbstractProblemParGetter, sys::AbstractODESystem)
     ProblemUpdater(par_getter,
-        ODEProblemParSetter(sys, keys(par_getter)))
+        ODEProblemParSetterTyped(sys, keys(par_getter)))
 end,
 function get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0, p)
     ProblemUpdater(par_getter,
-        ODEProblemParSetter(u0, p, keys(par_getter)))
+        ODEProblemParSetterTyped(u0, p, keys(par_getter)))
 end
 
 @deprecate ProblemUpdater(par_getter, u0_keys, p_keys) get_ode_problemupdater(par_getter, u0_keys, p_keys)
