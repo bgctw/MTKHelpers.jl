@@ -185,7 +185,9 @@ labels_noprefix(ax::AbstractAxis) = map(x -> x[2:end], _labels(ax))
 function _ax_symbols_tuple(ax::AbstractAxis; prefix = "₊")
     (labels_noprefix(ax) .|> (x -> replace(x, "." => prefix)) .|> Symbol) |> Tuple
 end
-
+function _ax_symbols_tuple(ax::UnitRange) # representing a 0.length FlatAxis
+    ()
+end
 function _ax_symbols_vector(ax::AbstractAxis; prefix = "₊")
     (labels_noprefix(ax) .|> (x -> replace(x, "." => prefix)) .|> Symbol)::Vector{Symbol}
 end
