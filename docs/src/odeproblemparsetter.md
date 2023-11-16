@@ -11,7 +11,7 @@ for AbstractODEProblems.
 AbstractODEProblemParSetter
 ```
 
-See the specific implementation [`ODEProblemParSetterTyped`](@ref). 
+See the specific implementation [`ODEProblemParSetter`](@ref). 
 
 
 ## Helper functions to access state and parameters
@@ -38,10 +38,12 @@ get_u_map
 ```@docs
 ODEProblemParSetter
 ```
-# ODEProblemParSetterTyped
+# ODEProblemParSetterConcrete
 
+To support [Concrete ProblemUpdater](@ref) the following variant of 
+[`ODEProblemParSetter`](@ref) is provided.
 ```@docs
-ODEProblemParSetterTyped
+ODEProblemParSetterConcrete
 ```
 
 

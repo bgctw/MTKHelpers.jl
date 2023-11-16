@@ -14,7 +14,7 @@ using InlineStrings
 export AbstractProblemParSetter,
     AbstractODEProblemParSetter,
     ODEProblemParSetter,
-    ODEProblemParSetterTyped,
+    ODEProblemParSetterConcrete,
     count_state,
     count_par,
     count_paropt,
@@ -37,7 +37,8 @@ export AbstractProblemParSetter,
     name_par,
     name_state,
     get_u_map,
-    get_p_map
+    get_p_map,
+    get_concrete
 
 
 export smoothstep
@@ -58,16 +59,16 @@ include("util_componentarrays.jl")
 
 include("abstractproblemparsetter.jl")
 include("abstractodeproblemparsetter.jl")
-include("odeproblemparsettertyped.jl")
+include("odeproblemparsetterconcrete.jl")
 include("odeproblemparsetter.jl")
 include("smoothstep.jl")
 include("solution.jl")
 
-export AbstractProblemUpdater,
-    AbstractProblemParGetter, ProblemUpdater, KeysProblemParGetter, NullProblemUpdater
+export AbstractProblemUpdater, ProblemUpdater, ProblemUpdaterConcrete, NullProblemUpdater,
+    AbstractProblemParGetter,  KeysProblemParGetter
 export par_setter, par_setter
 export get_ode_problemupdater
-include("problem_updater.jl")
+include("problemupdater.jl")
 
 export get_system_symbol_dict, system_num_dict
 export strip_deriv_num

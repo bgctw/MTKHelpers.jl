@@ -18,13 +18,8 @@ The states and parameters can be extracted from an `ModelingToolkit.ODESystem`.
 If `strip=true`, then namespaces of parameters of a composed system are removed, 
 e.g. `subcomp₊p` becomes `p`.
 
-Note the similar [`ODEProblemParSetterTyped`] with template parameters, which 
-supports type-stable calls (where x is is either state,par, or paropt)
-- axis_x(pset)
-- label_x(pset) (using attach_axis) -> leading to labeled_vector.key::Any
-- get_paropt, get_paropt_labelel
-- update_statepar and remake
-- count_x(pset) is inferred at compile time and be used to create StaticArrays
+Note the similar [`ODEProblemParSetterConcrete`](@ref) with template parameters, which 
+supports type-stable calls
 """
 struct ODEProblemParSetter <: AbstractODEProblemParSetter
     ax_paropt::AbstractAxis
@@ -51,7 +46,6 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
     end
 end
 
-ODEProblemParSetterU = Union{ODEProblemParSetter, ODEProblemParSetterTyped}
 
 function ODEProblemParSetter(state_template, par_template, popt_template; 
     is_validating = Val{true}())
@@ -106,6 +100,13 @@ function ODEProblemParSetter(sys::ODESystem, paropt; strip = false)
     strip && error("strip in construction of ODEProblemparSetter currently not supported.")
     ODEProblemParSetter(axis_of_nums(states(sys)), axis_of_nums(parameters(sys)), paropt)
 end
+
+function get_concrete(pset::ODEProblemParSetter)
+    ODEProblemParSetterConcrete(pset.ax_state, pset.ax_par, pset.ax_paropt, Val{false}())
+end
+
+ODEProblemParSetterU = Union{ODEProblemParSetter, ODEProblemParSetterConcrete}
+
 
 axis_state(ps::ODEProblemParSetterU) = ps.ax_state
 axis_par(ps::ODEProblemParSetterU) = ps.ax_par

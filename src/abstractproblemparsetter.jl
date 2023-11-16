@@ -130,6 +130,16 @@ function name_paropt(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSci
     name_paropt(pset, get_paropt(pset, prob); kwargs...)
 end
 
+"""
+    get_concrete(pset::AbstractProblemParSetter)
+    get_concrete(pu::AbstractParameterUpdater)
+
+Return a concrete-type-version of an ProbemParSetter or ProblemUpdater.
+"""
+function get_concrete(pset::AbstractProblemParSetter)
+    !isconcrete(pset) && @warn "no concrete type implemented for ProblemSetter of type $(typeof(pset))."
+    pset
+end
 
 
 

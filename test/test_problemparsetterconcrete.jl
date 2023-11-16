@@ -4,11 +4,10 @@
 u1 = ComponentVector(L = 10.0)
 p1 = ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
 popt1 = ComponentVector(L = 10.1, k_L = 1.1, k_R = 1 / 20.1)
-popt1s = ComponentVector(state=ComponentVector(L = 10.1), 
-    par=ComponentVector(k_L = 1.1, k_R = 1 / 20.1))
+popt1s = ComponentVector(state=(L = 10.1,), par=(k_L = 1.1, k_R = 1 / 20.1))
 # use Axis for type stability, but here, check with non-typestable ps
-#ps = @inferred ODEProblemParSetterTyped(Axis(keys(u1)),Axis(keys(p1)),Axis(keys(popt)))
-ps = ps1 = ODEProblemParSetterTyped(u1, p1, popt1)
+#ps = @inferred ODEProblemParSetterConcrete(Axis(keys(u1)),Axis(keys(p1)),Axis(keys(popt)))
+ps = ps1 = ODEProblemParSetterConcrete(u1, p1, popt1)
 
 # entries with substructure
 u1c = ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
@@ -19,7 +18,7 @@ p1c = ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
 #poptc = ComponentVector(a=(a2=1:2,), c=1:2) 
 poptc = vcat(u1c[KeepIndex(:a)], p1c[(:b, :c)])
 poptcs = ComponentVector(state=u1c[KeepIndex(:a)], par=p1c[(:b, :c)])
-psc = pset = ODEProblemParSetterTyped(u1c, p1c, poptc)
+psc = pset = ODEProblemParSetterConcrete(u1c, p1c, poptc)
 #u0 = u1c; p=p1c; popt=poptc
 
 # test states and parameters and ComponentVector{SVector}
@@ -219,8 +218,8 @@ end;
 
 function test_system(ps1, popt_names, m)
     #Msin.@infiltrate_main
-    #@code_warntype ODEProblemParSetterTyped(m, Axis(popt_names))
-    #@descend_code_warntype ODEProblemParSetterTyped(m, Axis(popt_names))
+    #@code_warntype ODEProblemParSetterConcrete(m, Axis(popt_names))
+    #@descend_code_warntype ODEProblemParSetterConcrete(m, Axis(popt_names))
     @test @inferred(keys(axis_state(ps1))) == (:x, :RHS)
     @test @inferred(keys(axis_par(ps1))) == (:τ, :p1, :p2, :i)
     @test @inferred(keys_paropt(ps1)) == popt_names
@@ -228,15 +227,40 @@ end
 @testset "construct from ODESystem" begin
     @named m = samplesystem()
     popt_names = (:RHS, :τ)
-    ps1 = ODEProblemParSetterTyped(m, Axis(popt_names))
+    ps1 = ODEProblemParSetterConcrete(m, Axis(popt_names))
     # only type stable after function boundary
     test_system(ps1, popt_names, m)
     #
     # @test_broken "stripping names of embedded system" == "currently not supported"
     # tmpf = () -> begin
     #     @named em = embed_system(m, simplify = false)
-    #     #ps1e = ODEProblemParSetterTyped(em, popt_names; strip = true)
+    #     #ps1e = ODEProblemParSetterConcrete(em, popt_names; strip = true)
     #     test_system(ps1e, popt_names, em)
     # end
+end;
+
+@testset "get_concrete ODEProblemParSetter used in cost function" begin
+    u1 = ComponentVector(L = 10.0)
+    p1 = ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
+    popt1s = ComponentVector(state=(L = 10.1,), par=(k_L = 1.1, k_R = 1 / 20.1))
+    ps = ps1 = ODEProblemParSetter(u1, p1, popt1s)
+    get_fopt = (ps) -> begin
+        # get a conrete-type version of the ProblemParSetter and pass it 
+        # through a function barrier to a closure (function within let)
+        psc = get_concrete(ps) 
+        get_fopt_inner = (psc) -> begin
+            let psc=psc
+                (paropt) -> begin
+                    paropt_l = @inferred label_paropt(psc,paropt)
+                    (;cost = paropt_l.par.k_L + paropt_l.par.k_R, paropt_l)
+                end # function
+            end # let
+        end # get_fopt_inner  
+        get_fopt_inner(psc)
+    end # get_ftopt
+    fopt = get_fopt(ps)
+    res = @inferred fopt(getdata(popt1s) .* 2)
+    @test res.cost == (popt1s.par.k_L + popt1s.par.k_R)*2
+    @test getaxes(res.paropt_l) == getaxes(popt1s)
 end;
 

@@ -29,13 +29,13 @@ prob = ODEProblem(sys, [m.x => 0.0], (0.0,10.0))
 nothing # hide
 ```
 
-An [`ODEProblemParSetterTyped`](@ref) then can be used to update a subset of states
+An [`ODEProblemParSetterConcrete`](@ref) then can be used to update a subset of states
 and parametes in the derived problem.
 
 ```@example doc
 # setup position matching, note τ is not in parameters optimized
 popt = ComponentVector(state=(m₊x=0.1,), par=(m₊p=[2.1,2.2],)) 
-pset = ODEProblemParSetterTyped(sys, popt) # pass through function barrier to use type inference
+pset = ODEProblemParSetterConcrete(sys, popt) # pass through function barrier to use type inference
 
 # extract optimized 
 get_paropt(pset, prob)          # plain vector
@@ -51,14 +51,14 @@ get_paropt_labeled(pset, prob2) == popt
 nothing # hide
 ```
 
-Note that constructing and ODEProblemParSetterTyped, `pset`, is only fully type-inferred 
+Note that constructing and ODEProblemParSetterConcrete, `pset`, is only fully type-inferred 
 when passing three ComponentArrays.Axis objects. This propagates to all ComponentVectors 
 constructed by it, e.g. with `label_state`.
 Hence, its recommended to pass `pset` across a function barrier for code
 where performance matters.
 
 ## ProblemUpdater
-A [`ODEProblemParSetterTyped`](@ref) can be combined with a [`KeysProblemParGetter`](@ref)
+A [`ODEProblemParSetterConcrete`](@ref) can be combined with a [`KeysProblemParGetter`](@ref)
 or other specific implementations of [`AbstractProblemParGetter`](@ref) to 
 update an AbstractODEProblem based on information already present in the AbstractODEProblem.
 
@@ -81,7 +81,7 @@ tspan = (0.,1.)
 prob = ODEProblem(f,getdata(u0),tspan,getdata(p))
 #
 mapping = (:k_L => :k_L2, :k_R => :k_P)
-pu = get_ode_problemupdater(KeysProblemParGetter(mapping), u0, p)
+pu = get_ode_problemupdater(KeysProblemParGetter(mapping, keys(u0)), u0, p)
 #axis_par(par_setter(pu))
 prob2 = pu(prob)
 p2 = label_par(par_setter(pu), prob2.p)

@@ -19,8 +19,9 @@ makedocs(;
         "Embedding a system" => "embed_system.md",
         "Update parameters" => [
             "Updating problems" => "updating_problems.md",
-            "AbstractProblem" => "problemparsetter.md",
+            "ProblemUpdater" => "problemupdater.md",
             "ODEProblem" => "odeproblemparsetter.md",
+            "Type inference" => "concrete_parupdater.md",
         ],
         "Translating symbols and Nums" => "system_num_dict.md",
         "Solution handling" => "solution.md",
