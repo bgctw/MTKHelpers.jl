@@ -2,6 +2,10 @@ using MTKHelpers
 using CairoMakie # to load cairomakie functions
 using Documenter
 
+# allow plot to work without display
+# https://discourse.julialang.org/t/generation-of-documentation-fails-qt-qpa-xcb-could-not-connect-to-display/60988/2
+ENV["GKSwstype"] = "100"
+
 DocMeta.setdocmeta!(MTKHelpers, :DocTestSetup, :(using MTKHelpers); recursive = true)
 
 makedocs(;
@@ -27,6 +31,9 @@ makedocs(;
         "Solution handling" => "solution.md",
         "Smooth steps" => "smoothstep.md",
         "CairoMakie Helpers" => "cairomakie.md",
+        "Developer notes" => [
+            "PDE support" => "pde.md",
+        ],
         "index" => "zindex.md",
     ])
 
