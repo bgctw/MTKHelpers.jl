@@ -77,6 +77,10 @@ include("util_nums.jl")
 export fit_Dirichlet_std, fit_Dirichlet_mode, simplex_grid
 include("prior_util.jl")
 
+export grid_exp, Dz_exp, Iz_exp, Dz_lin, Iz_lin
+include("util_pde.jl")
+
+
 export series_sol!
 include("makie_util.jl")
 

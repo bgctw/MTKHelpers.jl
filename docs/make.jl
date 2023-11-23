@@ -26,13 +26,14 @@ makedocs(;
             "ProblemUpdater" => "problemupdater.md",
             "ODEProblem" => "odeproblemparsetter.md",
             "Type inference" => "concrete_parupdater.md",
+            "PDE support" => "pde.md",
         ],
         "Translating symbols and Nums" => "system_num_dict.md",
         "Solution handling" => "solution.md",
         "Smooth steps" => "smoothstep.md",
         "CairoMakie Helpers" => "cairomakie.md",
         "Developer notes" => [
-            "PDE support" => "pde.md",
+            "PDE support" => "pde_dev.md",
         ],
         "index" => "zindex.md",
     ])

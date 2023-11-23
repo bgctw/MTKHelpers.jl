@@ -1,4 +1,5 @@
 using OrdinaryDiffEq, ModelingToolkit, MethodOfLines, DomainSets
+using MTKHelpers: Dz_lin, Dz_exp
 
 @parameters t z 
 # Method of lines discretization
@@ -10,7 +11,7 @@ dz = 0.02
 discretization = MOLFiniteDifference([z => dz], t; 
 advection_scheme=UpwindScheme(), approx_order = 2)
 #advection_scheme=WENOScheme(), approx_order = 2)
-z_m = -0.3 # maximum depth in m
+z_m = 0.3 # maximum depth in m
 
 @parameters k_Y Y0 i_Y ω i_Y_agr i_Y_agr_pulse
 @variables Y(..) i_Yo(..) adv_Yo(..) dec_Y(..) Y_t(..) Y_zz(..) Yi(..) i_Yi(..) Y_z(..) adv_Yi(..) 
@@ -22,39 +23,23 @@ params = [
         k_Y => 2.0,
         Y0 => 200.0,
         i_Y => 50.0,
-        ω => -0.01,
+        #ω => -0.01, # for negative z
+        ω => 0.01,
         i_Y_agr => 10.0,
         i_Y_agr_pulse => 0.0,        
 ]
 
-
-Dz_lin(z,z_m) = -1/z_m   # constant input that integrates to one across profile
-Iz_lin(z,z_m) = (z_m-z)/z_m # closed form integral across Dz_lin(z) from z_m to z
-
-# intetral from z_m to zero = 1
-Dz_exp(z,z_m,b) = b/(1-exp(b*z_m)) * exp(b*z) # input taht decreases exponentially
-Iz_exp(z,z_m,b) = 1/(1-exp(b*z_m)) * (exp(b*z)-exp(b*z_m)) # integral from z_m
-
-
-#i_Yz(t,z,i_Y) = Dz_lin(z) * i_Y   # inputs that integrate to i_Y independent of time
-i_Yz(t,z,i_Y) = Dz_exp(z,z_m,4.0) * i_Y  # inputs that integrate to i_Y independent of time
+#i_Yz(t,z,i_Y) = Dz_lin(z, z_m) * i_Y   # inputs that integrate to i_Y independent of time
+i_Yz(t,z,i_Y) = Dz_exp(z, z_m, 4.0) * i_Y  # inputs that integrate to i_Y independent of time
 @register_symbolic i_Yz(t, z, i_Y)
 
 tmp_f = () -> begin
-    Dz_lin.(z_m:dz:0, z_m)
-    #Iz_lin_emp.(z_m:dz:0, z_m)
-    Iz_lin.(z_m:dz:0, z_m)
-    i_Yz.(0.0, -2.0:0.5:0.0, 200.0)
-    Iz_emp(z, z_m, Dz, args...; dz=1e-3) = sum(z_i -> Dz(z_i,z_m,args...)*dz, z_m:dz:z)
-
-    sum(Dz_exp.(z_m:dz:0, z_m, 4.0) .* dz .* 40)
-    Dz_exp.(z_m:dz:0, z_m, 4.0) .* 40.0
-    i_Yz.(0, z_m:dz:0, 40.0)
-    sum(i_Yz.(0, z_m:dz:0, 40.0) .* dz)
+    _dz = 0:z_m/1000:z_m
+    plot(i_Yz.(0, _dz, 200), _dz, yflip=true)
+    isapprox(sum(i_Yz.(0, _dz, 200) .* z_m/1000), 200, rtol=0.01)
 end
 
-Iz = Integral(z in DomainSets.ClosedInterval(z_m, z))
-
+Iz = Integral(z in DomainSets.ClosedInterval(0, z))
 
 eqs = [
     ∂_t(Y(t, z)) ~ Y_t(t, z),
@@ -88,12 +73,13 @@ bcs = [
     #Y(0, z) ~ Dz_exp(z, z_m, 2.0) * Y0, # initial exponential distribution with depth
     Y(0, z) ~ Dz_lin(z, z_m) * Y0, # initial constant with depth, modified by set problem.u0
     # replace upwind flow of first cell by agr litter input (see docs/src/pde.md)
-    -ω * ∂_z(Y(t, 0)) ~ (fagr(t,i_Y_agr, i_Y_agr_pulse) + ω * Y(t, 0))/dz
+    #-ω * ∂_z(Y(t, 0)) ~ (fagr(t,i_Y_agr, i_Y_agr_pulse) + ω * Y(t, 0))/dz # for negative z
+    -ω * ∂_z(Y(t, 0)) ~ (fagr(t,i_Y_agr, i_Y_agr_pulse) - ω * Y(t, 0))/dz
     ]
 
 # Space and time domains
 domains = [t ∈ Interval(0.0, 500.0),
-           z ∈ Interval(z_m, 0.0),
+           z ∈ Interval(0.0, z_m),
            ]
 
 # PDE system
@@ -198,7 +184,8 @@ par_new = ComponentVector(k_Y = 1/10, Y0 = 80.0, i_Y = 10.0,
 #prob2 = remake(prob, p=getdata(par_new), tspan=(0,500))
 # reset the initial state
 #u0 = Dz_exp.((z_m:dz:-dz), z_m, 2.0) * par_new.Y0
-u0 = Dz_lin.((z_m:dz:-dz), z_m) * par_new.Y0 # straight initial profile
+#u0 = Dz_lin.((z_m:dz:-dz), z_m) * par_new.Y0 # straight initial profile
+u0 = Dz_lin.((dz:dz:z_m), z_m) * par_new.Y0 # straight initial profile
 #u0 = Dz_exp.((z_m:dz:0), z_m, 2.0) * par_new.Y0 # no upwind boundary
 #u0 = Dz_lin.((z_m:dz:0), z_m) * par_new.Y0
 par_new = par_new[Tuple(Symbol.(parameters(odesys)))] # sort according to system
