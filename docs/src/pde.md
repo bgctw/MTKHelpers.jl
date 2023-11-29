@@ -69,3 +69,11 @@ plot!(Dz_exp.(-z_grid, -z_m, 0.5), z_grid, label="b = 0.5");
 plot!(Dz_exp.(-z_grid, -z_m, 1), z_grid, label="b=1.0");
 plot!(Dz_exp.(-z_grid, -z_m, 2), z_grid, label="b=2.0")
 ```
+## Extracting grid information from the system or problem
+
+The following require MethodOfLines to be loaded to activate the extension.
+```@docs
+get_1d_grid
+get_discrete_space
+```
+

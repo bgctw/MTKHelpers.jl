@@ -29,13 +29,13 @@ prob = ODEProblem(sys, [m.x => 0.0], (0.0,10.0))
 nothing # hide
 ```
 
-An [`ODEProblemParSetterConcrete`](@ref) then can be used to update a subset of states
-and parametes in the derived problem.
+An [`ODEProblemParSetter`](@ref) then can be used to update a subset of states
+and parameters in the derived problem.
 
 ```@example doc
 # setup position matching, note τ is not in parameters optimized
 popt = ComponentVector(state=(m₊x=0.1,), par=(m₊p=[2.1,2.2],)) 
-pset = ODEProblemParSetterConcrete(sys, popt) # pass through function barrier to use type inference
+pset = ODEProblemParSetter(sys, popt) # pass through function barrier to use type inference
 
 # extract optimized 
 get_paropt(pset, prob)          # plain vector
@@ -51,11 +51,9 @@ get_paropt_labeled(pset, prob2) == popt
 nothing # hide
 ```
 
-Note that constructing and ODEProblemParSetterConcrete, `pset`, is only fully type-inferred 
-when passing three ComponentArrays.Axis objects. This propagates to all ComponentVectors 
-constructed by it, e.g. with `label_state`.
-Hence, its recommended to pass `pset` across a function barrier for code
-where performance matters.
+Note that produced labeled CompoenentArrays are not fully type-inferred, unless
+a concrete versions of the ParameterSetter and function barriers are used as described 
+in [Concrete ProblemUpdater](@ref).
 
 ## ProblemUpdater
 A [`ODEProblemParSetterConcrete`](@ref) can be combined with a [`KeysProblemParGetter`](@ref)

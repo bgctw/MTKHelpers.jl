@@ -38,7 +38,7 @@ end;
     #plot(sol, vars=[m2.x,m2.RHS])    
     #
     # specify by symbol_op instead of num
-    _dict_nums = get_system_symbol_dict(m2)
+    _dict_nums = get_system_symbol_dict(sys)
     prob = ODEProblem(sys, [_dict_nums[:m2₊x] => 0.0], (0.0, 10.0), [m2.τ => 3.0])
 end;
 

@@ -44,6 +44,11 @@ end
 #include("test/samplesystem.jl")
 include("samplesystem.jl")
 
+@testset "util_pde" begin
+    #include("test/test_util_pde.jl")
+    include("test_util_pde.jl")
+end;
+
 @testset "symbolicarray" begin
     #include("test/test_symbolicarray.jl")
     include("test_symbolicarray.jl")
@@ -101,6 +106,7 @@ end;
 @testset "util_nums" begin
     include("test_util_nums.jl")
 end;
+
 
 using JET: JET
 @testset "JET" begin

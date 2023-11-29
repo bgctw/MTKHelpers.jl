@@ -20,7 +20,6 @@ makedocs(;
         assets = String[]),
     pages = [
         "Home" => "index.md",
-        "Embedding a system" => "embed_system.md",
         "Update parameters" => [
             "Updating problems" => "updating_problems.md",
             "ProblemUpdater" => "problemupdater.md",
@@ -29,6 +28,7 @@ makedocs(;
             "PDE support" => "pde.md",
         ],
         "Translating symbols and Nums" => "system_num_dict.md",
+        "Embedding a system" => "embed_system.md",
         "Solution handling" => "solution.md",
         "Smooth steps" => "smoothstep.md",
         "CairoMakie Helpers" => "cairomakie.md",

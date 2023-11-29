@@ -4,13 +4,13 @@ authors = ["Thomas Wutzler <twutz@bgc-jena.mpg.de> and contributors"]
 version = "0.2.2-DEV"
 
 [deps]
+Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 DomainSets = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
 InlineStrings = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
 LabelledArrays = "2ee39098-c373-598a-b85f-a56591580800"
-MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 NamedArrays = "86f7a689-2022-50b4-a561-43c23ac3c673"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
@@ -22,9 +22,12 @@ SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 
 [weakdeps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
+PDEBase = "a7812802-0625-4b9e-961c-d332478797e5"
 
 [extensions]
 MTKHelpersMakieExt = "CairoMakie"
+MTKHelpersMethodOfLinesExt = "MethodOfLines"
 
 [compat]
 CairoMakie = "0.10"
@@ -41,3 +44,5 @@ julia = "1.6"
 
 [extras]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
+PDEBase = "a7812802-0625-4b9e-961c-d332478797e5"

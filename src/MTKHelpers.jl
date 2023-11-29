@@ -9,6 +9,7 @@ using ComponentArrays
 using Distributions
 using SymbolicUtils: SymbolicUtils
 using InlineStrings
+using Chain
 #using Infiltrator
 
 export AbstractProblemParSetter,
@@ -70,14 +71,16 @@ export par_setter, par_setter
 export get_ode_problemupdater
 include("problemupdater.jl")
 
-export get_system_symbol_dict, system_num_dict
+export get_system_symbol_dict, system_num_dict 
 export strip_deriv_num
+export base_num, get_base_num_dict
 include("util_nums.jl")
 
 export fit_Dirichlet_std, fit_Dirichlet_mode, simplex_grid
 include("prior_util.jl")
 
 export grid_exp, Dz_exp, Iz_exp, Dz_lin, Iz_lin
+export get_1d_state_grid, get_1d_grid, get_discrete_space, get_system
 include("util_pde.jl")
 
 
@@ -97,5 +100,12 @@ end
         @require CairoMakie="13f3f980-e62b-5c42-98c6-ff1f3baf88f0" include("../ext/MTKHelpersMakieExt.jl")
     end
 end
+
+@static if !isdefined(Base, :get_extension)
+    function __init__()
+        @require CairoMakie="13f3f980-e62b-5c42-98c6-ff1f3baf88f0" include("../ext/MTKHelpersMakieExt.jl")
+    end
+end
+
 
 end # module

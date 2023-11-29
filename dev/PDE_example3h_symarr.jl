@@ -1,19 +1,23 @@
-using OrdinaryDiffEq, ModelingToolkit, MethodOfLines, DomainSets
-using MTKHelpers: Dz_lin, Dz_exp
+using OrdinaryDiffEq, ModelingToolkit, DomainSets
+using MethodOfLines
+using MTKHelpers
 
 @parameters t z 
-# Method of lines discretization
-dz = 0.1
-dz = 0.02
-#dz = 0.005 # test remedy numerical dispersion of i_agr pulse - does not
+z_m = +0.3 # maximum depth in m, change to positive depth
+n_z = 16
+#z_grid = collect(range(0,z_m, length=n_z))
+z_grid = grid_exp(n_z, z_m, 3.0) 
+#dz = z_m/(n_z-1) # control of same grid represented by a single number
+#z_grid = z_m/(n_z-1)
+#scatter(z_grid, yflip=true)
 #edge_aling extends the grid below lower boundary with strange initial conditions
-#discretization = MOLFiniteDifference([z => dz], t; approx_order = 2, grid_align = edge_align)
-discretization = MOLFiniteDifference([z => dz], t; 
-advection_scheme=UpwindScheme(), approx_order = 2)
+discretization = MOLFiniteDifference([z => z_grid], t;
+    advection_scheme = UpwindScheme(), approx_order = 2)
 #advection_scheme=WENOScheme(), approx_order = 2)
-z_m = 0.3 # maximum depth in m
+dzs = diff(z_grid)
+dzsl = vcat(dzs[1]/2, dzs[2:end], dzs[end]/2) # assume first and last layer only half 
 
-@parameters k_Y Y0 i_Y ω i_Y_agr i_Y_agr_pulse
+@parameters k_Y Y0 i_Y ω i_Y_agr[1:2] 
 @variables Y(..) i_Yo(..) adv_Yo(..) dec_Y(..) Y_t(..) Y_zz(..) Yi(..) i_Yi(..) Y_z(..) adv_Yi(..) 
 ∂_t = Differential(t)
 ∂_z = Differential(z)
@@ -23,23 +27,40 @@ params = [
         k_Y => 2.0,
         Y0 => 200.0,
         i_Y => 50.0,
-        #ω => -0.01, # for negative z
+        #ω => -0.01,
         ω => 0.01,
-        i_Y_agr => 10.0,
-        i_Y_agr_pulse => 0.0,        
+        i_Y_agr[1] => 10.0, # base input
+        i_Y_agr[2] => 50.0, # pulse at t=80       
 ]
 
-#i_Yz(t,z,i_Y) = Dz_lin(z, z_m) * i_Y   # inputs that integrate to i_Y independent of time
-i_Yz(t,z,i_Y) = Dz_exp(z, z_m, 4.0) * i_Y  # inputs that integrate to i_Y independent of time
-@register_symbolic i_Yz(t, z, i_Y)
+
+#i_Yz(t,z,i_Y) = Dz_lin(z) * i_Y   # inputs that integrate to i_Y independent of time
+i_Yz(t,z,i_Y) = Dz_exp(z, z_m,4.0) * i_Y  # inputs that integrate to i_Y independent of time
+#@register_symbolic i_Yz(t, z, i_Y)
 
 tmp_f = () -> begin
-    _dz = 0:z_m/1000:z_m
-    plot(i_Yz.(0, _dz, 200), _dz, yflip=true)
-    isapprox(sum(i_Yz.(0, _dz, 200) .* z_m/1000), 200, rtol=0.01)
+    _iY = i_Yz.(0, z_grid, 40.0)
+    sum(_iY .* dzsl) # coarse approximation of an integral
+    scatter(_iY, z_grid, yflip=true, xlabel="iY (g/m/s)")
 end
 
-Iz = Integral(z in DomainSets.ClosedInterval(0, z))
+fgauss(x, μ, σ2) = 1/sqrt(2*pi*σ2) * exp(-(x-μ)^2/(2*σ2))
+fagr(t, i_Y_agr, i_Y_agr_pulse) = i_Y_agr + i_Y_agr_pulse*fgauss(t, 80, 2^2)
+#@register_symbolic fagr(t, i_Y_agr, i_Y_agr_pulse)
+
+tmpf = () -> begin
+    x = 0:200
+    plot(x, 20*fgauss.(x,80, 10^2))
+    plot(x, fagr.(x,2.0,2.0*10))
+    dx = 0.02
+    isapprox(sum(fagr.(70:dx:90, 0, 50) * dx), 50, atol=1e-3) # integral of agr_pulse matches
+end
+
+
+
+z_min = 0.0  # directly using 0.0 in Integral causes error in solution wrapping
+Iz = Integral(z in DomainSets.ClosedInterval(z_min, z))
+
 
 eqs = [
     ∂_t(Y(t, z)) ~ Y_t(t, z),
@@ -56,52 +77,65 @@ eqs = [
     adv_Yi(t,z) ~ Iz(adv_Yo(t, z)), # integral over advection inputs
 ]
 
-fgauss(x, μ, σ2) = 1/sqrt(2*pi*σ2) * exp(-(x-μ)^2/(2*σ2))
-fagr(t, i_Y_agr, i_Y_agr_pulse) = i_Y_agr + i_Y_agr_pulse*fgauss(t, 80, 2^2)
-@register_symbolic fagr(t, i_Y_agr, i_Y_agr_pulse)
-
-tmpf = () -> begin
-    x = 0:200
-    plot(x, 20*fgauss.(x,80, 10^2))
-    plot(x, fagr.(x,2.0,2.0*10))
-    dx = 0.02
-    isapprox(sum(fagr.(70:dx:90, 0, 50) * dx), 50, atol=1e-3) # integral of agr_pulse matches
-end
-
-# TODO: boundary depends on dz. Can we replace it by ∂_z operator somehow?
 bcs = [
     #Y(0, z) ~ Dz_exp(z, z_m, 2.0) * Y0, # initial exponential distribution with depth
     Y(0, z) ~ Dz_lin(z, z_m) * Y0, # initial constant with depth, modified by set problem.u0
-    # replace upwind flow of first cell by agr litter input (see docs/src/pde.md)
-    #-ω * ∂_z(Y(t, 0)) ~ (fagr(t,i_Y_agr, i_Y_agr_pulse) + ω * Y(t, 0))/dz # for negative z
-    -ω * ∂_z(Y(t, 0)) ~ (fagr(t,i_Y_agr, i_Y_agr_pulse) - ω * Y(t, 0))/dz
+    ω * Y(t, 0) ~ fagr(t,i_Y_agr[1], i_Y_agr[2]), # specified flux at upper boundary
+    ∂_z(Y(t, z_m)) ~ 0, # negligible change in concentration at lower boundary
+    #
+    # following are only necessary because observables need to be specified with vector grid
+    ∂_z(dec_Y(t, 0)) ~ 0.0, 
+    ∂_z(dec_Y(t, z_m)) ~ 0.0, 
+    ∂_z(i_Yo(t, 0)) ~ 0.0, 
+    ∂_z(i_Yo(t, z_m)) ~ 0.0, 
+    #∂_z(adv_Yo(t, 0)) ~ 0.0, 
+    ω * adv_Yo(t, 0) ~ fagr(t,i_Y_agr[1], i_Y_agr[2]), 
+    ∂_z(adv_Yo(t, z_m)) ~ 0.0, 
+    ∂_z(Y_t(t, 0)) ~ 0.0, 
+    ∂_z(Y_t(t, z_m)) ~ 0.0, 
+    ∂_z(Yi(t, 0)) ~ 0.0, 
+    ∂_z(Yi(t, z_m)) ~ 0.0, 
+    ∂_z(i_Yi(t, 0)) ~ 0.0, 
+    ∂_z(i_Yi(t, z_m)) ~ 0.0, 
+    ∂_z(Y_z(t, 0)) ~ 0.0, 
+    ∂_z(Y_z(t, z_m)) ~ 0.0, 
+    ∂_z(adv_Yi(t, 0)) ~ 0.0, 
+    ∂_z(adv_Yi(t, z_m)) ~ 0.0, 
     ]
 
 # Space and time domains
-domains = [t ∈ Interval(0.0, 500.0),
-           z ∈ Interval(0.0, z_m),
-           ]
+domains = [t ∈ Interval(0.0, 500.0), z ∈ Interval(0.0, z_m), ]
 
 # PDE system
 state_vars = [Y(t, z), i_Yo(t,z), adv_Yo(t,z), dec_Y(t,z), Y_t(t,z), Yi(t,z), i_Yi(t,z), Y_z(t,z), adv_Yi(t,z) ]
+#state_vars = [Y(t, z), i_Yo(t,z), adv_Yo(t,z), dec_Y(t,z), Y_t(t,z), Y_z(t,z),]
+#state_vars = [Y(t, z), i_Yo(t,z), adv_Yo(t,z), dec_Y(t,z), Y_t(t,z), Y_z(t,z), Yi(t,z),]
 #state_vars = [Y(t, z), i_Yo(t,z), adv_Yo(t,z), dec_Y(t,z), Y_t(t,z)]
 @named pdesys = PDESystem(eqs, bcs, domains, [t, z], state_vars, params)
 # Convert the PDE problem into an ODE problem
 prob = discretize(pdesys, discretization) 
 
-# get the ODESystem to construct ProbParameterSetter
-odesys_full, tspan = symbolic_discretize(pdesys, discretization);
-odesys = structural_simplify(odesys_full)
-observed(odesys)
-equations(odesys)
-parameters(odesys)
-states(odesys)
-# removes observables - state only contains Y
+tmp_f = () -> begin
+    # get the ODESystem to construct ProbParameterSetter
+    odesys_full, tspan = symbolic_discretize(pdesys, discretization);
+    #odesys_full, tspan = symbolic_discretize(pdesys2, discretization);
+    odesys = structural_simplify(odesys_full)
+    observed(odesys)
+    equations(odesys)
+    parameters(odesys)
+    states(odesys)
+    # removes observables - state only contains Y
+end
 
 # Solve ODE problem
 #sol = solve(prob, Tsit5(), saveat=0.2);
 #sol = solve(prob, Tsit5());
 sol = solve(prob, TRBDF2());
+#sol = solve(prob2, TRBDF2());
+#plot(sol[dec_Y(t,z)][1,:])
+#plot(sol[dec_Y(t,z)][end,:])
+#plot(sol[Y(t,z)][1,:]); plot!(sol[Y(t,z)][end,:])
+#plot(sol[adv_Yo(t,z)][1,:]); plot!(sol[adv_Yo(t,z)][end,:])
 
 po = prob.p; po[4] = 0.2 # higher leaching/advection rate
 probo = remake(prob, p = po)
@@ -163,32 +197,43 @@ using ComponentArrays
 # only advection: low decomposition and low below ground input
 # without any abr inputs
 par_new = ComponentVector(k_Y = 1e-6, Y0 = 100.0, i_Y = 1e-12, 
-    ω = -0.01, i_Y_agr = 0.0, i_Y_agr_pulse = 0.0)
+    ω = 0.01, i_Y_agr = [0.0, 0.0])
 # with abr input rate
 par_new = ComponentVector(k_Y = 1e-6, Y0 = 100.0, i_Y = 1e-12, 
-    ω = -0.01, i_Y_agr = 10.0, i_Y_agr_pulse = 0.0)
+    ω = 0.01, i_Y_agr = [10.0, 0.0])
 # with a pulse no input rate
 par_new = ComponentVector(k_Y = 1e-6, Y0 = 0.0, i_Y = 1e-12, 
-    ω = -0.01, i_Y_agr = 0.0, i_Y_agr_pulse = 50.0)
+    ω = 0.01, i_Y_agr = [0.0, 50.0])
 # with a pulse and input rate
 par_new = ComponentVector(k_Y = 1e-6, Y0 = 320.0, i_Y = 1e-12, 
-    ω = -0.01, i_Y_agr = 10.0, i_Y_agr_pulse = 50.0)
+    ω = 0.01, i_Y_agr = [10.0, 50.0])
 # with below ground litter input but negligible decomposition:
 # despite lower inputs at the bottom, the stock increases because of downward adv. flux
 par_new = ComponentVector(k_Y = 1e-6, Y0 = 220.0, i_Y = 10.0, 
-    ω = -0.01, i_Y_agr = 0.0, i_Y_agr_pulse = 50.0)
+    ω = 0.01, i_Y_agr = [0.0, 50.0])
 # with decomposition, the pulse barely reaches lower soil
 par_new = ComponentVector(k_Y = 1/10, Y0 = 80.0, i_Y = 10.0, 
-    ω = -0.01, i_Y_agr = 0.0, i_Y_agr_pulse = 50.0)
+    ω = 0.01, i_Y_agr = [0.0, 50.0])
 #parl = ComponentVector(prob.p, first(getaxes(par_new)))
 #prob2 = remake(prob, p=getdata(par_new), tspan=(0,500))
 # reset the initial state
 #u0 = Dz_exp.((z_m:dz:-dz), z_m, 2.0) * par_new.Y0
-#u0 = Dz_lin.((z_m:dz:-dz), z_m) * par_new.Y0 # straight initial profile
-u0 = Dz_lin.((dz:dz:z_m), z_m) * par_new.Y0 # straight initial profile
+#u0 = Dz_lin.(-(z_m:dz:-dz), -z_m) * par_new.Y0 # straight initial profile
+#u0 = Dz_lin.(-(z_m:dz:-dz), -z_m) * par_new.Y0 # straight initial profile
+#u0 = Dz_lin.((dz:dz:z_m), z_m) * par_new.Y0 # straight initial profile
+#u0 = Dz_lin.((0:dz:z_m)[2:(end-1)], z_m) * par_new.Y0 # straight initial profile
+u0 = Dz_lin.(get_1d_state_grid(prob), z_m) * par_new.Y0 # straight initial profile
 #u0 = Dz_exp.((z_m:dz:0), z_m, 2.0) * par_new.Y0 # no upwind boundary
 #u0 = Dz_lin.((z_m:dz:0), z_m) * par_new.Y0
-par_new = par_new[Tuple(Symbol.(parameters(odesys)))] # sort according to system
+ax_par = MTKHelpers.axis_of_nums(parameters(get_system(prob)))  
+
+Symbolics.scalarize.(par_new.i_Y_agr)
+symbol_p
+tmp = vcat((Symbolics.scalarize(k) .=> par_new[symbol_op(k)]) for k in keys(par_new)...)
+
+k = :i_Y_agr
+
+par_new = par_new[keys(ax_par)] # sort according to system
 prob2 = prob2 = remake(prob, u0=u0, p=getdata(par_new), tspan=(0,500))
 #solp = sol = solve(prob2, TRBDF2()); #slower than Rodas5P but more points to plot
 #solp = sol = solve(prob2, Rodas5P(), saveat=2); 
@@ -206,7 +251,10 @@ plot(solp[Y(t,z)][end,:], solp[z])
 #(i_t, t_i) = last(enumerate(solp[t]))
 Y_ex = extrema(solp[Y(t,z)])
 anim = @animate for (i_t, t_i) in enumerate(solp[t])
-    plot(solp[Y(t,z)][i_t,:], solp[z], xlim=Y_ex, xlab="Y(z)", ylab="z (m)", title="t = $(round(t_i;sigdigits=2))")
+    plot(solp[Y(t,z)][i_t,:], solp[z], xlim=Y_ex, xlab="Y(z)", ylab="z (m)", 
+    title="t = $(round(t_i;sigdigits=2))",
+    yflip=true,
+    )
 end;
 gif(anim, fps=3)
 

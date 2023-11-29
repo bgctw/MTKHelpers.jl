@@ -14,7 +14,7 @@
     #plot(sol, vars=[m2.x,m2.RHS])    
     #
     # specify by symbol_op instead of num
-    _dict_nums = get_system_symbol_dict(m2)
+    _dict_nums = get_system_symbol_dict(sys)
     st = Symbolics.scalarize(_dict_nums[:m2₊x] .=> [10.1,10.2])
     prob = ODEProblem(sys, st, (0.0, 10.0), [_dict_nums[:m2₊τ] => 3.0])
     @test prob.u0 == [10.1,10.2]
@@ -104,7 +104,7 @@ end;
 end;
 
 @testset "Parsetter from sys_vec" begin
-    #_dict_nums = get_system_symbol_dict(m2)
+    #_dict_nums = get_system_symbol_dict(sys)
     st = Symbolics.scalarize(m2.x .=> [1.0,2.0])
     prob = ODEProblem(sys, st, (0.0, 10.0))
     # paropt = CA.ComponentArray(state=CA.ComponentArray(m2₊x=[1.1, 1.2]), 
