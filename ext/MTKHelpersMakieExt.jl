@@ -12,12 +12,12 @@ import MTKHelpers # provide method for series_sol!
 # pdf_figure moved to TwPrototypes
 
 function MTKHelpers.series_sol!(ax,
-    sol::AbstractODESolution,
-    vars;
-    tspan = extrema(sol.t),
-    labels = string.(vars),
-    nt = 120,
-    kwargs...)
+        sol::AbstractODESolution,
+        vars;
+        tspan = extrema(sol.t),
+        labels = string.(vars),
+        nt = 120,
+        kwargs...)
     #ts = first(tspan) .<= sol.t .<= last(tspan)
     #series!(ax, sol.t[ts], transpose(VectorOfArray(sol[vars])[ts,:]); labels, kwargs...)
     tsol = sol.t[first(tspan) .<= sol.t .<= last(tspan)]

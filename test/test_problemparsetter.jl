@@ -2,8 +2,8 @@
 u1 = ComponentVector(L = 10.0)
 p1 = ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
 popt1 = ComponentVector(L = 10.1, k_L = 1.1, k_R = 1 / 20.1)
-popt1s = ComponentVector(state=ComponentVector(L = 10.1), 
-    par=ComponentVector(k_L = 1.1, k_R = 1 / 20.1))
+popt1s = ComponentVector(state = ComponentVector(L = 10.1),
+    par = ComponentVector(k_L = 1.1, k_R = 1 / 20.1))
 # use Axis for type stability, but here, check with non-typestable ps
 #ps = @inferred ODEProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(keys(popt)))
 ps = ps1 = ODEProblemParSetter(u1, p1, popt1)
@@ -16,7 +16,7 @@ p1c = ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
 # a2 and c need to have correct length for updating
 #poptc = ComponentVector(a=(a2=1:2,), c=1:2) 
 poptc = vcat(u1c[KeepIndex(:a)], p1c[(:b, :c)])
-poptcs = ComponentVector(state=u1c[KeepIndex(:a)], par=p1c[(:b, :c)])
+poptcs = ComponentVector(state = u1c[KeepIndex(:a)], par = p1c[(:b, :c)])
 psc = pset = ODEProblemParSetter(u1c, p1c, poptc)
 #u0 = u1c; p=p1c; popt=poptc
 
@@ -69,8 +69,7 @@ end
     #test if setting parameters does work
 end;
 
-
-@testset "warning on duplicate symbols" begin 
+@testset "warning on duplicate symbols" begin
     state_syms = keys(p1)
     par_syms = keys(p1)
     popt_syms = (:k_L,)
@@ -112,7 +111,7 @@ end;
     # tmpf(ps)
     @test keys((axis_state(ps))) == keys(u1)
     @test keys((axis_par(ps))) == keys(p1)
-    @test keys((axis_paropt(ps))) == (:state,:par)
+    @test keys((axis_paropt(ps))) == (:state, :par)
     #
     @test (@inferred count_state(ps)) == length(u1)
     @test (@inferred count_par(ps)) == length(p1)
@@ -140,12 +139,12 @@ end;
 # ps.optinfo
 
 function test_label_svectors(pset,
-    u0,
-    p,
-    popt,
-    ::Val{NU0},
-    ::Val{NP},
-    ::Val{NOPT}) where {NOPT, NU0, NP}
+        u0,
+        p,
+        popt,
+        ::Val{NU0},
+        ::Val{NP},
+        ::Val{NOPT}) where {NOPT, NU0, NP}
     #Main.@infiltrate_main
     # not inferred - compare to test_problemparsettertyped
     @test label_paropt(pset, popt) == popt
@@ -274,8 +273,8 @@ end
     #sol = solve(prob, Tsit5())
     #sol[end]
     pset = ODEProblemParSetter(Axis(keys(u0)), Axis(keys(p)), Axis((:u1, :p2)))
-    popt = ComponentVector(state=ComponentVector(u1 = 1 / 4), 
-        par=ComponentVector(p2 = 1.2))
+    popt = ComponentVector(state = ComponentVector(u1 = 1 / 4),
+        par = ComponentVector(p2 = 1.2))
     #
     # update_statepar
     prob2 = remake(prob, popt, pset)
@@ -329,7 +328,7 @@ end;
     end
     # not inferred 
     #@inferred fcost(popt)  
-    fcost(popt)  
+    fcost(popt)
     #using Cthulhu
     #@descend_code_warntype update_statepar(pset, popt, u0, p)
     res = ForwardDiff.gradient(fcost, popt)
@@ -410,11 +409,12 @@ end;
     # ?implement al{allow_missing_popt}=Val(true)
     # as long as Axis argument is passed, all the type is inferred
     #psr = @inferred ODEProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(frandsym()))
-    ftmp = (poptnames) -> ODEProblemParSetter(Axis(keys(u1)), Axis(keys(p1)), Axis(poptnames))
+    ftmp = (poptnames) -> ODEProblemParSetter(Axis(keys(u1)),
+        Axis(keys(p1)),
+        Axis(poptnames))
     #psr = @inferred ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
     psr = ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
     # use Parsetter either with explicit Axis or inside function barrier
     xl = label_paropt(psr, collect(1:count_paropt(psr))) # ok?
     xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
 end;
-

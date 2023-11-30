@@ -5,7 +5,7 @@
     symd = get_system_symbol_dict(m)
     @test symd isa Dict
     @test eltype(keys(symd)) == Symbol
-    @test eltype(values(symd)) <:  SymbolicUtils.BasicSymbolic
+    @test eltype(values(symd)) <: SymbolicUtils.BasicSymbolic
     @test all((:x, :RHS, :τ) .∈ Ref(keys(symd)))
     #
     p1 = ComponentVector(x = 1.0, τ = 2.0)
@@ -21,10 +21,10 @@ end;
 
 @testset "system_num_dict Tuple" begin
     @parameters t
-    sys = compose(ODESystem([], t; name=:sys), [m, m2])
+    sys = compose(ODESystem([], t; name = :sys), [m, m2])
     symd = get_system_symbol_dict(sys)
     @test eltype(keys(symd)) == Symbol
-    @test eltype(values(symd)) <:  SymbolicUtils.BasicSymbolic
+    @test eltype(values(symd)) <: SymbolicUtils.BasicSymbolic
     @test all((:m₊x, :m₊RHS, :m₊τ) .∈ Ref(keys(symd)))
     @test all((:m2₊x, :m2₊RHS, :m2₊τ) .∈ Ref(keys(symd)))
     #

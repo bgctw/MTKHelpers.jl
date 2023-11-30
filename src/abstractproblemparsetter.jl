@@ -28,7 +28,8 @@ abstract type AbstractProblemParSetter end
 Return an updated problem given the parameters.
 Subtypes need to implement method `remake_pset(prob, popt, pset)`
 """
-function SciMLBase.remake(prob::SciMLBase.AbstractSciMLProblem, popt, pset::AbstractProblemParSetter) 
+function SciMLBase.remake(prob::SciMLBase.AbstractSciMLProblem,
+        popt, pset::AbstractProblemParSetter)
     remake_pset(prob, popt, pset)
 end
 
@@ -40,9 +41,11 @@ Extract optimized parameters from the Problem.
 The labeled versions additionally calls [`label_paropt`](@ref)
 on the return value.
 """
-function get_paropt(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem; kwargs...) end,
-function get_paropt_labeled(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem; kwargs...) end
-
+function get_paropt(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem;
+        kwargs...) end,
+function get_paropt_labeled(pset::AbstractProblemParSetter,
+        prob::SciMLBase.AbstractSciMLProblem;
+        kwargs...) end
 
 """
     axis_paropt(pset::AbstractProblemParSetter)
@@ -67,7 +70,7 @@ Report length of the optimized parameters vector.
 This generally is different from the length of keys, because each key
 can describe a array.
 """
-function count_paropt(pset::AbstractProblemParSetter) 
+function count_paropt(pset::AbstractProblemParSetter)
     axis_length(axis_paropt(pset))::Int
 end
 # TODO change to length(ax) when this becomes available in ComponentArrays
@@ -77,7 +80,7 @@ end
 
 Report the keys of paropt below the classification level.
 """
-function keys_paropt(ps::AbstractProblemParSetter) 
+function keys_paropt(ps::AbstractProblemParSetter)
     ax = axis_paropt(ps)
     # for each top-key access the subaxis and apply keys
     gen = (getproperty(CA.indexmap(ax), k) |> x -> keys(x) for k in classes_paropt(ps))
@@ -114,7 +117,6 @@ function label_paropt(pset::AbstractProblemParSetter, popt)
     attach_axis(popt, axis_paropt(pset))
 end
 
-
 """
     name_paropt(pset, popt::AbstractVector) 
     name_paropt(pset, prob::AbstractSciMLProblem)    
@@ -126,7 +128,8 @@ The second form calls [`get_paropt`](@ref) on the Problem.
 function name_paropt(pset::AbstractProblemParSetter, paropt::AbstractVector)
     NamedArrays.NamedArray(paropt, (collect(symbols_paropt(pset))::Vector{Symbol},))
 end,
-function name_paropt(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem; kwargs...)
+function name_paropt(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem;
+        kwargs...)
     name_paropt(pset, get_paropt(pset, prob); kwargs...)
 end
 
@@ -137,19 +140,7 @@ end
 Return a concrete-type-version of an ProblemParSetter or ProblemUpdater.
 """
 function get_concrete(pset::AbstractProblemParSetter)
-    !isconcrete(pset) && @warn "no concrete type implemented for ProblemSetter of type $(typeof(pset))."
+    !isconcrete(pset) &&
+        @warn "no concrete type implemented for ProblemSetter of type $(typeof(pset))."
     pset
 end
-
-
-
-
-
-
-
-
-
-
-
-
-

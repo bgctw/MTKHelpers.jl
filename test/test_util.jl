@@ -15,7 +15,7 @@ end
 end;
 
 @testset "tuplejoin" begin
-    @test MTKHelpers.tuplejoin((1,2),(3,),(4,5,6)) == Tuple(i for i in 1:6)
+    @test MTKHelpers.tuplejoin((1, 2), (3,), (4, 5, 6)) == Tuple(i for i in 1:6)
 end;
 
 @testset "strip_namespace" begin
@@ -36,7 +36,7 @@ end;
     @named m2 = samplesystem()
     @named sys = embed_system(m2)
     prob = ODEProblem(sys, [m2.x => 0.0], (0.0, 10.0), [m2.τ => 3.0])
-    sol = solve(prob, Tsit5());
+    sol = solve(prob, Tsit5())
     @test first(sol[m2.x]) == 0.0
     #plot(sol, vars=[m2.x,m2.RHS])    
     #
@@ -66,4 +66,3 @@ end;
     ]
     @test_throws ErrorException sys_ext=override_system(eqs, m; name, ps)
 end;
-

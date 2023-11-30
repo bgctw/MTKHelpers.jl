@@ -1,5 +1,4 @@
 
-
 """
 Support translation between parameter vectors and 
 `AbstractODEProblem`.
@@ -18,7 +17,6 @@ parameters:
 """
 abstract type AbstractODEProblemParSetter <: AbstractProblemParSetter end
 struct DummyProblemParSetter <: AbstractODEProblemParSetter end # for testing error message
-
 
 """
     axis_state(pset::AbstractODEProblemParSetter)
@@ -41,10 +39,10 @@ function axis_par(::AbstractODEProblemParSetter) end
 Report the number of problem states, problem parameters and optimized parameters
 respectively.    
 """
-function count_state(pset::AbstractODEProblemParSetter) 
+function count_state(pset::AbstractODEProblemParSetter)
     axis_length(axis_state(pset))::Int
 end,
-function count_par(pset::AbstractODEProblemParSetter) 
+function count_par(pset::AbstractODEProblemParSetter)
     axis_length(axis_par(pset))::Int
 end
 # TODO change to length(ax) when this becomes available in ComponentArrays
@@ -64,10 +62,10 @@ This usually correspdonds to `keys(axis)`, but if there is a
 classification, similar to [`keys_paropt`](@ref), report the keys below
 this classification.
 """
-function keys_state(ps::AbstractODEProblemParSetter) 
+function keys_state(ps::AbstractODEProblemParSetter)
     keys(axis_state(ps))
 end,
-function keys_par(ps::AbstractODEProblemParSetter) 
+function keys_par(ps::AbstractODEProblemParSetter)
     keys(axis_par(ps))
 end
 
@@ -80,22 +78,23 @@ Report the names, i.e. symbols of problem states, problem parameters
 respectively, i.e. the concatenation of components.
 Similar to `ComponentArrays.label`, but inferred from Axis object.   
 """
-function symbols_state(pset::AbstractODEProblemParSetter) 
+function symbols_state(pset::AbstractODEProblemParSetter)
     _ax_symbols_tuple(axis_state(pset))
 end,
-function symbols_par(pset::AbstractODEProblemParSetter) 
+function symbols_par(pset::AbstractODEProblemParSetter)
     _ax_symbols_tuple(axis_par(pset))
 end
 
 @deprecate statesyms(pset::AbstractODEProblemParSetter) symbols_state(pset)
 @deprecate parsyms(pset::AbstractODEProblemParSetter) symbols_par(pset)
 
-
 # dispatch to get_paropt_labeled(pset, u0, p)
 function get_paropt(pset::AbstractODEProblemParSetter, prob::AbstractODEProblem; kwargs...)
     get_paropt(pset, prob.u0, prob.p; kwargs...)
 end,
-function get_paropt_labeled(pset::AbstractODEProblemParSetter, prob::AbstractODEProblem; kwargs...)
+function get_paropt_labeled(pset::AbstractODEProblemParSetter,
+        prob::AbstractODEProblem;
+        kwargs...)
     get_paropt_labeled(pset, prob.u0, prob.p; kwargs...)
 end,
 function get_paropt(pset::AbstractODEProblemParSetter, u0, p)
@@ -104,7 +103,6 @@ function get_paropt(pset::AbstractODEProblemParSetter, u0, p)
     getdata(get_paropt_labeled(pset, u0, p))::Vector{T}
 end
 # need to implement in concrete types: get_paropt_labeled -> ComponentVector
-
 
 """
     label_state(pset::AbstractODEProblemParSetter, u::AbstractVector) 
@@ -121,7 +119,6 @@ function label_par(pset::AbstractODEProblemParSetter, p)
 end
 # label_state(pset::AbstractODEProblemParSetter, u::SVector) = SLVector(label_state(pset, Tuple(u)))
 # label_state(pset::AbstractODEProblemParSetter, u::NTuple) = NamedTuple{symbols_state(pset)}(u)
-
 
 """
     name_state(pset, u::AbstractVector) 
@@ -150,9 +147,10 @@ function remake_pset(prob::AbstractODEProblem, popt, pset::AbstractODEProblemPar
     remake(prob; u0, p)
 end
 # need to implement update_statepar in concrete subtypes
-@deprecate(update_statepar(pset::AbstractODEProblemParSetter, popt, prob::AbstractODEProblem),
+@deprecate(update_statepar(pset::AbstractODEProblemParSetter,
+        popt,
+        prob::AbstractODEProblem),
     remake(prob, popt, pset))
-
 
 """
     get_u_map(u_new, pset::AbstractODEProblemParSetter)
@@ -183,20 +181,20 @@ function get_u_map(u_new, pset::AbstractODEProblemParSetter; is_warn_missing = f
     pos_old = attach_axis(1:count_state(pset), axis_state(pset))
     if is_warn_missing
         missing_keys = setdiff(keys_state(pset), keys(ax_new))
-        !isempty(missing_keys) && 
-        @warn("problem states $missing_keys are missing in u_new.")
+        !isempty(missing_keys) &&
+            @warn("problem states $missing_keys are missing in u_new.")
     end
-    getdata(pos_old[keys(ax_new)]) 
+    getdata(pos_old[keys(ax_new)])
 end,
 function get_p_map(p_new, pset::AbstractODEProblemParSetter; is_warn_missing = false)
     ax_new = MTKHelpers._get_axis(p_new)
     pos_old = attach_axis(1:count_par(pset), axis_par(pset))
     if is_warn_missing
         missing_keys = setdiff(keys_par(pset), keys(ax_new))
-        !isempty(missing_keys) && 
-        @warn("problem parameters $missing_keys are missing in u_new.")
+        !isempty(missing_keys) &&
+            @warn("problem parameters $missing_keys are missing in u_new.")
     end
-    getdata(pos_old[keys(ax_new)]) 
+    getdata(pos_old[keys(ax_new)])
 end
 
 """
@@ -205,9 +203,7 @@ end
 Get the System associated to a problem.
 """
 function get_system(prob::AbstractODEProblem)
-    :sys ∈ propertynames(prob.f) || error(
-        "Cannot get System for a Problem without associated system")
-   prob.f.sys
+    :sys ∈ propertynames(prob.f) ||
+        error("Cannot get System for a Problem without associated system")
+    prob.f.sys
 end
-
-

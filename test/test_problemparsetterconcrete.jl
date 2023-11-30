@@ -4,7 +4,7 @@
 u1 = ComponentVector(L = 10.0)
 p1 = ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
 popt1 = ComponentVector(L = 10.1, k_L = 1.1, k_R = 1 / 20.1)
-popt1s = ComponentVector(state=(L = 10.1,), par=(k_L = 1.1, k_R = 1 / 20.1))
+popt1s = ComponentVector(state = (L = 10.1,), par = (k_L = 1.1, k_R = 1 / 20.1))
 # use Axis for type stability, but here, check with non-typestable ps
 #ps = @inferred ODEProblemParSetterConcrete(Axis(keys(u1)),Axis(keys(p1)),Axis(keys(popt)))
 ps = ps1 = ODEProblemParSetterConcrete(u1, p1, popt1)
@@ -17,7 +17,7 @@ p1c = ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
 # a2 and c need to have correct length for updating
 #poptc = ComponentVector(a=(a2=1:2,), c=1:2) 
 poptc = vcat(u1c[KeepIndex(:a)], p1c[(:b, :c)])
-poptcs = ComponentVector(state=u1c[KeepIndex(:a)], par=p1c[(:b, :c)])
+poptcs = ComponentVector(state = u1c[KeepIndex(:a)], par = p1c[(:b, :c)])
 psc = pset = ODEProblemParSetterConcrete(u1c, p1c, poptc)
 #u0 = u1c; p=p1c; popt=poptc
 
@@ -28,17 +28,16 @@ p1s = label_par(psc, SVector{5}(getdata(p1c))) # convert to ComponentVector{SVec
 @testset "access keys and counts" begin
     @test (@inferred keys(axis_state(ps))) == keys(u1)
     @test (@inferred keys(axis_par(ps))) == keys(p1)
-    @test (@inferred keys(axis_paropt(ps))) == (:state,:par)
+    @test (@inferred keys(axis_paropt(ps))) == (:state, :par)
 end;
 
-
 function test_label_svectors(pset,
-    u0,
-    p,
-    popt,
-    ::Val{NU0},
-    ::Val{NP},
-    ::Val{NOPT}) where {NOPT, NU0, NP}
+        u0,
+        p,
+        popt,
+        ::Val{NU0},
+        ::Val{NP},
+        ::Val{NOPT}) where {NOPT, NU0, NP}
     #Main.@infiltrate_main
     @test label_paropt(pset, popt) == popt
     @test @inferred(label_paropt(pset, convert(Array, popt))) == popt
@@ -242,17 +241,17 @@ end;
 @testset "get_concrete ODEProblemParSetter used in cost function" begin
     u1 = ComponentVector(L = 10.0)
     p1 = ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
-    popt1s = ComponentVector(state=(L = 10.1,), par=(k_L = 1.1, k_R = 1 / 20.1))
+    popt1s = ComponentVector(state = (L = 10.1,), par = (k_L = 1.1, k_R = 1 / 20.1))
     ps = ps1 = ODEProblemParSetter(u1, p1, popt1s)
     get_fopt = (ps) -> begin
         # get a concrete-type version of the ProblemParSetter and pass it 
         # through a function barrier to a closure (function within let)
-        psc = get_concrete(ps) 
+        psc = get_concrete(ps)
         get_fopt_inner = (psc) -> begin
-            let psc=psc
+            let psc = psc
                 (paropt) -> begin
-                    paropt_l = @inferred label_paropt(psc,paropt)
-                    (;cost = paropt_l.par.k_L + paropt_l.par.k_R, paropt_l)
+                    paropt_l = @inferred label_paropt(psc, paropt)
+                    (; cost = paropt_l.par.k_L + paropt_l.par.k_R, paropt_l)
                 end # function
             end # let
         end # get_fopt_inner  
@@ -260,7 +259,6 @@ end;
     end # get_ftopt
     fopt = get_fopt(ps)
     res = @inferred fopt(getdata(popt1s) .* 2)
-    @test res.cost == (popt1s.par.k_L + popt1s.par.k_R)*2
+    @test res.cost == (popt1s.par.k_L + popt1s.par.k_R) * 2
     @test getaxes(res.paropt_l) == getaxes(popt1s)
 end;
-

@@ -35,8 +35,10 @@ struct ProblemUpdater <: AbstractProblemUpdater
     pset::AbstractProblemParSetter
 end
 
-struct ProblemUpdaterConcrete{PG<:AbstractProblemParGetter,PS<:AbstractODEProblemParSetter} <:
-       AbstractProblemUpdater
+struct ProblemUpdaterConcrete{
+    PG <: AbstractProblemParGetter,
+    PS <: AbstractODEProblemParSetter,
+} <: AbstractProblemUpdater
     pget::PG
     pset::PS
 end
@@ -47,20 +49,18 @@ end
 
 ProblemUpdaterU = Union{ProblemUpdater, ProblemUpdaterConcrete}
 
-
 """
     get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0, p)
     get_ode_problemupdater(par_getter::AbstractProblemParGetter, sys::AbstractODESystem)
 
 Construct a `ProblemUpdater` based on an constructed `ODEProblemParSetterConcrete`.     
 """
-function get_ode_problemupdater(par_getter::AbstractProblemParGetter, sys::AbstractODESystem)
-    ProblemUpdater(par_getter,
-        ODEProblemParSetter(sys, keys(par_getter)))
+function get_ode_problemupdater(par_getter::AbstractProblemParGetter,
+        sys::AbstractODESystem)
+    ProblemUpdater(par_getter, ODEProblemParSetter(sys, keys(par_getter)))
 end,
 function get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0, p)
-    ProblemUpdater(par_getter,
-        ODEProblemParSetter(u0, p, keys(par_getter)))
+    ProblemUpdater(par_getter, ODEProblemParSetter(u0, p, keys(par_getter)))
 end
 
 @deprecate ProblemUpdater(par_getter, u0_keys, p_keys) get_ode_problemupdater(par_getter,
@@ -94,12 +94,12 @@ ODEProblem. It is required to know from which part of the problem to extract.
 struct KeysProblemParGetter{N} <: AbstractProblemParGetter
     source_keys::NTuple{N, Symbol}
     dest_keys::NTuple{N, Symbol}
-    is_in_state::SVector{N,Bool}
+    is_in_state::SVector{N, Bool}
     # type parameter already enfources same length
 end
 
-function KeysProblemParGetter(mapping::NTuple{N,Pair{Symbol, Symbol}}, 
-        keys_state::Union{AbstractVector{Symbol},NTuple{NU,Symbol}}) where {N,NU}
+function KeysProblemParGetter(mapping::NTuple{N, Pair{Symbol, Symbol}},
+        keys_state::Union{AbstractVector{Symbol}, NTuple{NU, Symbol}}) where {N, NU}
     source_keys = ntuple(i -> first(mapping[i]), N)
     dest_keys = ntuple(i -> last(mapping[i]), N)
     is_in_state = SVector{N}(k ∈ keys_state for k in source_keys)
@@ -110,7 +110,7 @@ end
 # so that it can be used by constructing a ProblemUpdater
 Base.keys(pg::KeysProblemParGetter) = pg.dest_keys
 
-function (pg::KeysProblemParGetter{N})(pu::AbstractProblemUpdater, prob) where N
+function (pg::KeysProblemParGetter{N})(pu::AbstractProblemUpdater, prob) where {N}
     pset = pu.pset
     u0l = label_state(pset, prob.u0)
     pl = label_par(pu.pset, prob.p)
@@ -120,8 +120,8 @@ function (pg::KeysProblemParGetter{N})(pu::AbstractProblemUpdater, prob) where N
     #ftmp = (k) -> k ∈ keys(u0l) ? u0l[k] : pl[k]
     #vcat((ftmp(k) for k in pg.source_keys)...)::Vector{T}
     #Main.@infiltrate_main
-    ftmp = (i,k) -> pg.is_in_state[i] ? u0l[k] : pl[k]
-    vcat((ftmp(i,k) for (i,k) in enumerate(pg.source_keys))...)::Vector{T}
+    ftmp = (i, k) -> pg.is_in_state[i] ? u0l[k] : pl[k]
+    vcat((ftmp(i, k) for (i, k) in enumerate(pg.source_keys))...)::Vector{T}
 end
 
 """

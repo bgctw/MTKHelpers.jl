@@ -18,11 +18,11 @@ prob = ODEProblem(f, collect(u0), tspan, collect(p))
 end;
 
 @testset "KeysProblemParGetter_arr" begin
-    f = (u,p,t) -> p[1]*u
-    u0 = ComponentVector(L=1/2)
-    p = ComponentVector(k_L = 1.0, k_R = [2.0,3.0], k_P = [4.0,5.0], k_L2 = 6.0)
-    tspan = (0., 1.)
-    prob = ODEProblem(f,getdata(u0),tspan,getdata(p);tspan = (0.,1.))
+    f = (u, p, t) -> p[1] * u
+    u0 = ComponentVector(L = 1 / 2)
+    p = ComponentVector(k_L = 1.0, k_R = [2.0, 3.0], k_P = [4.0, 5.0], k_L2 = 6.0)
+    tspan = (0.0, 1.0)
+    prob = ODEProblem(f, getdata(u0), tspan, getdata(p); tspan = (0.0, 1.0))
     #
     mapping = (:k_L => :k_L2, :k_R => :k_P)
     pu = get_ode_problemupdater(KeysProblemParGetter(mapping, keys(u0)), u0, p)
@@ -39,7 +39,6 @@ end;
     p_non_opt = setdiff(keys_par(pset), dest)
     @test p2[p_non_opt] == p[p_non_opt]
 end;
-
 
 @testset "KeysProblemParGetter error on length(source) != length(dest)" begin
     sk = (:k_L, :k_L)
@@ -72,9 +71,9 @@ end;
     get_fopt = (pu) -> begin
         # get a concrete-type version of the ProblemParSetter and pass it 
         # through a function barrier to a closure (function within let)
-        puc = get_concrete(pu) 
+        puc = get_concrete(pu)
         get_fopt_inner = (puc) -> begin
-            let puc=puc
+            let puc = puc
                 (prob) -> begin
                     prob_upd = @inferred puc(prob)
                 end # function
@@ -92,18 +91,13 @@ end;
     @named sys = embed_system(m)
     pset = ODEProblemParSetter(sys, (:m₊p,))
     mapping = (:m₊i => :m₊τ,)
-    pg = KeysProblemParGetter(mapping, keys_state(pset)) 
+    pg = KeysProblemParGetter(mapping, keys_state(pset))
     pu = get_ode_problemupdater(pg, sys)
     #
-    st = Symbolics.scalarize(m.x .=> [1.0,2.0])
-    p_new = vcat(m.i => 1.0, m.τ => 2.0,  Symbolics.scalarize(m.p .=> [2.1,2.2,2.3]))
+    st = Symbolics.scalarize(m.x .=> [1.0, 2.0])
+    p_new = vcat(m.i => 1.0, m.τ => 2.0, Symbolics.scalarize(m.p .=> [2.1, 2.2, 2.3]))
     prob = ODEProblem(sys, st, (0.0, 10.0), p_new)
     @test label_par(pset, prob.p).m₊τ == 2.0
     prob2 = pu(prob)
     @test label_par(pset, prob2.p).m₊τ == 1.0
 end;
-
-
-
-
-

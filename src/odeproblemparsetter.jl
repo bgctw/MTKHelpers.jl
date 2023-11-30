@@ -28,8 +28,8 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
     is_updated_state_i::AbstractVector
     is_updated_par_i::AbstractVector
     function ODEProblemParSetter(ax_state::AbstractAxis,
-        ax_par::AbstractAxis, ax_paropt::AbstractAxis,
-        is_validating::Val{isval}) where {isval}
+            ax_par::AbstractAxis, ax_paropt::AbstractAxis,
+            is_validating::Val{isval}) where {isval}
         if isval
             is_valid, msg = validate_keys_state_par(ax_paropt, ax_state, ax_par)
             !is_valid && error(msg)
@@ -37,36 +37,35 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
         keys_paropt_state = keys(CA.indexmap(ax_paropt)[:state])
         keys_paropt_par = keys(CA.indexmap(ax_paropt)[:par])
         is_updated_state_i = isempty(keys_paropt_state) ?
-                             SVector{0,Bool}() :
+                             SVector{0, Bool}() :
                              SVector((k ∈ keys_paropt_state for k in keys(ax_state))...)
         is_updated_par_i = isempty(keys_paropt_par) ?
-                           SVector{0,Bool}() :
+                           SVector{0, Bool}() :
                            SVector((k ∈ keys_paropt_par for k in keys(ax_par))...)
         new(ax_paropt, ax_state, ax_par, is_updated_state_i, is_updated_par_i)
     end
 end
 
-
-function ODEProblemParSetter(state_template, par_template, popt_template; 
-    is_validating = Val{true}())
+function ODEProblemParSetter(state_template, par_template, popt_template;
+        is_validating = Val{true}())
     ax_paropt = _get_axis(popt_template)
     ax_state = _get_axis(state_template)
     ax_par = _get_axis(par_template)
-    if !(:state ∈ keys(ax_paropt) || :par ∈ keys(ax_paropt)) 
+    if !(:state ∈ keys(ax_paropt) || :par ∈ keys(ax_paropt))
         ax_paropt = assign_state_par(ax_state, ax_par, ax_paropt)
     end
     ODEProblemParSetter(ax_state, ax_par, ax_paropt, is_validating)
 end
 
-function ODEProblemParSetter(state_template, 
-    par_template, popt_template::Union{NTuple{N,Symbol},AbstractVector{Symbol}}; 
-    is_validating = Val{true}()) where N
+function ODEProblemParSetter(state_template,
+        par_template, popt_template::Union{NTuple{N, Symbol}, AbstractVector{Symbol}};
+        is_validating = Val{true}()) where {N}
     ax_par = _get_axis(par_template)
     ax_state = _get_axis(state_template)
     # construct a template by extracting the components of u0 and p
     u0 = attach_axis(1:axis_length(ax_state), ax_state)
     p = attach_axis(1:axis_length(ax_par), ax_par)
-    popt_template_new = vcat(u0,p)[popt_template]
+    popt_template_new = vcat(u0, p)[popt_template]
     ODEProblemParSetter(ax_state, ax_par, popt_template_new; is_validating)
 end
 
@@ -78,19 +77,19 @@ function assign_state_par(ax_state, ax_par, ax_paropt)
         key ∈ keys(ax_par) && push!(par_keys, key)
     end
     missing_keys = setdiff(keys(ax_paropt), vcat(state_keys, par_keys))
-    length(missing_keys) != 0 && @warn("Expected optimization parameters to be part of " *
-        "state or parameters, but did not found parameters " * string(missing_keys) * ".")
+    length(missing_keys) != 0 && @warn("Expected optimization parameters to be part of "*
+          "state or parameters, but did not found parameters "*string(missing_keys)*".")
     duplicate_keys = intersect(state_keys, par_keys)
-    length(duplicate_keys) != 0 && @warn("Expected optimization parameters to be either " *
-        " part of state or parameters, but following occur in both " * 
-        string(duplicate_keys) * ". Will update those only in state.")
+    length(duplicate_keys) != 0 && @warn("Expected optimization parameters to be either "*
+          " part of state or parameters, but following occur in both "*
+          string(duplicate_keys)*". Will update those only in state.")
     # assume to refer to state only
     par_keys = setdiff(par_keys, duplicate_keys)
-    tmp = attach_axis((1:axis_length(ax_paropt)), ax_paropt) 
+    tmp = attach_axis((1:axis_length(ax_paropt)), ax_paropt)
     # empty ComponentVector does not translate to tmp2
     # tmp_state = isempty(state_keys) ? ComponentVector() : @view tmp[state_keys]
     # tmp_par = isempty(par_keys) ? ComponentVector() : @view tmp[par_keys]
-    tmp_state =  @view tmp[state_keys]
+    tmp_state = @view tmp[state_keys]
     tmp_par = @view tmp[par_keys]
     tmp2 = CA.ComponentVector(state = tmp_state, par = tmp_par)
     return _get_axis(tmp2)
@@ -107,13 +106,11 @@ end
 
 ODEProblemParSetterU = Union{ODEProblemParSetter, ODEProblemParSetterConcrete}
 
-
 axis_state(ps::ODEProblemParSetterU) = ps.ax_state
 axis_par(ps::ODEProblemParSetterU) = ps.ax_par
 axis_paropt(ps::ODEProblemParSetterU) = ps.ax_paropt
 
 classes_paropt(pset::ODEProblemParSetterU) = (:state, :par)
-
 
 # # Using unexported interface of ComponentArrays.axis, one place to change
 # "Accessor function for index from ComponentIndex"
@@ -137,8 +134,8 @@ function update_statepar(pset::ODEProblemParSetterU, popt, u0, p)
             copy(pc) :
             _update_cv_top(pc, poptc.par, pset.is_updated_par_i)
     # if u0 was not a ComponentVector, return then data inside
-    return (u0 isa ComponentVector) ? u0_new : getfield(u0_new, :data), 
-        (p isa ComponentVector) ? p_new : getfield(p_new, :data)
+    return (u0 isa ComponentVector) ? u0_new : getfield(u0_new, :data),
+    (p isa ComponentVector) ? p_new : getfield(p_new, :data)
 end
 
 # mutating version does not work with derivatives
@@ -157,7 +154,6 @@ end
 #         (p isa ComponentVector) ? pc : getfield(pc, :data)
 # end
 
-
 # struct ODEVectorCreator <: AbstractVectorCreator; end
 # function (vc::ODEVectorCreator)(pset, u0, p)
 #     ET = promote_type(eltype(u0), eltype(p))
@@ -171,7 +167,6 @@ end
 #     MVector{N,ET}(undef)
 # end
 
-
 """
     get_paropt_labeled(pset::ODEProblemParSetter, u0, p)
 
@@ -184,8 +179,10 @@ For obtaining a StaticVector instead, pass MTKHelpers.ODEMVectorCreator()
 as the fourth argument. This method should work with any AbstractVectorCreator
 that returns a mutable AbstractVector.
 """
-function get_paropt_labeled(pset::ODEProblemParSetterU, u0, p, 
-    #vec_creator::AbstractVectorCreator=ODEVectorCreator()
+function get_paropt_labeled(pset::ODEProblemParSetterU,
+        u0,
+        p
+        #vec_creator::AbstractVectorCreator=ODEVectorCreator()
     )
     u0c = attach_axis(u0, axis_state(pset))
     pc = attach_axis(p, axis_par(pset))
@@ -237,38 +234,40 @@ function validate_keys(pset::ODEProblemParSetterU)
     validate_keys_state_par(axis_paropt(pset), axis_state(pset), axis_par(pset))
 end
 
-function validate_keys_state_par(ax_paropt::AbstractAxis, ax_state::AbstractAxis, ax_par::AbstractAxis)
+function validate_keys_state_par(ax_paropt::AbstractAxis,
+        ax_state::AbstractAxis,
+        ax_par::AbstractAxis)
     paropt = attach_axis((1:axis_length(ax_paropt)), ax_paropt)
-    if keys(ax_paropt) != (:state,:par) return (;isvalid=false, 
-        msg=String127("Expected paropt to have classification keys (:state,:par) but was " *
-        string(keys(paropt))))
+    if keys(ax_paropt) != (:state, :par)
+        return (; isvalid = false,
+            msg = String127("Expected paropt to have classification keys (:state,:par) " *
+                            "but was " * string(keys(paropt))))
     end
     paropt.state isa CA.ComponentVector ||
         length(paropt.state) == 0 ||  # special case of empty ComponentVector, e.g. 2:1
-        return return (; isvalid=false,
-            msg=String127("Expected paropt.state <: ComponentVector, but was not."))
+        return return (; isvalid = false,
+            msg = String127("Expected paropt.state <: ComponentVector, but was not."))
     paropt.par isa CA.ComponentVector ||
         length(paropt.par) == 0 ||  # special case of empty ComponentVector
-        return return (; isvalid=false,
-            msg=String127("Expected paropt.par <: ComponentVector, but was not."))
+        return return (; isvalid = false,
+            msg = String127("Expected paropt.par <: ComponentVector, but was not."))
     u0c = attach_axis((1:axis_length(ax_state)), ax_state)
     for k in keys(paropt.state)
-        k ∉ keys(u0c) && return (;isvalid=false, 
-            msg=String127("Expected optimined paropt.state.$k to be part of state, " * 
-            "but was not."))
-        length(paropt.state[k]) != length(u0c[k]) &&  return (;isvalid=false, 
-            msg=String127("Expected optimized paropt.state.$k to be of length " *
-            "$(length(u0c[k])) but had length $(length(paropt.state[k]))"))
+        k ∉ keys(u0c) && return (; isvalid = false,
+            msg = String127("Expected optimined paropt.state.$k to be part of state, " *
+                            "but was not."))
+        length(paropt.state[k]) != length(u0c[k]) && return (; isvalid = false,
+            msg = String127("Expected optimized paropt.state.$k to be of length " *
+                            "$(length(u0c[k])) but had length $(length(paropt.state[k]))"))
     end
     pc = attach_axis((1:axis_length(ax_par)), ax_par)
     for k in keys(paropt.par)
-        k ∉ keys(pc) && return (;isvalid=false, 
-            msg=String127("Expected optimined paropt.par.$k to be part of parameters, " * 
-            "but was not."))
-        length(paropt.par[k]) != length(pc[k]) && return (;isvalid=false, 
-            msg=String127("Expected optimized paropt.par.$k to be of length " *
-            "$(length(pc[k])) but had length $(length(paropt.par[k]))"))
+        k ∉ keys(pc) && return (; isvalid = false,
+            msg = String127("Expected optimined paropt.par.$k to be part of parameters, " *
+                            "but was not."))
+        length(paropt.par[k]) != length(pc[k]) && return (; isvalid = false,
+            msg = String127("Expected optimized paropt.par.$k to be of length " *
+                            "$(length(pc[k])) but had length $(length(paropt.par[k]))"))
     end
-    return (;isvalid=true, msg=String127(""))
+    return (; isvalid = true, msg = String127(""))
 end
-

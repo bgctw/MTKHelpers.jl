@@ -41,9 +41,6 @@ export AbstractProblemParSetter,
     get_p_map,
     get_concrete
 
-
-
-
 # extending 
 import Base: merge, getindex
 import ComponentArrays: getdata
@@ -69,12 +66,12 @@ export getlast
 include("solution.jl")
 
 export AbstractProblemUpdater, ProblemUpdater, ProblemUpdaterConcrete, NullProblemUpdater,
-    AbstractProblemParGetter,  KeysProblemParGetter
+    AbstractProblemParGetter, KeysProblemParGetter
 export par_setter, par_setter
 export get_ode_problemupdater
 include("problemupdater.jl")
 
-export get_system_symbol_dict, system_num_dict 
+export get_system_symbol_dict, system_num_dict
 export strip_deriv_num
 export base_num, get_base_num_dict
 include("util_nums.jl")
@@ -86,13 +83,11 @@ export grid_exp, Dz_exp, Iz_exp, Dz_lin, Iz_lin
 export get_1d_state_pos, get_1d_grid, get_discrete_space
 include("util_pde.jl")
 
-
 export series_sol!
 include("makie_util.jl")
 
 #export samplesystem_vec, indices_of_nums
 include("example_systems.jl")
-
 
 if !isdefined(Base, :get_extension)
     using Requires
@@ -109,6 +104,5 @@ end
         @require CairoMakie="13f3f980-e62b-5c42-98c6-ff1f3baf88f0" include("../ext/MTKHelpersMakieExt.jl")
     end
 end
-
 
 end # module

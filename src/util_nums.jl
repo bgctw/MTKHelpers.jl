@@ -3,9 +3,12 @@
 
 Get the symbol without an index, e.g. p[1] -> p, or x(t)[1] -> x(t).   
 """
-base_num(s::SymbolicUtils.BasicSymbolic) = !istree(s) ? s :
+function base_num(s::SymbolicUtils.BasicSymbolic)
+    !istree(s) ? s :
     #operation(s) == getindex ? base_num(first(arguments(s))) : base_num(operation(s)) 
-    operation(s) == getindex ? base_num(first(arguments(s))) : s 
+    operation(s) == getindex ?
+    base_num(first(arguments(s))) : s
+end
 base_num(s) = s
 
 """
@@ -14,7 +17,7 @@ base_num(s) = s
 Return a Dictionary of Symbol -> Num, for each unique `base_num.(nums)`
 """
 function get_base_num_dict(nums)
-    @chain nums begin  
+    @chain nums begin
         base_num.()
         unique()
         symbol_op.(_) .=> _
@@ -36,8 +39,7 @@ function get_system_symbol_dict(sys::AbstractODESystem)
         # get_base_num_dict(ModelingToolkit.namespace_variables(sys)),
         # get_base_num_dict(ModelingToolkit.namespace_parameters(sys)),
         get_base_num_dict(states(sys)),
-        get_base_num_dict(parameters(sys)),
-    )
+        get_base_num_dict(parameters(sys)))
 end
 
 # function get_system_symbol_dict(sys::AbstractSystem,
@@ -53,26 +55,25 @@ end
 #     merge(dicts...)
 # end
 
-
 @deprecate strip_deriv_num(x) symbol_op(x)
 
-
 function componentvector_to_numdict(cv::ComponentVector{T}, num_dict::Dict{Symbol, S};
-    indices = nothing) where {T,S}
+        indices = nothing) where {T, S}
     tmp = @chain keys(cv) begin
         #filter(k -> k ∈ keys(num_dict), _)
-        isnothing(indices) ? 
-            (Symbolics.scalarize(k) .=> cv[symbol_op(k)] for k in getindex.(Ref(num_dict), _)) :
-            (Symbolics.scalarize(k)[indices] .=> cv[symbol_op(k)] for k in getindex.(Ref(num_dict), _))
+        isnothing(indices) ?
+        (Symbolics.scalarize(k) .=> cv[symbol_op(k)] for k in getindex.(Ref(num_dict), _)) :
+        (Symbolics.scalarize(k)[indices] .=> cv[symbol_op(k)]
+         for k in getindex.(Ref(num_dict), _))
         vcat(_...)
         Dict(_)
     end
-    isempty(tmp) && return Dict{SymbolicUtils.BasicSymbolic{Real}, T}()    
-    tmp::Dict{SymbolicUtils.BasicSymbolic{Real}, T}    
+    isempty(tmp) && return Dict{SymbolicUtils.BasicSymbolic{Real}, T}()
+    tmp::Dict{SymbolicUtils.BasicSymbolic{Real}, T}
 end
 # fallback for empty subvectors of a ComponentArray
-function componentvector_to_numdict(cv::SubArray{T}, num_dict::Dict{Symbol, S}) where {T,S}
-    Dict{SymbolicUtils.BasicSymbolic{Real}, T}()    
+function componentvector_to_numdict(cv::SubArray{T}, num_dict::Dict{Symbol, S}) where {T, S}
+    Dict{SymbolicUtils.BasicSymbolic{Real}, T}()
 end
 
 """
@@ -90,14 +91,13 @@ by boundary conditions and are not in the state vector.
 For those, supply argument `state_pos` giving indices of the states,
 as found by [`get_1d_state_pos`](@ref).
 """
-function SciMLBase.remake(prob::AbstractODEProblem, paropt::ComponentVector; 
-    state_pos = nothing,
-    num_dict_state = get_base_num_dict(states(get_system(prob))),
-    num_dict_par = get_base_num_dict(parameters(get_system(prob)))
-    )
-    u0 = componentvector_to_numdict(paropt.state, num_dict_state; indices=state_pos)
+function SciMLBase.remake(prob::AbstractODEProblem, paropt::ComponentVector;
+        state_pos = nothing,
+        num_dict_state = get_base_num_dict(states(get_system(prob))),
+        num_dict_par = get_base_num_dict(parameters(get_system(prob))))
+    u0 = componentvector_to_numdict(paropt.state, num_dict_state; indices = state_pos)
     p = componentvector_to_numdict(paropt.par, num_dict_par)
-    SciMLBase.remake(prob, u0=u0, p=p)
+    SciMLBase.remake(prob, u0 = u0, p = p)
 end
 
 """
@@ -120,15 +120,14 @@ function system_num_dict(ca::CA.ComponentVector, symbol_dict::AbstractDict)
     componentvector_to_numdict(ca, symbol_dict)
 end
 
-
 function indices_of_nums(nums)
     op_syms = symbol_op.(nums)
     #vec_of_pairs = Vector{Pair{Symbol, Union{Int,UnitRange{Int}}}}()
     vec_of_pairs = Vector{Pair{Symbol, UnitRange{Int}}}()
-    for (pos, sym) in enumerate(op_syms) 
-        if length(vec_of_pairs) == 0 
+    for (pos, sym) in enumerate(op_syms)
+        if length(vec_of_pairs) == 0
             push!(vec_of_pairs, sym => pos:pos)
-        else 
+        else
             current_pair = vec_of_pairs[end]
             if sym != first(current_pair)
                 push!(vec_of_pairs, sym => pos:pos)
@@ -149,9 +148,8 @@ to the indices in the given vector of nums.
 """
 function axis_of_nums(nums)
     pos_nums = indices_of_nums(nums)
-    pos_nums_scalar = [first(pr) => length(last(pr)) == 1 ? first(last(pr)) : last(pr) for pr in pos_nums]
+    pos_nums_scalar = [first(pr) => length(last(pr)) == 1 ? first(last(pr)) : last(pr)
+                       for pr in pos_nums]
     #CA._component_axis(first(axes(CA.ComponentArray(;pos_nums_scalar...))))
-    first(getaxes(CA.ComponentArray(;pos_nums_scalar...)))
+    first(getaxes(CA.ComponentArray(; pos_nums_scalar...)))
 end
-
-

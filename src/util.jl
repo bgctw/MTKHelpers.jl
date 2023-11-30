@@ -54,13 +54,12 @@ Converts from `var\"Y_Any[i]\""` to `var"Y[2]"` by
 function simplify_symbol(s::AbstractString)
     @chain s begin
         # remove outer var"..."
-        replace(_, r"^var\"(.+)\"$" => s"\1")        
+        replace(_, r"^var\"(.+)\"$" => s"\1")
         # replace _Any[...] by [...]
         replace(_, r"_.+\[(.+)\]" => s"[\1]")
     end
 end
 simplify_symbol(sym::Symbol) = Symbol(simplify_symbol(string(sym)))
-
 
 """
     symbol_op(t)
@@ -71,12 +70,14 @@ function symbol_op(t::Term)
     error("Case not yet implemented. Should not dispatch on Term.")
     #symbol_op(t.f)
 end
-symbol_op(s::SymbolicUtils.BasicSymbolic) = !istree(s) ? simplify_symbol(Symbol(s)) :
-    operation(s) == getindex ? symbol_op(first(arguments(s))) : symbol_op(operation(s)) 
+function symbol_op(s::SymbolicUtils.BasicSymbolic)
+    !istree(s) ? simplify_symbol(Symbol(s)) :
+    operation(s) == getindex ? symbol_op(first(arguments(s))) : symbol_op(operation(s))
+end
 symbol_op(s::Symbolics.Arr) = symbol_op(s.value)
 symbol_op(num::Num) = symbol_op(num.val)
-symbol_op(s::AbstractString) = Symbol(simplify_symbol(s)) 
-function symbol_op(s) 
+symbol_op(s::AbstractString) = Symbol(simplify_symbol(s))
+function symbol_op(s)
     simplify_symbol(Symbol(s))
 end
 
@@ -135,11 +136,11 @@ Modify `basesys` by replacing some equations matched by their left-hand-side.
 The keyword argument correspond to ODESystem.
 """
 function override_system(eqs, basesys::AbstractSystem;
-    name::Symbol = Symbol(string(nameof(basesys)) * "_ext"),
-    ps = Term[],
-    obs = Equation[],
-    evs = ModelingToolkit.SymbolicContinuousCallback[],
-    defs = Dict())
+        name::Symbol = Symbol(string(nameof(basesys)) * "_ext"),
+        ps = Term[],
+        obs = Equation[],
+        evs = ModelingToolkit.SymbolicContinuousCallback[],
+        defs = Dict())
     T = SciMLBase.parameterless_type(basesys)
     ivs = independent_variables(basesys)
     length(ivs) > 1 && error("Extending multivariate systems is not supported")
@@ -161,24 +162,11 @@ function override_system(eqs, basesys::AbstractSystem;
     syss = get_systems(basesys)
     #
     if length(ivs) == 0
-        T(eqs_ext,
-            sts,
-            ps_ext,
-            observed = obs_ext,
-            defaults = defs_ext,
-            name = name,
-            systems = syss,
-            continuous_events = evs_ext)
+        T(eqs_ext, sts, ps_ext, observed = obs_ext, defaults = defs_ext, name = name,
+            systems = syss, continuous_events = evs_ext)
     elseif length(ivs) == 1
-        T(eqs_ext,
-            ivs[1],
-            sts,
-            ps_ext,
-            observed = obs_ext,
-            defaults = defs_ext,
-            name = name,
-            systems = syss,
-            continuous_events = evs_ext)
+        T(eqs_ext, ivs[1], sts, ps_ext, observed = obs_ext, defaults = defs_ext,
+            name = name, systems = syss, continuous_events = evs_ext)
     end
 end
 

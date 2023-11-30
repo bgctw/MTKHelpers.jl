@@ -16,7 +16,6 @@ _get_axis(x::ComponentVector) = first(getaxes(x))
 _get_axis(x::AbstractAxis) = x
 _get_axis(x::CA.CombinedAxis) = CA._component_axis(x)
 
-
 # TODO move to ComponentArrays.jl
 # type piracy: https://github.com/jonniedie/ComponentArrays.jl/issues/141
 #@inline CA.getdata(x::ComponentVector) = getfield(x, :data)
@@ -28,9 +27,6 @@ function attach_axis(x::ComponentVector, ax::AbstractAxis)
     ComponentArray(getfield(x, :data), (ax,))
 end
 attach_x_axis(x::ComponentMatrix, ax::AbstractAxis) = ComponentArray(x, (ax, FlatAxis()))
-
-
-
 
 # function _get_index_axis(cv::ComponentVector, ax::AbstractAxis)
 #     first(getaxes(cv)) == ax && return(cv) # no need to reassamble
@@ -234,7 +230,7 @@ function _update_cv_top(cv::ComponentVector, s::ComponentVector)
     keyss = keys(s)
     mkeys = (!(k ∈ keys(cv)) for k in keyss)
     any(mkeys) && error("The following keys to update were not found in destination " *
-        string(keyss[collect(mkeys)]))
+          string(keyss[collect(mkeys)]))
     gen_is_updated = (k ∈ keys(s) for k in keys(cv))
     #is_updated = collect(gen_is_updated)
     is_updated = SVector{length(keys(_get_axis(cv)))}(gen_is_updated...)
@@ -248,14 +244,16 @@ Return a new ComponentVector of eltype `promote_type(TD, TS)` with those compone
 , for which `is_key_updated[i]` is true, are replaced by the corresponding name of 
 source s. 
 """
-function _update_cv_top(cv::ComponentVector{TD,TAD}, s::ComponentVector{TS}, is_updated::AbstractVector{Bool}) where {TD, TAD, TS}
+function _update_cv_top(cv::ComponentVector{TD, TAD},
+        s::ComponentVector{TS},
+        is_updated::AbstractVector{Bool}) where {TD, TAD, TS}
     # s has not entries, return a copy
     axis_length(_get_axis(s)) == 0 && copy(cv)
     T_EL = promote_type(TD, TS)
     #(i,k) = first(enumerate(keys(cv)))
     #(i,k) = last(enumerate(keys(cv)))
-    ftmp = (i,k) -> begin
-        if is_updated[i] 
+    ftmp = (i, k) -> begin
+        if is_updated[i]
             # extracting the underlying array does not gain performance but makes problems
             # in vcat: #val = @view s[k]
             val_s = @view s[KeepIndex(k)]
@@ -264,13 +262,13 @@ function _update_cv_top(cv::ComponentVector{TD,TAD}, s::ComponentVector{TS}, is_
             val_cv = @view cv[KeepIndex(k)]
         end
     end
-    g = (ftmp(i,k) for (i,k) in enumerate(keys(cv))) 
+    g = (ftmp(i, k) for (i, k) in enumerate(keys(cv)))
     data = vcat(g...)
     # data = reduce(vcat,g) # takes more resources from small vectors
     #Main.@infiltrate_main
     T_C = TAD <: StaticArray ?
-        similar_type(TAD, T_EL) :
-        typeof(similar(getdata(cv), T_EL))
+          similar_type(TAD, T_EL) :
+          typeof(similar(getdata(cv), T_EL))
     data_conv = convert(T_C, data)::T_C
     attach_axis(data_conv, _get_axis(cv))
 end
@@ -303,4 +301,3 @@ end
 #     end
 #     Axis(NamedTuple{syms}(nts))
 # end
-

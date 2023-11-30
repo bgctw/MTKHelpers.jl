@@ -2,8 +2,8 @@
     samplesystem(; name, τ = 3.0, i = 0.1, p1 = 1.1, p2 = 1.2)
 
 Defines a simple ODESystem of exponential decay to p1/p2 with rate τ
-"""    
-function samplesystem(; name, τ = 3.0, i=0.1, p1 = 1.1, p2 = 1.2)
+"""
+function samplesystem(; name, τ = 3.0, i = 0.1, p1 = 1.1, p2 = 1.2)
     @variables t
     D = Differential(t)
     sts = @variables x(t) RHS(t)  # RHS is observed
@@ -38,7 +38,3 @@ end
 #             D(x₂) ~ dx₂(t),
 #         ], t, sts, ps; name)
 # end
-
-
-
-
