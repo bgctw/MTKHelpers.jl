@@ -57,10 +57,13 @@ end
 @deprecate strip_deriv_num(x) symbol_op(x)
 
 
-function componentvector_to_numdict(cv::ComponentVector{T}, num_dict::Dict{Symbol, S}) where {T,S}
+function componentvector_to_numdict(cv::ComponentVector{T}, num_dict::Dict{Symbol, S};
+    indices = nothing) where {T,S}
     tmp = @chain keys(cv) begin
         #filter(k -> k ∈ keys(num_dict), _)
-        (Symbolics.scalarize(k) .=> cv[symbol_op(k)] for k in getindex.(Ref(num_dict), _))
+        isnothing(indices) ? 
+            (Symbolics.scalarize(k) .=> cv[symbol_op(k)] for k in getindex.(Ref(num_dict), _)) :
+            (Symbolics.scalarize(k)[indices] .=> cv[symbol_op(k)] for k in getindex.(Ref(num_dict), _))
         vcat(_...)
         Dict(_)
     end
@@ -81,12 +84,18 @@ Creates a new problem with components in `u0` and `p` begin updated, for problem
 with an associated ODESystem.
 For doing this more efficently when repeating, pre-compute the `num_dict_state` and `num_dict_par` once,
 and provide it to the function.
+
+For discretized pde systems, some of the scalarized states are computed
+by boundary conditions and are not in the state vector.
+For those, supply argument `state_pos` giving indices of the states,
+as found by [`get_1d_state_pos`](@ref).
 """
 function SciMLBase.remake(prob::AbstractODEProblem, paropt::ComponentVector; 
+    state_pos = nothing,
     num_dict_state = get_base_num_dict(states(get_system(prob))),
     num_dict_par = get_base_num_dict(parameters(get_system(prob)))
     )
-    u0 = componentvector_to_numdict(paropt.state, num_dict_state)
+    u0 = componentvector_to_numdict(paropt.state, num_dict_state; indices=state_pos)
     p = componentvector_to_numdict(paropt.par, num_dict_par)
     SciMLBase.remake(prob, u0=u0, p=p)
 end

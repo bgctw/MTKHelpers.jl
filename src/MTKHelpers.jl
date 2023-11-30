@@ -28,7 +28,7 @@ export AbstractProblemParSetter,
     symbols_paropt,
     symbols_state,
     symbols_par,
-    update_statepar,
+    #update_statepar,
     get_paropt,
     get_paropt_labeled,
     label_paropt,
@@ -42,27 +42,30 @@ export AbstractProblemParSetter,
     get_concrete
 
 
-export smoothstep
 
-export series_sol!
-
-export getlast
 
 # extending 
 import Base: merge, getindex
 import ComponentArrays: getdata
 
-export symbol_op, symbols_state, symbols_par, strip_namespace, embed_system, override_system
+export symbol_op, embed_system, override_system
 include("util.jl")
 
 #export _get_index_axis, _set_index_axis!, attach_axis, _update_cv, _labels
 include("util_componentarrays.jl")
 
 include("abstractproblemparsetter.jl")
+
+export get_system
 include("abstractodeproblemparsetter.jl")
 include("odeproblemparsetterconcrete.jl")
 include("odeproblemparsetter.jl")
+
+export smoothstep
 include("smoothstep.jl")
+
+export series_sol!
+export getlast
 include("solution.jl")
 
 export AbstractProblemUpdater, ProblemUpdater, ProblemUpdaterConcrete, NullProblemUpdater,
@@ -80,7 +83,7 @@ export fit_Dirichlet_std, fit_Dirichlet_mode, simplex_grid
 include("prior_util.jl")
 
 export grid_exp, Dz_exp, Iz_exp, Dz_lin, Iz_lin
-export get_1d_state_grid, get_1d_grid, get_discrete_space, get_system
+export get_1d_state_pos, get_1d_grid, get_discrete_space
 include("util_pde.jl")
 
 

@@ -222,19 +222,13 @@ par_new = ComponentVector(k_Y = 1/10, Y0 = 80.0, i_Y = 10.0,
 #u0 = Dz_lin.(-(z_m:dz:-dz), -z_m) * par_new.Y0 # straight initial profile
 #u0 = Dz_lin.((dz:dz:z_m), z_m) * par_new.Y0 # straight initial profile
 #u0 = Dz_lin.((0:dz:z_m)[2:(end-1)], z_m) * par_new.Y0 # straight initial profile
-u0 = Dz_lin.(get_1d_state_grid(prob), z_m) * par_new.Y0 # straight initial profile
-#u0 = Dz_exp.((z_m:dz:0), z_m, 2.0) * par_new.Y0 # no upwind boundary
-#u0 = Dz_lin.((z_m:dz:0), z_m) * par_new.Y0
-ax_par = MTKHelpers.axis_of_nums(parameters(get_system(prob)))  
+zs = get_1d_grid(prob)
+state_pos = get_1d_state_pos(prob)
+u0 = ComponentVector(Y = Dz_lin.(zs[state_pos], z_m) * par_new.Y0)
+#ax_par = MTKHelpers.axis_of_nums(parameters(get_system(prob)))  
 
-Symbolics.scalarize.(par_new.i_Y_agr)
-symbol_p
-tmp = vcat((Symbolics.scalarize(k) .=> par_new[symbol_op(k)]) for k in keys(par_new)...)
 
-k = :i_Y_agr
-
-par_new = par_new[keys(ax_par)] # sort according to system
-prob2 = prob2 = remake(prob, u0=u0, p=getdata(par_new), tspan=(0,500))
+prob2 = remake(prob, ComponentVector(state=u0, par=par_new); state_pos)
 #solp = sol = solve(prob2, TRBDF2()); #slower than Rodas5P but more points to plot
 #solp = sol = solve(prob2, Rodas5P(), saveat=2); 
 #solp = sol = solve(prob2, Rodas5P(), saveat=1, tspan=(70,150)); 

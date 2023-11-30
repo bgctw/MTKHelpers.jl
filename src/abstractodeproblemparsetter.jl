@@ -198,3 +198,16 @@ function get_p_map(p_new, pset::AbstractODEProblemParSetter; is_warn_missing = f
     end
     getdata(pos_old[keys(ax_new)]) 
 end
+
+"""
+    get_system(prob::AbstractODEProblem) 
+
+Get the System associated to a problem.
+"""
+function get_system(prob::AbstractODEProblem)
+    :sys ∈ propertynames(prob.f) || error(
+        "Cannot get System for a Problem without associated system")
+   prob.f.sys
+end
+
+

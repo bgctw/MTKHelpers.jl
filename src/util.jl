@@ -44,6 +44,25 @@ function embed_system(m; name, simplify = true)
 end
 
 """
+    simplify_symbol(s::AbstractString)
+    simplify_symbol(s::Symbol)
+
+Converts from `var\"Y_Any[i]\""` to `var"Y[2]"` by 
+- stripping outer var
+- replacing `_Any[i]` by `[i]`
+"""
+function simplify_symbol(s::AbstractString)
+    @chain s begin
+        # remove outer var"..."
+        replace(_, r"^var\"(.+)\"$" => s"\1")        
+        # replace _Any[...] by [...]
+        replace(_, r"_.+\[(.+)\]" => s"[\1]")
+    end
+end
+simplify_symbol(sym::Symbol) = Symbol(simplify_symbol(string(sym)))
+
+
+"""
     symbol_op(t)
 
 Extract the inner symbol_op from a Term, Num, or BasicSymbolic object.
@@ -52,11 +71,14 @@ function symbol_op(t::Term)
     error("Case not yet implemented. Should not dispatch on Term.")
     #symbol_op(t.f)
 end
-symbol_op(s::SymbolicUtils.BasicSymbolic) = !istree(s) ? Symbol(s) :
+symbol_op(s::SymbolicUtils.BasicSymbolic) = !istree(s) ? simplify_symbol(Symbol(s)) :
     operation(s) == getindex ? symbol_op(first(arguments(s))) : symbol_op(operation(s)) 
 symbol_op(s::Symbolics.Arr) = symbol_op(s.value)
 symbol_op(num::Num) = symbol_op(num.val)
-symbol_op(s) = Symbol(s)
+symbol_op(s::AbstractString) = Symbol(simplify_symbol(s)) 
+function symbol_op(s) 
+    simplify_symbol(Symbol(s))
+end
 
 """
     strip_namespace(s)

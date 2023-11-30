@@ -44,17 +44,6 @@ end
 
 
 """
-    get_system(prob::AbstractODEProblem) 
-
-Get the System associated to a problem.
-"""
-function get_system(prob::AbstractODEProblem)
-    :sys ∈ propertynames(prob.f) || error(
-        "Cannot get System for a Problem without associated system")
-   prob.f.sys
-end
-
-"""
     get_discrete_space(prob::AbstractODEProblem) 
     get_discrete_space(sys::AbstractSystem) 
 
@@ -64,14 +53,20 @@ function get_discrete_space end
 
 """
     get_1d_grid(prob::AbstractODEProblem) 
-    get_1d_state_grid(sys::AbstractSystem) 
 
 Get spatial grid of a discretized 1-D PDESystem associated with a problem.
-The `get_1d_state_grid` variant returns the positions of the state
-variables, excluding the boundary conditions.
 """
-function get_1d_grid end,
-function get_1d_state_grid end
+function get_1d_grid end
+
+"""
+    get_1d_state_pos(sys::AbstractSystem) 
+
+Get the indices of states in the grid of a discretized 1-D PDESystem 
+associated with a problem.
+It excludes the positions computed based on boundary conditions.
+"""
+function get_1d_state_pos end
 
 function example_pde_problem end
+function example_pde_problem_arrstate end
 

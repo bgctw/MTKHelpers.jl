@@ -9,6 +9,9 @@ end
     Symbol(m.x)
     @test symbol_op(m.x) == :m₊x # calls Num which calls Par
     @test symbol_op(m.τ) == :m₊τ
+    #
+    # applying simplify_symbol
+    @test symbol_op(Symbol("var\"Y_Any[1]\"")) == Symbol("Y[1]")
 end;
 
 @testset "tuplejoin" begin
@@ -16,10 +19,10 @@ end;
 end;
 
 @testset "strip_namespace" begin
-    @test strip_namespace(:x) == :x
-    @test strip_namespace(:m₊x) == :x
-    @test strip_namespace(:s₊m₊x) == :x
-    @test strip_namespace("s.m.x") == "x"
+    @test MTKHelpers.strip_namespace(:x) == :x
+    @test MTKHelpers.strip_namespace(:m₊x) == :x
+    @test MTKHelpers.strip_namespace(:s₊m₊x) == :x
+    @test MTKHelpers.strip_namespace("s.m.x") == "x"
 end;
 
 # @testset "strip_deriv_num" begin
