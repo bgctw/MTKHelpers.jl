@@ -245,7 +245,7 @@ end;
     popt1s = ComponentVector(state=(L = 10.1,), par=(k_L = 1.1, k_R = 1 / 20.1))
     ps = ps1 = ODEProblemParSetter(u1, p1, popt1s)
     get_fopt = (ps) -> begin
-        # get a conrete-type version of the ProblemParSetter and pass it 
+        # get a concrete-type version of the ProblemParSetter and pass it 
         # through a function barrier to a closure (function within let)
         psc = get_concrete(ps) 
         get_fopt_inner = (psc) -> begin

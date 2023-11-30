@@ -63,7 +63,7 @@ This can be used to create a closure for a cost function that uses
 the type-stable variant.
 
 ```@example doc
-# get a conrete-type version of the ProblemParSetter and pass it 
+# get a concrete-type version of the ProblemParSetter and pass it 
 # through a function barrier to a closure (function within let)
 get_fopt = (puc=get_concrete(pu)) -> let puc=puc
     (prob) -> begin

@@ -70,7 +70,7 @@ end;
     @test prob3.u0 == prob2.u0
     #
     get_fopt = (pu) -> begin
-        # get a conrete-type version of the ProblemParSetter and pass it 
+        # get a concrete-type version of the ProblemParSetter and pass it 
         # through a function barrier to a closure (function within let)
         puc = get_concrete(pu) 
         get_fopt_inner = (puc) -> begin

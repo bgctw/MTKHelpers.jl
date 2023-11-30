@@ -82,7 +82,7 @@ end
     
 Creates a new problem with components in `u0` and `p` begin updated, for problems
 with an associated ODESystem.
-For doing this more efficently when repeating, pre-compute the `num_dict_state` and `num_dict_par` once,
+For doing this more efficiently when repeating, pre-compute the `num_dict_state` and `num_dict_par` once,
 and provide it to the function.
 
 For discretized pde systems, some of the scalarized states are computed

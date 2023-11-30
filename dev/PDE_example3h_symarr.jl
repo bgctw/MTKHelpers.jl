@@ -10,7 +10,6 @@ z_grid = grid_exp(n_z, z_m, 3.0)
 #dz = z_m/(n_z-1) # control of same grid represented by a single number
 #z_grid = z_m/(n_z-1)
 #scatter(z_grid, yflip=true)
-#edge_aling extends the grid below lower boundary with strange initial conditions
 discretization = MOLFiniteDifference([z => z_grid], t;
     advection_scheme = UpwindScheme(), approx_order = 2)
 #advection_scheme=WENOScheme(), approx_order = 2)
@@ -261,7 +260,7 @@ plot(;xlim=(0,130))
 #plot!(solp[t], solp[adv_Yo(t, z)][:,end-2] ) 
 plot!(solp[t], fagr.(solp[t], par_new.i_Y_agr, par_new.i_Y_agr_pulse), label="agr input")
 #plot!(solp[t], solp[Yi(t, z)][:,end], label="Yi" ) # Y integrated across profile
-#plot!(solp[t], -solp[Y_z(t, z)][:,end], lable = "Y_z(0)" ) 
+#plot!(solp[t], -solp[Y_z(t, z)][:,end], label = "Y_z(0)" ) 
 plot!(solp[t], solp[adv_Yi(t, z)][:,end], label="adv_Yi" ) # Y integrated across profile
 #plot!(solp[t], solp[Y(t, z)][:,end]*dz, label="Y_0" ) # Y integrated across profile
 

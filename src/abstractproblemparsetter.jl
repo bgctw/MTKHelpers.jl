@@ -134,7 +134,7 @@ end
     get_concrete(pset::AbstractProblemParSetter)
     get_concrete(pu::AbstractParameterUpdater)
 
-Return a concrete-type-version of an ProbemParSetter or ProblemUpdater.
+Return a concrete-type-version of an ProblemParSetter or ProblemUpdater.
 """
 function get_concrete(pset::AbstractProblemParSetter)
     !isconcrete(pset) && @warn "no concrete type implemented for ProblemSetter of type $(typeof(pset))."

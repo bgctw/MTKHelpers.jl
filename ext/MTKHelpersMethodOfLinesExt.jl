@@ -55,7 +55,7 @@ function MTKHelpers.get_1d_state_pos(prob::AbstractODEProblem)
         filter(x -> isequal(operation(x), getindex), _) 
         # only the first one of these (having the same 1st argument - the name)
         filter(x -> isequal(arguments(x)[1], arguments(first(_))[1]),_) 
-        # extract the postion (second argument)
+        # extract the position (second argument)
         getindex.(arguments.(_), 2)
         # index into z_grid
         # getindex.(Ref(z_grid), _)
