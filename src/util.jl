@@ -82,7 +82,6 @@ end
 #     #symbol_op(t.f)
 # end
 
-
 """
     strip_namespace(s)
     

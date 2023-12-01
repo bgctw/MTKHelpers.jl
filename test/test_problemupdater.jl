@@ -28,10 +28,9 @@ end;
     (pu::DummyProblemUpdater)(prob) = prob
     MTKHelpers.isconcrete(::DummyProblemUpdater) = false
     pu = DummyProblemUpdater()
-    puc = @test_logs (:warn, r"DummyProblemUpdater") get_concrete(pu) 
+    puc = @test_logs (:warn, r"DummyProblemUpdater") get_concrete(pu)
     @test puc === pu
 end;
-
 
 @testset "KeysProblemParGetter_arr" begin
     f = (u, p, t) -> p[1] * u

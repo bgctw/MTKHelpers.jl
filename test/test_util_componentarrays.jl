@@ -200,7 +200,7 @@ end;
 # end;
 
 @testset "_ax_symbols_tuple" begin
-    cv = ComponentVector(a=[])
+    cv = ComponentVector(a = [])
     ax = first(getaxes(cv))
     @test MTKHelpers._ax_symbols_tuple(ax) == ()
 end;
