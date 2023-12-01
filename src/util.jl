@@ -66,10 +66,6 @@ simplify_symbol(sym::Symbol) = Symbol(simplify_symbol(string(sym)))
 
 Extract the inner symbol_op from a Term, Num, or BasicSymbolic object.
 """
-function symbol_op(t::Term)
-    error("Case not yet implemented. Should not dispatch on Term.")
-    #symbol_op(t.f)
-end
 function symbol_op(s::SymbolicUtils.BasicSymbolic)
     !istree(s) ? simplify_symbol(Symbol(s)) :
     operation(s) == getindex ? symbol_op(first(arguments(s))) : symbol_op(operation(s))
@@ -80,6 +76,12 @@ symbol_op(s::AbstractString) = Symbol(simplify_symbol(s))
 function symbol_op(s)
     simplify_symbol(Symbol(s))
 end
+
+# function symbol_op(t::Term)
+#     error("Case not yet implemented. Should not dispatch on Term.")
+#     #symbol_op(t.f)
+# end
+
 
 """
     strip_namespace(s)

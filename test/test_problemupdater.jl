@@ -17,6 +17,22 @@ prob = ODEProblem(f, collect(u0), tspan, collect(p))
     @test label_state(par_setter(pu), prob2.u0) == ComponentVector(u0)
 end;
 
+@testset "NullProblemUpdater" begin
+    pu = NullProblemUpdater()
+    @test get_concrete(pu) === pu
+end;
+
+@testset "no_concrete" begin
+    # test warning if there is no concrete version of a problemupdater
+    struct DummyProblemUpdater <: AbstractProblemUpdater end
+    (pu::DummyProblemUpdater)(prob) = prob
+    MTKHelpers.isconcrete(::DummyProblemUpdater) = false
+    pu = DummyProblemUpdater()
+    puc = @test_logs (:warn, r"DummyProblemUpdater") get_concrete(pu) 
+    @test puc === pu
+end;
+
+
 @testset "KeysProblemParGetter_arr" begin
     f = (u, p, t) -> p[1] * u
     u0 = ComponentVector(L = 1 / 2)

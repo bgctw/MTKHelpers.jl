@@ -1,5 +1,7 @@
 @named m = samplesystem()
 @named m2 = samplesystem()
+@named sys = embed_system(m)
+
 
 @testset "system_num_dict single" begin
     symd = get_system_symbol_dict(m)
@@ -7,6 +9,9 @@
     @test eltype(keys(symd)) == Symbol
     @test eltype(values(symd)) <: SymbolicUtils.BasicSymbolic
     @test all((:x, :RHS, :τ) .∈ Ref(keys(symd)))
+    cv = ComponentVector(x=1.2)
+    ret = system_num_dict(cv, symd)
+    @test all(values(ret) .== [1.2]) # cannot test for x, because only defined in m
     #
     p1 = ComponentVector(x = 1.0, τ = 2.0)
     numd = system_num_dict(p1, m)
@@ -17,6 +22,8 @@
     @test num_x ∈ keys(numd)
     @test numd[num_x] == p1.x
     @test numd[num_τ] == p1.τ
+    # 
+
 end;
 
 @testset "system_num_dict Tuple" begin
@@ -39,3 +46,25 @@ end;
     @test numd[m2.x] == p1.m2₊x
     @test numd[m2.τ] == p1.m2₊τ
 end;
+
+@testset "base_num" begin
+    s = first(states(m))
+    ret = base_num(s)
+    @test isequal(ret, s)
+    sym = :bla
+    @test isequal(base_num(sym), sym) # fallback for non-Symbolics
+end;
+
+@testset "componentvector_to_numdict" begin
+    num_dict_par = get_base_num_dict(parameters(sys))
+    cv = ComponentVector(m₊p1=10.1)
+    ret = MTKHelpers.componentvector_to_numdict(cv, num_dict_par)
+    @test ret == Dict(m.p1 => 10.1)
+    # test empty subcomponent
+    cv2 = ComponentVector(state=[], par=cv)
+    ret = MTKHelpers.componentvector_to_numdict(cv2.state, num_dict_par)
+    @test ret isa Dict
+    @test isempty(ret)
+    #prob = ODEProblem(sys, [m.x => 0.0], (0.0,10.0), [m.τ => 3.0])
+end;
+

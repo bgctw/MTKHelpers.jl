@@ -198,3 +198,9 @@ end;
 #     cv = ComponentVector(a=(a1=1,a2=2,a3=3),b=20)
 #     CP.subaxis(cv, :a)    
 # end;
+
+@testset "_ax_symbols_tuple" begin
+    cv = ComponentVector(a=[])
+    ax = first(getaxes(cv))
+    @test MTKHelpers._ax_symbols_tuple(ax) == ()
+end;

@@ -39,7 +39,8 @@ function Dz_lin(z, z_m)
     1 / z_m
 end,
 function Iz_lin(z, z_m)
-    (z_m - z) / z_m
+    #(z_m - z) / z_m
+    z / z_m
 end
 
 """

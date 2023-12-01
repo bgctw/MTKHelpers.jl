@@ -16,6 +16,7 @@ end;
 
 @testset "tuplejoin" begin
     @test MTKHelpers.tuplejoin((1, 2), (3,), (4, 5, 6)) == Tuple(i for i in 1:6)
+    @test MTKHelpers.tuplejoin((1, 2)) == Tuple(i for i in 1:2)
 end;
 
 @testset "strip_namespace" begin

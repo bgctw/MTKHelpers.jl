@@ -80,6 +80,8 @@ AbstractProblemUpdater that returns the original AbstractODEProblem.
 struct NullProblemUpdater <: AbstractProblemUpdater end
 (pu::NullProblemUpdater)(prob) = prob
 
+isconcrete(::NullProblemUpdater) = true
+
 """
     KeysProblemParGetter(mapping::NTuple{N,Pair{Symbol, Symbol}, keys_state)
 

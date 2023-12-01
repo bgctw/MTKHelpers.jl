@@ -9,6 +9,14 @@ using LoggingExtras
     @test all(isapprox.(diff(dl), first(diff(dl)), rtol = 0.01))
 end;
 
+@testset "Dz_exp" begin
+    @test Dz_exp(0.3, 0.3, 2) ≈ 2.43 rtol=0.01 # regression test
+    @test Iz_exp(0.3, 0.3, 2) == 1.0
+    #
+    @test Dz_lin(0.3, 0.3) ≈ 1/0.3
+    @test Iz_lin(0.3, 0.3) == 1.0
+end;
+
 prob = LoggingExtras.withlevel(Logging.Error) do
     prob = MTKHelpers.example_pde_problem()
 end
