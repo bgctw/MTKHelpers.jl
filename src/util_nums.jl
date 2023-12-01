@@ -77,7 +77,7 @@ function componentvector_to_numdict(cv::SubArray{T}, num_dict::Dict{Symbol, S}) 
 end
 
 """
-    remake(prob::AbstractODEProblem, paropt::ComponentVector; 
+    remake_cv(prob::AbstractODEProblem, paropt::ComponentVector; 
         num_dict_state = get_base_num_dict(states(get_system(prob))),
         num_dict_par = get_base_num_dict(parameters(get_system(prob)))
     
@@ -91,7 +91,7 @@ by boundary conditions and are not in the state vector.
 For those, supply argument `state_pos` giving indices of the states,
 as found by [`get_1d_state_pos`](@ref).
 """
-function SciMLBase.remake(prob::AbstractODEProblem, paropt::ComponentVector;
+function remake_cv(prob::AbstractODEProblem, paropt::ComponentVector;
         state_pos = nothing,
         num_dict_state = get_base_num_dict(states(get_system(prob))),
         num_dict_par = get_base_num_dict(parameters(get_system(prob))))

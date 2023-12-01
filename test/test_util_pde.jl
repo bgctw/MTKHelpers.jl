@@ -43,7 +43,7 @@ end;
     state_pos = get_1d_state_pos(prob)
     Y_new = repeat([200.0], length(state_pos))
     paropt = ComponentVector(state = (Y = Y_new,), par = (Y0 = 201, i_Y_agr = [20.0, 30.0]))
-    prob2 = remake(prob, paropt; state_pos)
+    prob2 = MTKHelpers.remake_cv(prob, paropt; state_pos)
     #
     axis_p = MTKHelpers.axis_of_nums(Tuple(parameters(get_system(prob))))
     p_old = ComponentVector(prob.p, axis_p)
@@ -70,7 +70,7 @@ end;
     state_names = (Symbol("Y[$i]") for i in (R, L)) # turn around to test position matching
     paropt = ComponentVector(state = (; zip(state_names, [Y_L, Y_L * 3])...),
         par = (Y0 = 201,))
-    prob2 = remake(proba, paropt; state_pos)
+    prob2 = MTKHelpers.remake_cv(proba, paropt; state_pos)
     #
     axis_p = MTKHelpers.axis_of_nums(Tuple(parameters(get_system(proba))))
     p_old = ComponentVector(proba.p, axis_p)

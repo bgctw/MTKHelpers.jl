@@ -238,10 +238,13 @@ par_new = ComponentVector(k_Y = 1 / 10, Y0 = 80.0, i_Y = 10.0,
 #u0 = Dz_lin.((0:dz:z_m)[2:(end-1)], z_m) * par_new.Y0 # straight initial profile
 zs = get_1d_grid(prob)
 state_pos = get_1d_state_pos(prob)
-u0 = ComponentVector(Y = Dz_lin.(zs[state_pos], z_m) * par_new.Y0)
+u0 = ComponentVector(Y = Dz_exp.(zs[state_pos], z_m, 3) * par_new.Y0)
 #ax_par = MTKHelpers.axis_of_nums(parameters(get_system(prob)))  
 
-prob2 = remake(prob, ComponentVector(state = u0, par = par_new); state_pos)
+paropt = ComponentVector(state = u0, par = par_new)
+pset = ODEProblemParSetter(get_system(prob), paropt)
+prob2 = remake(prob, paropt, pset)
+
 #solp = sol = solve(prob2, TRBDF2()); #slower than Rodas5P but more points to plot
 #solp = sol = solve(prob2, Rodas5P(), saveat=2); 
 #solp = sol = solve(prob2, Rodas5P(), saveat=1, tspan=(70,150)); 

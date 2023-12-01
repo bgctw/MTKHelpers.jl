@@ -1,6 +1,6 @@
 """
     ODEProblemParSetterConcrete(state_template,par_template,popt_template) 
-    ODEProblemParSetterConcrete(sys::ODESystem, popt_template; strip=false) 
+    ODEProblemParSetterConcrete(sys::ODESystem, popt_template) 
 
 Helps keeping track of a subset of initial states and parameters to be optimized.
 Similar to [`ODEProblemParSetter`](@ref), but with axis and length information
@@ -60,8 +60,7 @@ function ODEProblemParSetterConcrete(state_template,
     ODEProblemParSetterConcrete(ax_state, ax_par, popt_template_new; is_validating)
 end
 
-function ODEProblemParSetterConcrete(sys::ODESystem, paropt; strip = false)
-    strip && error("strip in construction of ODEProblemparSetter currently not supported.")
+function ODEProblemParSetterConcrete(sys::ODESystem, paropt)
     ODEProblemParSetterConcrete(axis_of_nums(states(sys)),
         axis_of_nums(parameters(sys)), paropt)
 end

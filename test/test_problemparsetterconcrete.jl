@@ -229,13 +229,6 @@ end
     ps1 = ODEProblemParSetterConcrete(m, Axis(popt_names))
     # only type stable after function boundary
     test_system(ps1, popt_names, m)
-    #
-    # @test_broken "stripping names of embedded system" == "currently not supported"
-    # tmpf = () -> begin
-    #     @named em = embed_system(m, simplify = false)
-    #     #ps1e = ODEProblemParSetterConcrete(em, popt_names; strip = true)
-    #     test_system(ps1e, popt_names, em)
-    # end
 end;
 
 @testset "get_concrete ODEProblemParSetter used in cost function" begin

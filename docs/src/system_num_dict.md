@@ -58,14 +58,14 @@ p_prob.m₊τ == p.m₊τ   # from p
 p_prob.m₊p == p.m₊p   # from p
 ```
 
-MTKHelpers provides a `remake` variant (API below), that allows to set `u0` and `p`
+MTKHelpers provides a [`remake`](@ref) variant with a [`ODEProblemParSetter`](@ref), 
+that allows to set `u0` and `p`
 of an `AbstractODEProblem` by providing a ComponentVector of parameters or initial states. 
-Note that this is slower than using the position-matching
-of `ODEProblemParSetter`.
 
 ```@example doc
 paropt = ComponentVector(state=(m₊x=[10.1,10.2],), par=(m₊τ = 10.1,))
-prob2 = remake(prob, paropt)
+pset = ODEProblemParSetter(get_system(prob), paropt)
+prob2 = remake(prob, paropt, pset)
 p2_prob = label_par(pset, prob2.p); u2_prob = label_state(pset, prob2.u0)
 p2_prob.m₊τ == paropt.par.m₊τ     # from paropt
 u2_prob.m₊x == paropt.state.m₊x   # from paropt
@@ -77,7 +77,6 @@ nothing # hide
 
 ```@docs
 system_num_dict
-remake(prob::AbstractODEProblem, paropt::ComponentVector)
 get_system
 base_num
 get_base_num_dict

@@ -1,6 +1,6 @@
 """
     ODEProblemParSetter(state_template,par_template,popt_template) 
-    ODEProblemParSetter(sys::ODESystem, popt_template; strip=false) 
+    ODEProblemParSetter(sys::ODESystem, popt_template) 
 
 Helps keeping track of a subset of initial states and parameters to be optimized.
 
@@ -15,11 +15,9 @@ If all of `state_template`, `par_template`, and `popt_template` are type-inferre
 then also the constructed ODEProblemParSetter is type-inferred.
 
 The states and parameters can be extracted from an `ModelingToolkit.ODESystem`.
-If `strip=true`, then namespaces of parameters of a composed system are removed, 
-e.g. `subcomp₊p` becomes `p`.
 
 Note the similar [`ODEProblemParSetterConcrete`](@ref) with template parameters, which 
-supports type-stable calls
+supports type-stable calls (see [Concrete ProblemUpdater](@ref)).
 """
 struct ODEProblemParSetter <: AbstractODEProblemParSetter
     ax_paropt::AbstractAxis
@@ -95,8 +93,7 @@ function assign_state_par(ax_state, ax_par, ax_paropt)
     return _get_axis(tmp2)
 end
 
-function ODEProblemParSetter(sys::ODESystem, paropt; strip = false)
-    strip && error("strip in construction of ODEProblemparSetter currently not supported.")
+function ODEProblemParSetter(sys::ODESystem, paropt)
     ODEProblemParSetter(axis_of_nums(states(sys)), axis_of_nums(parameters(sys)), paropt)
 end
 
