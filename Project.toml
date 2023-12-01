@@ -15,6 +15,7 @@ MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 NamedArrays = "86f7a689-2022-50b4-a561-43c23ac3c673"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+PDEBase = "a7812802-0625-4b9e-961c-d332478797e5"
 RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
@@ -24,7 +25,6 @@ SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 [weakdeps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
-PDEBase = "a7812802-0625-4b9e-961c-d332478797e5"
 
 [extensions]
 MTKHelpersMakieExt = "CairoMakie"
@@ -46,4 +46,3 @@ julia = "1.6"
 [extras]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
-PDEBase = "a7812802-0625-4b9e-961c-d332478797e5"

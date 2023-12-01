@@ -101,7 +101,7 @@ end
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
-        @require CairoMakie="13f3f980-e62b-5c42-98c6-ff1f3baf88f0" include("../ext/MTKHelpersMakieExt.jl")
+        @require MethodOfLines="94925ecb-adb7-4558-8ed8-f975c56a0bf4" include("../ext/MTKHelpersMethodOfLinesExt.jl")
     end
 end
 
