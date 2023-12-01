@@ -19,7 +19,7 @@ those equations.
 
 ```@example doc
 # setting up a simple example composite system and problem
-using ModelingToolkit, DifferentialEquations, ComponentArrays
+using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
 using MTKHelpers
 function samplesystem(;name,τ = 3.0, p1=1.1, p2=1.2) 
     @variables t 
@@ -46,7 +46,7 @@ end
 @named mc = samplesystem_const(-0.1)
 @named sys = embed_system(mc)
 prob = ODEProblem(sys, [mc.x => 1.0], (0.0,10.0))
-sol = solve(prob)
+sol = solve(prob, Tsit5())
 isapprox(sol(8)[1], exp(-0.1*8), atol = 1e-5)
 ```
 
@@ -56,9 +56,8 @@ override_system
 
 # Utilities
 ```@docs
-symbol
+symbol_op
 strip_namespace
-symbols_state(::ODESystem)
 ```
 
 

@@ -1,6 +1,33 @@
 import ComponentArrays as CA
 #import ComponentArrays: _get_index_axis
 
+axis_length(ax::AbstractAxis) = lastindex(ax) - firstindex(ax) + 1
+axis_length(::FlatAxis) = 0
+
+# function _get_axis(x::AbstractArray) 
+#     @info("Providing Parameters as Array was deprecated for performance?")
+#     # depr?: need a full-fledged axis
+#     Axis(Tuple(i for i in symbol_op.(x)))
+# end
+function _get_axis(x::Tuple)
+    Axis(Tuple(i for i in symbol_op.(x)))
+end
+_get_axis(x::ComponentVector) = first(getaxes(x))
+_get_axis(x::AbstractAxis) = x
+_get_axis(x::CA.CombinedAxis) = CA._component_axis(x)
+
+# TODO move to ComponentArrays.jl
+# type piracy: https://github.com/jonniedie/ComponentArrays.jl/issues/141
+#@inline CA.getdata(x::ComponentVector) = getfield(x, :data)
+# twutz 2311: remove CombinedAxis but only work with AbstractAxis (getaxes vs axes)
+#attach_axis(x::AbstractVector, ax::CA.CombinedAxis) = ComponentArray(x, (CA._component_axis(ax),))
+attach_axis(x::AbstractVector, ax::AbstractAxis) = ComponentArray(x, (ax,))
+#attach_axis(x::ComponentVector, ax::AbstractAxis) = ComponentArray(getdata(x), (ax,))
+function attach_axis(x::ComponentVector, ax::AbstractAxis)
+    ComponentArray(getfield(x, :data), (ax,))
+end
+attach_x_axis(x::ComponentMatrix, ax::AbstractAxis) = ComponentArray(x, (ax, FlatAxis()))
+
 # function _get_index_axis(cv::ComponentVector, ax::AbstractAxis)
 #     first(getaxes(cv)) == ax && return(cv) # no need to reassamble
 #     # extract subvectors and reassamble
@@ -22,7 +49,6 @@ import ComponentArrays as CA
 # # in order to extract entire component, do not specify subaxes
 # # e.g. (a=1) to match entire (a=(a1=1, a2=2))
 # _get_index_axis(cv::ComponentVector, ax::CA.NullorFlatAxis) = cv # else method ambiguous
-
 
 # function _set_index_axis!(cv::ComponentVector, s::ComponentVector)
 #     ax = first(getaxes(s))
@@ -57,13 +83,11 @@ import ComponentArrays as CA
 #     s.a.a3 = 6
 #     _set_index_axis!(cv, s)
 
-
 #     cvs = ComponentVector(a=1)
 #     s = cv0[cvs]
 #     s.a = [10,20,30]
 #     _set_index_axis!(cv, s)    
 # end
-
 
 # """
 # assembles a new ComponentVector with some components replaced by corresponding
@@ -108,7 +132,6 @@ import ComponentArrays as CA
 #     #AT = typeof(parent(cv))
 #     attach_axis(convert(AT,getdata(res))::AT, first(getaxes(cv)))
 # end
-
 
 # function _ax_string_prefixed(any; prefix);  ""; end
 # _ax_string_prefixed(sym::Symbol; prefix) = [string(sym)]
@@ -155,21 +178,27 @@ import ComponentArrays as CA
 # CA.labels(ax) would be type piracy II 
 labels_noprefix(ax::AbstractAxis) = map(x -> x[2:end], _labels(ax))
 
-_ax_symbols_tuple(ax::AbstractAxis; prefix = "₊") =
+function _ax_symbols_tuple(ax::AbstractAxis; prefix = "₊")
     (labels_noprefix(ax) .|> (x -> replace(x, "." => prefix)) .|> Symbol) |> Tuple
-
-_ax_symbols_vector(ax::AbstractAxis; prefix = "₊") =
+end
+function _ax_symbols_tuple(ax::UnitRange) # representing a 0.length FlatAxis
+    ()
+end
+function _ax_symbols_vector(ax::AbstractAxis; prefix = "₊")
     (labels_noprefix(ax) .|> (x -> replace(x, "." => prefix)) .|> Symbol)::Vector{Symbol}
+end
 
 function _labels(x::AbstractAxis, nview::Int = 0)
     #@info "Absract:$(typeof(x))"
     vcat((".$(key)" .* _labels(x[key]) for key in keys(x))...)
 end
-_labels(x::NamedTuple, nview::Int = 0) =
+function _labels(x::NamedTuple, nview::Int = 0)
     length(x) == 0 ? [""] : vcat((".$(key)" .* _labels(x[key]) for key in keys(x))...)
+end
 
-_labels(x::AbstractArray, nview::Int = 0) =
+function _labels(x::AbstractArray, nview::Int = 0)
     vcat(("[" * join(i.I, ",") * "]" for i in CartesianIndices(x))...)
+end
 function _labels(x, nview::Int = 0)
     # @info "_labels(x)"
     # @show x, typeof(x)
@@ -177,47 +206,71 @@ function _labels(x, nview::Int = 0)
 end
 _labels(x::CA.NullAxis, nview::Int = 0) = ""
 
-function _labels(x::CA.PartitionedAxis{PartSz,IdxMap}, nview::Int) where {PartSz,IdxMap}
+function _labels(x::CA.PartitionedAxis{PartSz, IdxMap}, nview::Int) where {PartSz, IdxMap}
     la = _labels(IdxMap)
     ncomp = Int(nview / PartSz)
     #@show nview, PartSz, ncomp
-    v = vcat(("[$i]" for i = 1:ncomp)...)
+    v = vcat(("[$i]" for i in 1:ncomp)...)
     vcat((vi .* a for (a, vi) in Iterators.product(la, v))...)
 end
-function _labels(x::CA.ShapedAxis{Shape,IdxMap}, nview::Int) where {Shape,IdxMap}
+function _labels(x::CA.ShapedAxis{Shape, IdxMap}, nview::Int) where {Shape, IdxMap}
     la = _labels(IdxMap)
     v = vcat(("[" * join(i.I, ",") * "]" for i in CartesianIndices(Shape))...)
     vcat((vi .* a for (a, vi) in Iterators.product(la, v))...)
 end
 
-_labels(x::CA.ComponentIndex{N,FlatAxis}, nview::Int = 0) where {N} =
+function _labels(x::CA.ComponentIndex{N, FlatAxis}, nview::Int = 0) where {N}
     vcat(("[$i]" for i in eachindex(x.idx))...)
-_labels(x::CA.ComponentIndex{N,<:AbstractAxis}, nview::Int = 0) where {N} =
+end
+function _labels(x::CA.ComponentIndex{N, <:AbstractAxis}, nview::Int = 0) where {N}
     _labels(x.ax, length(x.idx))
+end
 
-function _update_cv_top(cv::ComponentVector{TD}, s::ComponentVector{TS}) where {TD,TS}
+function _update_cv_top(cv::ComponentVector, s::ComponentVector)
     keyss = keys(s)
     mkeys = (!(k ∈ keys(cv)) for k in keyss)
-    any(mkeys) && error(
-        "The following keys to update were not found in destination " *
-        string(keyss[collect(mkeys)]),
-    )
-    # assigning a Dual to existing cv does not work, cannot use constructor
-    #t = Tuple(getproperty(s,k) for k in keyss)
-    #nt = NamedTuple{keyss}(t)
-    #cvn = ComponentVector(cv; nt...)
+    any(mkeys) && error("The following keys to update were not found in destination " *
+          string(keyss[collect(mkeys)]))
+    gen_is_updated = (k ∈ keys(s) for k in keys(cv))
+    #is_updated = collect(gen_is_updated)
+    is_updated = SVector{length(keys(_get_axis(cv)))}(gen_is_updated...)
+    _update_cv_top(cv, s, is_updated)
+end
+
+"""
+    _update_cv_top(cv::ComponentVector{TD}, s::ComponentVector{TS}, is_updated)
+
+Return a new ComponentVector of eltype `promote_type(TD, TS)` with those components at position, i,
+, for which `is_key_updated[i]` is true, are replaced by the corresponding name of 
+source s. 
+"""
+function _update_cv_top(cv::ComponentVector{TD, TAD},
+        s::ComponentVector{TS},
+        is_updated::AbstractVector{Bool}) where {TD, TAD, TS}
+    # s has not entries, return a copy
+    axis_length(_get_axis(s)) == 0 && copy(cv)
     T_EL = promote_type(TD, TS)
-    #k = first(keys(cv))
-    tmp = map(keys(cv)) do k
-        val_cv = val_cv0 = cv[KeepIndex(k)]
-        # until KeepIndex behaviour is fixed in ComponentArrays
-        res1 = !(k ∈ keyss) ? val_cv : begin
-            TTS = typeof(similar(val_cv, T_EL))
-            convert(TTS, s[KeepIndex(k)])::TTS
+    #(i,k) = first(enumerate(keys(cv)))
+    #(i,k) = last(enumerate(keys(cv)))
+    ftmp = (i, k) -> begin
+        if is_updated[i]
+            # extracting the underlying array does not gain performance but makes problems
+            # in vcat: #val = @view s[k]
+            val_s = @view s[KeepIndex(k)]
+            #MVector{axis_length(_get_axis(val_s)),T_EL}(getdata(val_s)) 
+        else
+            val_cv = @view cv[KeepIndex(k)]
         end
     end
-    T_C = typeof(similar(cv, T_EL))
-    res = reduce(vcat, tmp)::T_C
+    g = (ftmp(i, k) for (i, k) in enumerate(keys(cv)))
+    data = vcat(g...)
+    # data = reduce(vcat,g) # takes more resources from small vectors
+    #Main.@infiltrate_main
+    T_C = TAD <: StaticArray ?
+          similar_type(TAD, T_EL) :
+          typeof(similar(getdata(cv), T_EL))
+    data_conv = convert(T_C, data)::T_C
+    attach_axis(data_conv, _get_axis(cv))
 end
 
 # # TODO: wait for ComponentArrays implement length(Axis)

@@ -22,7 +22,6 @@ Values of M close to 1 result in a flat, while high M result in a peaked distrib
 """
 fit_Dirichlet_mode(mode, M) = mode .* length(mode) .* (M - 1) .+ 1
 
-
 """
     simplex_grid(m,n=3)
 
@@ -51,7 +50,7 @@ function simplex_grid!(A, mstep, n; L = num_compositions(mstep, n))
         A .= cat(0:mstep, mstep:-1:0; dims = 2)
     else
         istart0 = 0
-        for im = 0:mstep
+        for im in 0:mstep
             Lsub = num_compositions(mstep - im, n - 1)
             i = istart0 .+ (1:Lsub)
             A[i, 1] .= im
