@@ -10,12 +10,9 @@ using Test, SafeTestsets
 const GROUP = get(ENV, "GROUP", "All") # defined in in CI.yml
 @show GROUP
 
-
 @time begin
     if GROUP == "All" || GROUP == "Basic"
         #join_path(test_path, ...) does not work, because test_path is unknown in new module
-        #@safetestset "Tests" include("test/test_util_pde.jl")
-        @time @safetestset "test_util_pde" include("test_util_pde.jl")
         #@safetestset "Tests" include("test/test_symbolicarray.jl")
         @time @safetestset "test_symbolicarray" include("test_symbolicarray.jl")
         #@safetestset "Tests" include("test/test_util_componentarrays.jl")
@@ -34,20 +31,25 @@ const GROUP = get(ENV, "GROUP", "All") # defined in in CI.yml
         @time @safetestset "test_prior_util" include("test_prior_util.jl")
         #@safetestset "Tests" include("test/test_smoothstep.jl")
         @time @safetestset "test_smoothstep" include("test_smoothstep.jl")
-        #@safetestset "Tests" include("test/test_cairomakie.jl")
-        @time @safetestset "test_cairomakie" include("test_cairomakie.jl")
         #@safetestset "Tests" include("test/test_solution.jl")
         @time @safetestset "test_solution" include("test_solution.jl")
         #@safetestset "Tests" include("test/test_util_nums.jl")
         @time @safetestset "test_util_nums" include("test_util_nums.jl")
     end
+
+    if GROUP == "All" || GROUP == "PDE"
+        #@safetestset "Tests" include("test/test_util_pde.jl")
+        @time @safetestset "test_util_pde" include("test_util_pde.jl")
+    end
+
+    if GROUP == "All" || GROUP == "Plot"
+        #@safetestset "Tests" include("test/test_cairomakie.jl")
+        @time @safetestset "test_cairomakie" include("test_cairomakie.jl")
+    end
+
+    if GROUP == "All" || GROUP == "JET"
+        #@safetestset "Tests" include("test/test_JET.jl")
+        @time @safetestset "test_JET" include("test_JET.jl")
+    end
 end
 
-using JET: JET
-@testset "JET" begin
-    @static if VERSION ≥ v"1.9.2"
-        JET.test_package(MTKHelpers; target_modules = (@__MODULE__,))
-    end
-end;
-# JET.report_package(MTKHelpers) # to debug the errors
-# JET.report_package(MTKHelpers; target_modules=(@__MODULE__,)) # to debug the errors
