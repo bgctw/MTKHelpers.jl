@@ -23,7 +23,9 @@ function MTKHelpers.series_sol!(ax,
     tsol = sol.t[first(tspan) .<= sol.t .<= last(tspan)]
     ts = range(first(tspan), last(tspan), length = nt)
     ts2 = sort!(vcat(tsol, ts))
-    series!(ax, ts2, VectorOfArray(sol(ts2, idxs = vars).u); labels, kwargs...)
+    a = VectorOfArray(sol(ts2, idxs = vars).u)
+    @show a
+    series!(ax, ts2, a; labels, kwargs...)
 end
 
 end
