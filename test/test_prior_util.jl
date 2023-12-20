@@ -1,5 +1,11 @@
+using Test
+using MTKHelpers
+using MTKHelpers: MTKHelpers as CP
+using StaticArrays: StaticArrays as SA
+using Distributions
+
 @testset "fit_Dirichlet_std" begin
-    α2 = SA[0.5, 1 / 3]
+    α2 = SA.SA[0.5, 1 / 3]
     σ = 0.2
     d = fit_Dirichlet_std(α2, σ)
     @test mean(d)[1:length(α2)] ≈ α2
@@ -10,9 +16,9 @@
 end;
 
 @testset "fit_Dirichlet_mode" begin
-    #alphas = fit_Dirichlet_mode(SA[0.6,0.3,0.1], 1.1)
-    #alphas = fit_dirichlet_mode(SA[1/3,1/3,1/3], 0.999)
-    mode_orig = SA[0.6, 0.3, 0.1]
+    #alphas = fit_Dirichlet_mode(SA.SA[0.6,0.3,0.1], 1.1)
+    #alphas = fit_dirichlet_mode(SA.SA[1/3,1/3,1/3], 0.999)
+    mode_orig = SA.SA[0.6, 0.3, 0.1]
     alphas = fit_Dirichlet_mode(mode_orig, 1.2)
     d = Dirichlet(alphas)
     @test mode(d) ≈ mode_orig
@@ -30,14 +36,14 @@ tmpf = () -> begin
     #grid = reverse(collect(Iterators.product(x,x)), dims=1) # flip for heatmap
     # matrix rows have initial at top, headmap has 0 at bottom -> ok
     # but change x and y coordinates
-    grid = map(x -> SA[x[2], x[1]], collect(Iterators.product(x, x)))
+    grid = map(x -> SA.SA[x[2], x[1]], collect(Iterators.product(x, x)))
     replace_zero(x) = x == 0 ? missing : x
     # evalue pdf(d) on rectangular grid
     mapg(d) = map(x -> replace_zero(g2(x...; d = d)), grid)
     #A1 = map(x -> x[1], grid); heatmap(A1)
     #A2 = map(x -> x[2], grid); heatmap(A2)
-    alphas = fit_Dirichlet_mode(SA[0.6, 0.3, 0.1], 1.2)
-    #alphas = fit_dirichlet_mode(SA[1/3,1/3,1/3], 0.999)
+    alphas = fit_Dirichlet_mode(SA.SA[0.6, 0.3, 0.1], 1.2)
+    #alphas = fit_dirichlet_mode(SA.SA[1/3,1/3,1/3], 0.999)
     d = Dirichlet(alphas)
     heatmap(mapg(d))
 end

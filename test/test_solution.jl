@@ -1,3 +1,15 @@
+using Test
+using MTKHelpers
+using MTKHelpers: MTKHelpers as CP
+using OrdinaryDiffEq, ModelingToolkit
+# using ComponentArrays: ComponentArrays as CA
+# using StaticArrays: StaticArrays as SA
+using NamedArrays: NamedArrays
+
+test_path = splitpath(pwd())[end] == "test" ? "." : "test"
+#include(joinpath(test_path,"samplesystem.jl"))
+include("samplesystem.jl")
+
 @testset "getlast" begin
     @named m = samplesystem()
     @named sys = embed_system(m)

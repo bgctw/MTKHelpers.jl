@@ -1,8 +1,21 @@
 tmp_f = function ()
+    push!(LOAD_PATH, joinpath(pwd(),"test"))
     push!(LOAD_PATH, expanduser("~/twutz/julia/makietools"))
     push!(LOAD_PATH, expanduser("~/twutz/julia/18_tools/makietools"))
 end
+
+using Test
+using MTKHelpers
+using MTKHelpers: MTKHelpers as CP
+using OrdinaryDiffEq, ModelingToolkit
+
 using CairoMakie
+
+test_path = splitpath(pwd())[end] == "test" ? "." : "test"
+#include(joinpath(test_path,"samplesystem.jl"))
+include("samplesystem.jl")
+
+
 
 @testset "series_sol" begin
     @named m = samplesystem()

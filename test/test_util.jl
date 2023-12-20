@@ -1,3 +1,14 @@
+using Test
+using MTKHelpers
+using MTKHelpers: MTKHelpers as CP
+using OrdinaryDiffEq, ModelingToolkit
+
+test_path = splitpath(pwd())[end] == "test" ? "." : "test"
+#include(joinpath(test_path,"samplesystem.jl"))
+include("samplesystem.jl")
+
+
+
 @testset "symbols_state ODE" begin
     @named m = samplesystem()
     @test symbols_state(m) == [:x, :RHS]
