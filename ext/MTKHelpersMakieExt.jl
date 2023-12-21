@@ -24,8 +24,9 @@ function MTKHelpers.series_sol!(ax,
     ts = range(first(tspan), last(tspan), length = nt)
     ts2 = sort!(vcat(tsol, ts))
     a = VectorOfArray(sol(ts2, idxs = vars).u)
-    @show a
-    series!(ax, ts2, a; labels, kwargs...)
+    aa = Array(a)  # workarount for series! failing on recursive array 127 categories
+    @show aa
+    series!(ax, ts2, aa; labels, kwargs...)
 end
 
 end

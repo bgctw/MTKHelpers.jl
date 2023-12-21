@@ -15,14 +15,12 @@ test_path = splitpath(pwd())[end] == "test" ? "." : "test"
 #include(joinpath(test_path,"samplesystem.jl"))
 include("samplesystem.jl")
 
-
-
 @testset "series_sol" begin
     @named m = samplesystem()
     @named me = embed_system(m)
     prob = ODEProblem(me, [m.x => 1.1], (0.0, 1.0), [])
     sol = solve(prob, Tsit5())
-    fig = Figure()
+    fig = Figure();
     ax = CairoMakie.Axis(fig[1, 1]; xlabel = "time (yr)")
     #MTKHelpers.MTKHelpersMakieExt.series_sol!(ax, sol, [m.x, m.RHS])
     series_sol!(ax, sol, [m.x, m.RHS])
