@@ -1,4 +1,10 @@
-dpset = CP.DummyProblemParSetter()
+using MTKHelpers
+using MTKHelpers: MTKHelpers as CP
+
+@testset "system with symbolic arrays" begin
+    dpset = CP.DummyProblemParSetter()
+    @test dpset isa AbstractProblemParSetter
+end;
 
 # @testset "error messages on not implemented methods" begin
 #     @test_throws ErrorException count_state(dpset)

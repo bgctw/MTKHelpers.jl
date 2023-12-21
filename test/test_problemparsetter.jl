@@ -1,28 +1,43 @@
+using Test
+using MTKHelpers
+using MTKHelpers: MTKHelpers as CP
+using OrdinaryDiffEq, ModelingToolkit
+using ComponentArrays: ComponentArrays as CA
+using StaticArrays: StaticArrays as SA
+
+using ForwardDiff: ForwardDiff
+
+
+test_path = splitpath(pwd())[end] == "test" ? "." : "test"
+#include(joinpath(test_path,"samplesystem.jl"))
+include("samplesystem.jl")
+
+
 # states and parameters are single entries
-u1 = ComponentVector(L = 10.0)
-p1 = ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
-popt1 = ComponentVector(L = 10.1, k_L = 1.1, k_R = 1 / 20.1)
-popt1s = ComponentVector(state = ComponentVector(L = 10.1),
-    par = ComponentVector(k_L = 1.1, k_R = 1 / 20.1))
+u1 = CA.ComponentVector(L = 10.0)
+p1 = CA.ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
+popt1 = CA.ComponentVector(L = 10.1, k_L = 1.1, k_R = 1 / 20.1)
+popt1s = CA.ComponentVector(state = CA.ComponentVector(L = 10.1),
+    par = CA.ComponentVector(k_L = 1.1, k_R = 1 / 20.1))
 # use Axis for type stability, but here, check with non-typestable ps
 #ps = @inferred ODEProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(keys(popt)))
 ps = ps1 = ODEProblemParSetter(u1, p1, popt1)
 
 # entries with substructure
-u1c = ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
-p1c = ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
+u1c = CA.ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
+p1c = CA.ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
 # as long as ComponentArrays does not support Axis-indexing, focus on top-level components rather than implementing this indexing in MTKHelpers
 # note: no a1 no b, 
 # a2 and c need to have correct length for updating
-#poptc = ComponentVector(a=(a2=1:2,), c=1:2) 
-poptc = vcat(u1c[KeepIndex(:a)], p1c[(:b, :c)])
-poptcs = ComponentVector(state = u1c[KeepIndex(:a)], par = p1c[(:b, :c)])
+#poptc = CA.ComponentVector(a=(a2=1:2,), c=1:2) 
+poptc = vcat(u1c[CA.KeepIndex(:a)], p1c[(:b, :c)])
+poptcs = CA.ComponentVector(state = u1c[CA.KeepIndex(:a)], par = p1c[(:b, :c)])
 psc = pset = ODEProblemParSetter(u1c, p1c, poptc)
 #u0 = u1c; p=p1c; popt=poptc
 
-# test states and parameters and ComponentVector{SVector}
-u1s = label_state(psc, SVector{3}(getdata(u1c)))
-p1s = label_par(psc, SVector{5}(getdata(p1c))) # convert to ComponentVector{SVector}
+# test states and parameters and CA.ComponentVector{SA.SVector}
+u1s = label_state(psc, SA.SVector{3}(CA.getdata(u1c)))
+p1s = label_par(psc, SA.SVector{5}(CA.getdata(p1c))) # convert to CA.ComponentVector{SA.SVector}
 
 @testset "_get_axis of ComponentVectors and Strings" begin
     popt_strings_tup = ("L", "k_L", "k_R")
@@ -35,16 +50,16 @@ end;
 
 @testset "axis_length FlatAxis" begin
     # empty substructure gives a FlatAxis
-    u1_flat = ComponentVector{Float64}()
-    popt1_no_u = ComponentVector(k_L = 1.1, k_R = 1 / 20.1)
+    u1_flat = CA.ComponentVector{Float64}()
+    popt1_no_u = CA.ComponentVector(k_L = 1.1, k_R = 1 / 20.1)
     ps = ODEProblemParSetter(u1_flat, p1, popt1_no_u)
     @test count_state(ps) == 0
 end;
 
 @testset "_ax_symbols" begin
-    cv = ComponentVector(a = (a1 = 100, a2 = (a21 = 210, a22 = 220)),
+    cv = CA.ComponentVector(a = (a1 = 100, a2 = (a21 = 210, a22 = 220)),
         c = (c1 = reshape(1:4, (2, 2)),))
-    ax = first(getaxes(cv))
+    ax = first(CA.getaxes(cv))
     #tp = @inferred MTKHelpers._ax_symbols_tuple(ax; prefix = "_") # lastindex not inferable
     tp = MTKHelpers._ax_symbols_tuple(ax; prefix = "_")
     @test tp == (:a_a1,
@@ -62,9 +77,9 @@ end
     state_syms = keys(u1)
     par_syms = keys(p1)
     popt_syms = (:L, :k_L, :M1, :M2)
-    psw = @test_logs (:warn, r"M1.+M2") ODEProblemParSetter(Axis(state_syms),
-        Axis(par_syms),
-        Axis(popt_syms))
+    @test_throws ErrorException ODEProblemParSetter(state_syms, par_syms, popt_syms)
+    psw = @test_logs (:warn, r"M1.+M2") ODEProblemParSetter(CA.Axis(state_syms),
+        CA.Axis(par_syms), CA.Axis(popt_syms))
     #get_paropt(psw, u1, p1) # error, because Missing not allowed
     #test if setting parameters does work
 end;
@@ -73,8 +88,9 @@ end;
     state_syms = keys(p1)
     par_syms = keys(p1)
     popt_syms = (:k_L,)
-    psw = @test_logs (:warn, r"k_L") ODEProblemParSetter(Axis(state_syms),
-        Axis(par_syms), Axis(popt_syms))
+    @test_throws ErrorException ODEProblemParSetter(state_syms, par_syms, popt_syms)
+    psw = @test_logs (:warn, r"k_L") ODEProblemParSetter(CA.Axis(state_syms),
+        CA.Axis(par_syms), CA.Axis(popt_syms))
     p2 = p1 .* 2
 
     res = get_paropt_labeled(psw, p2, p1)
@@ -87,7 +103,7 @@ end;
 end;
 
 @testset "get_paropt_labeled with StaticVector" begin
-    # extract names and values from SVector
+    # extract names and values from SA.SVector
     pset = ODEProblemParSetter(u1s, p1s, poptc)
     res_vec = get_paropt(pset, u1s, p1s)
     @test res_vec isa Vector
@@ -119,13 +135,13 @@ end;
 end;
 
 @testset "access symbols" begin
-    # u1c = ComponentVector(a=(a1=1,a2=(a21=21, a22=22.0)))
-    # p1c = ComponentVector(b=(b1=0.1, b2=0.2), c=[0.01, 0.02], d=3.0)
+    # u1c = CA.ComponentVector(a=(a1=1,a2=(a21=21, a22=22.0)))
+    # p1c = CA.ComponentVector(b=(b1=0.1, b2=0.2), c=[0.01, 0.02], d=3.0)
     # as long as ComponentArrays does not support Axis-indexing, focus on top-level components rather than implementing this indexing in MTKHelpers
     # note: no a1 no b, 
     # a2 and c need to have correct length for updating
-    #poptc = ComponentVector(a=(a2=1:2,), c=1:2) 
-    poptc = vcat(u1c[KeepIndex(:a)], p1c[(:b, :c)])
+    #poptc = CA.ComponentVector(a=(a2=1:2,), c=1:2) 
+    poptc = vcat(u1c[CA.KeepIndex(:a)], p1c[(:b, :c)])
     @test (symbols_state(psc)) == (:a₊a1, :a₊a2₊a21, :a₊a2₊a22)
     @test (symbols_par(psc)) == (:b₊b1, :b₊b2, Symbol("c[1]"), Symbol("c[2]"), :d)
     # symbols paropt should neglect classification of symbols, which can be 
@@ -149,24 +165,24 @@ function test_label_svectors(pset,
     # not inferred - compare to test_problemparsettertyped
     @test label_paropt(pset, popt) == popt
     @test (label_paropt(pset, convert(Array, popt))) == popt
-    @test (label_paropt(pset, SVector{NOPT}(getdata(popt)))) == popt
-    #@test @inferred(label_paropt(pset, SVector{NOPT}(getdata(popt)))) == popt
-    @test (label_paropt(pset, SVector{NOPT}(getdata(popt))) |> getdata) isa SVector
+    @test (label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt)))) == popt
+    #@test @inferred(label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt)))) == popt
+    @test (label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt))) |> CA.getdata) isa SA.SVector
     #
     @test label_state(pset, u0) == u0
     @test (label_state(pset, convert(Array, u0))) == u0
-    ls = label_state(pset, SVector{NU0}(getdata(u0))) # error without getdata
+    ls = label_state(pset, SA.SVector{NU0}(CA.getdata(u0))) # error without CA.getdata
     @test ls == u0
-    @test getdata(ls) isa SVector
+    @test CA.getdata(ls) isa SA.SVector
     #
     @test label_par(pset, p) == p
     @test (label_par(pset, convert(Array, p))) == p
-    psv = SVector{NP}(getdata(p))
+    psv = SA.SVector{NP}(CA.getdata(p))
     @test (label_par(pset, psv)) == p
     #@btime label_par($ps, $psv) # 3 allocations? creating views for subectors
     lp = label_par(pset, psv)
-    @test getdata(lp) === psv
-    @test getaxes(lp) === getaxes(p)
+    @test CA.getdata(lp) === psv
+    @test CA.getaxes(lp) === CA.getaxes(p)
 end
 
 @testset "label Vectors unstructured" begin
@@ -183,14 +199,14 @@ function test_update_statepar_and_get_paropt(pset, u0, p, popt, u0_target, p_tar
     #0o, po = update_statepar(pset, popt, u0, p)
     #@descend_code_warntype update_statepar(pset, popt, u0, p)
     #@code_warntype update_statepar(pset, popt, u0, p)
-    u0o, po = update_statepar(pset, getdata(popt), getdata(u0), getdata(p))
+    u0o, po = update_statepar(pset, CA.getdata(popt), CA.getdata(u0), CA.getdata(p))
     u0o, po = update_statepar(pset, popt, u0, p)
     #return u0o, po
     #@btime update_statepar($ps, $popt, $u1, $p1) 
-    @test getaxes(u0o) == getaxes(u0)
-    @test getaxes(po) == getaxes(p)
-    @test typeof(getdata(u0o)) == typeof(getdata(u0))
-    @test typeof(getdata(po)) == typeof(getdata(p))
+    @test CA.getaxes(u0o) == CA.getaxes(u0)
+    @test CA.getaxes(po) == CA.getaxes(p)
+    @test typeof(CA.getdata(u0o)) == typeof(CA.getdata(u0))
+    @test typeof(CA.getdata(po)) == typeof(CA.getdata(p))
     @test all(u0o .≈ u0_target)
     @test all(po .≈ p_target)
     #
@@ -206,8 +222,8 @@ function test_update_statepar_and_get_paropt(pset, u0, p, popt, u0_target, p_tar
 end;
 
 @testset "update_statepar vector unstructured" begin
-    u1t = ComponentVector(L = 10.1)
-    pt = ComponentVector(k_L = 1.1, k_R = 1 / 20.1, m = 2.0)
+    u1t = CA.ComponentVector(L = 10.1)
+    pt = CA.ComponentVector(k_L = 1.1, k_R = 1 / 20.1, m = 2.0)
     pset = ps
     u0 = u1
     p = p1
@@ -215,9 +231,9 @@ end;
     test_update_statepar_and_get_paropt(pset, u1, p1, popt, u1t, pt)
 end;
 @testset "update_statepar vector structured" begin
-    #u1t = ComponentVector(a = (a1 = 1, a2 = (a21 = 1, a22 = 2.0))) # only subcomponent
-    u1t = ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
-    pt = ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
+    #u1t = CA.ComponentVector(a = (a1 = 1, a2 = (a21 = 1, a22 = 2.0))) # only subcomponent
+    u1t = CA.ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
+    pt = CA.ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
     pset = psc
     u0 = u1c
     p = p1c
@@ -226,8 +242,8 @@ end;
     test_update_statepar_and_get_paropt(psc, u1c, p1c, poptcs, u1t, pt)
 end;
 @testset "update_statepar Svector structured" begin
-    u1t = ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
-    pt = ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
+    u1t = CA.ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
+    pt = CA.ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
     test_update_statepar_and_get_paropt(psc, u1s, p1s, poptcs, u1t, pt)
     #using BenchmarkTools
     #@btime get_paropt_labeled($psc, $u1t, $pt)
@@ -238,11 +254,11 @@ end
 #     # _update_cv returns a Vector because _
 #     u1a = AxisArray(collect(u1); row = keys(u1))
 #     p1a = AxisArray(collect(p1); row = keys(p1))
-#     s = ComponentVector(k_L = 1.1, k_R = 1/20.1)
+#     s = CA.ComponentVector(k_L = 1.1, k_R = 1/20.1)
 #     p1a_l = label_par(ps, p1a)
 #     tmp = _update_cv(p1a_l, s)
-#     u1t = ComponentVector(L = 10.1)
-#     pt = ComponentVector(k_L = 1.1, k_R = 1/20.1, m = 2.0)
+#     u1t = CA.ComponentVector(L = 10.1)
+#     pt = CA.ComponentVector(k_L = 1.1, k_R = 1/20.1, m = 2.0)
 #     test_update_statepar_and_get_paropt(ps, u1a, p1a, popt, u1t, pt)
 # end;
 
@@ -268,13 +284,13 @@ end
     u0 = (u1 = 1 / 2,)
     p = (p1 = 1.1, p2 = 2.0)
     tspan = (0.0, 1.0)
-    #prob = ODEProblem(f,SVector(Tuple(u0)),tspan,SVector(Tuple(p))) # SVector broken
+    #prob = ODEProblem(f,SA.SVector(Tuple(u0)),tspan,SA.SVector(Tuple(p))) # SA.SVector broken
     prob = ODEProblem(f, collect(u0), tspan, collect(p))
     #sol = solve(prob, Tsit5())
     #sol[end]
-    pset = ODEProblemParSetter(Axis(keys(u0)), Axis(keys(p)), Axis((:u1, :p2)))
-    popt = ComponentVector(state = ComponentVector(u1 = 1 / 4),
-        par = ComponentVector(p2 = 1.2))
+    pset = ODEProblemParSetter(keys(u0), keys(p), (:u1, :p2))
+    popt = CA.ComponentVector(state = CA.ComponentVector(u1 = 1 / 4),
+        par = CA.ComponentVector(p2 = 1.2))
     #
     # update_statepar
     prob2 = remake(prob, popt, pset)
@@ -283,17 +299,17 @@ end
     @test prob2.p[2] == popt.par.p2
     #
     # get_paropt
-    @test get_paropt(pset, prob2) == getdata(popt)
+    @test get_paropt(pset, prob2) == CA.getdata(popt)
     @test get_paropt_labeled(pset, prob2) == popt
-    @test label_par(pset, prob.p) == ComponentVector(p)
+    @test label_par(pset, prob.p) == CA.ComponentVector(p)
     #
     @test names(name_paropt(pset, prob2), 1) == [:u1, :p2]
 end;
 
 @testset "gradient _update_cv_top" begin
-    cv = ComponentVector(a = 1:2, b = 2, c = 3.0)
-    popt = ComponentVector(a = 11:12, b = 20.0)
-    is_updated = SVector(true, true, false)
+    cv = CA.ComponentVector(a = 1:2, b = 2, c = 3.0)
+    popt = CA.ComponentVector(a = 11:12, b = 20.0)
+    is_updated = SA.SVector(true, true, false)
     cv2 = MTKHelpers._update_cv_top(cv, popt)
     fcost = let cv = cv
         (popt) -> begin
@@ -335,7 +351,7 @@ end;
     @test typeof(res) == typeof(popt)
 end;
 
-@testset "gradient with SVector" begin
+@testset "gradient with SA.SVector" begin
     pset = psc
     u0 = u1c
     p = p1c
@@ -346,7 +362,7 @@ end;
         d = sum(get_paropt(pset, u0o, po))
         d * d
     end
-    poptsv = SVector{7}(popt)
+    poptsv = SA.SVector{7}(popt)
     fcost(poptsv)
     @test typeof(ForwardDiff.gradient(fcost, poptsv)) == typeof(poptsv)
 end;
@@ -369,7 +385,7 @@ end;
 
 function test_system(ps1, popt_names, m)
     #Main.@infiltrate_main
-    #@code_warntype ODEProblemParSetter(m, Axis(popt_names))
+    #@code_warntype ODEProblemParSetter(m, popt_names)
     # not inferred
     @test (keys(axis_state(ps1))) == (:x, :RHS)
     @test (keys(axis_par(ps1))) == (:τ, :p1, :p2, :i)
@@ -378,7 +394,7 @@ end
 @testset "construct from ODESystem" begin
     @named m = samplesystem()
     popt_names = (:RHS, :τ)
-    ps1 = ODEProblemParSetter(m, Axis(popt_names))
+    ps1 = ODEProblemParSetter(m, popt_names)
     # only type stable after function boundary
     test_system(ps1, popt_names, m)
 end;
@@ -402,9 +418,7 @@ end;
     # ?implement al{allow_missing_popt}=Val(true)
     # as long as Axis argument is passed, all the type is inferred
     #psr = @inferred ODEProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(frandsym()))
-    ftmp = (poptnames) -> ODEProblemParSetter(Axis(keys(u1)),
-        Axis(keys(p1)),
-        Axis(poptnames))
+    ftmp = (poptnames) -> ODEProblemParSetter(keys(u1), keys(p1), poptnames)
     #psr = @inferred ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
     psr = ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
     # use Parsetter either with explicit Axis or inside function barrier

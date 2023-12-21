@@ -63,7 +63,10 @@ function ODEProblemParSetter(state_template,
     # construct a template by extracting the components of u0 and p
     u0 = attach_axis(1:axis_length(ax_state), ax_state)
     p = attach_axis(1:axis_length(ax_par), ax_par)
-    popt_template_new = vcat(u0, p)[popt_template]
+    #Main.@infiltrate_main
+    u0p = vcat(u0, p)
+    u0p isa ComponentArray || error("Could not concatenate u0=$u0 and p=$p.")
+    popt_template_new = u0p[popt_template]
     ODEProblemParSetter(ax_state, ax_par, popt_template_new; is_validating)
 end
 

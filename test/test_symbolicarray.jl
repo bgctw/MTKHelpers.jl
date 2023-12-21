@@ -1,4 +1,12 @@
 
+using Test
+using MTKHelpers
+using MTKHelpers: MTKHelpers as CP
+using OrdinaryDiffEq, ModelingToolkit
+using ComponentArrays: ComponentArrays as CA
+using StaticArrays: StaticArrays as SA
+
+
 @named m2 = MTKHelpers.samplesystem_vec()
 @named sys = embed_system(m2)
 
@@ -111,11 +119,11 @@ end;
     prob = ODEProblem(sys, st, (0.0, 10.0))
     # paropt = CA.ComponentArray(state=CA.ComponentArray(m2₊x=[1.1, 1.2]), 
     #     par=CA.ComponentArray(m2₊p=[10.1, 10.2, 10.3]))
-    paropt = ComponentArray(state = (m2₊x = [1.1, 1.2],),
+    paropt = CA.ComponentArray(state = (m2₊x = [1.1, 1.2],),
         par = (m2₊p = [10.1, 10.2, 10.3],))
     ax_state = MTKHelpers.axis_of_nums(states(sys))
     ax_par = MTKHelpers.axis_of_nums(parameters(sys))
-    ax_paropt = first(getaxes(paropt))
+    ax_paropt = first(CA.getaxes(paropt))
     # tmp = attach_axis(collect(1:length(ax_paropt)) * 10, ax_paropt)
     # tmp.state.m2₊x
     #pset1 = ODEProblemParSetterConcrete(ax_state, ax_par, paropt)
@@ -156,18 +164,18 @@ end;
 end
 
 @testset "get_u_map and get_p_map" begin
-    u1 = ComponentVector(x = 1.0, y = [2.0, 3.0])
-    p1 = ComponentVector(a = 10.0, b = [20.0, 30.0, 40], c = 50)
+    u1 = CA.ComponentVector(x = 1.0, y = [2.0, 3.0])
+    p1 = CA.ComponentVector(a = 10.0, b = [20.0, 30.0, 40], c = 50)
     pset = ODEProblemParSetterConcrete(u1,
         p1,
-        ComponentVector(state = u1[KeepIndex(:x)] .* 10, par = p1[KeepIndex(:b)] .* 2))
+        CA.ComponentVector(state = u1[CA.KeepIndex(:x)] .* 10, par = p1[CA.KeepIndex(:b)] .* 2))
     # assume that positions have been changed
-    u_new = u1[SA[:y, :x]]
+    u_new = u1[SA.SA[:y, :x]]
     u_map = get_u_map(u_new, pset)
     @test all(u1[u_map] .== u_new)
     #
     # only a subcomponent to be set
-    u_new = u1[SA[:x]] .* 2
+    u_new = u1[SA.SA[:x]] .* 2
     u_map = @test_logs (:warn, r":y") get_u_map(u_new, pset; is_warn_missing = true)
     u_up = copy(u1)
     u_up[u_map] .= u_new
@@ -175,12 +183,12 @@ end
     missing_keys = setdiff(keys(u1), keys(u_new))
     @test all(u_up[missing_keys] .== u1[missing_keys])
     #
-    # specify components by name instead of ComponentVector
-    u_new = u1[SA[:y, :x]]
+    # specify components by name instead of CA.ComponentVector
+    u_new = u1[SA.SA[:y, :x]]
     u_map = get_u_map(keys(u_new), pset)
     @test all(u1[u_map] .== u_new)
     #
-    p_new = p1[SA[:b, :a]] .* 2
+    p_new = p1[SA.SA[:b, :a]] .* 2
     p_map = @test_logs (:warn, r":c") get_p_map(p_new, pset; is_warn_missing = true)
     p_up = copy(p1)
     p_up[p_map] .= p_new

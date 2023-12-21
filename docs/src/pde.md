@@ -178,10 +178,11 @@ params = [
         i_Y_agr[1] => 10.0, # base input
         i_Y_agr[2] => 50.0, # pulse at t=80       
 ]
-@named pdesys = PDESystem(eqs, bcs, domains, [t, z], state_vars, params)
-prob = LoggingExtras.withlevel(Logging.Error) do 
-prob = discretize(pdesys, discretization) 
-end 
+pdesys, prob = LoggingExtras.withlevel(Logging.Error) do 
+    @named pdesys = PDESystem(eqs, bcs, domains, [t, z], state_vars, params)
+    prob = discretize(pdesys, discretization) 
+    pdesys, prob
+end; 
 nothing # hide
 ```
 
@@ -227,7 +228,7 @@ nothing # hide
 using Plots # hide
 Y_ex = extrema(sol[Y(t,z)]) # hide
 anim = @animate for (i_t, t_i) in enumerate(sol[t]) # hide
-    plot(sol[Y(t,z)][i_t,:], sol[z], xlim=Y_ex, xlab="Y(z)", ylab="z (m)",  # hide
+    Plots.plot(sol[Y(t,z)][i_t,:], sol[z], xlim=Y_ex, xlab="Y(z)", ylab="z (m)",  # hide
     title="t = $(round(t_i;sigdigits=2))", # hide
     yflip=true, # hide
     ) # hide

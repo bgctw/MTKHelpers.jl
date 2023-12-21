@@ -1,3 +1,10 @@
+using Test
+using MTKHelpers
+using MTKHelpers: MTKHelpers as CP
+using OrdinaryDiffEq, ModelingToolkit
+using ComponentArrays: ComponentArrays as CA
+#using StaticArrays: StaticArrays as SA
+
 f = (u, p, t) -> p[1] * u
 u0 = (L = 1 / 2,)
 p = (k_L = 1.0, k_R = 2.0, k_P = 3.0)
@@ -14,7 +21,7 @@ prob = ODEProblem(f, collect(u0), tspan, collect(p))
     prob2 = pu(prob)
     @test label_par(par_setter(pu), prob2.p).k_R == p.k_L
     @test label_par(par_setter(pu), prob2.p).k_P == p.k_L
-    @test label_state(par_setter(pu), prob2.u0) == ComponentVector(u0)
+    @test label_state(par_setter(pu), prob2.u0) == CA.ComponentVector(u0)
 end;
 
 @testset "NullProblemUpdater" begin
@@ -34,10 +41,10 @@ end;
 
 @testset "KeysProblemParGetter_arr" begin
     f = (u, p, t) -> p[1] * u
-    u0 = ComponentVector(L = 1 / 2)
-    p = ComponentVector(k_L = 1.0, k_R = [2.0, 3.0], k_P = [4.0, 5.0], k_L2 = 6.0)
+    u0 = CA.ComponentVector(L = 1 / 2)
+    p = CA.ComponentVector(k_L = 1.0, k_R = [2.0, 3.0], k_P = [4.0, 5.0], k_L2 = 6.0)
     tspan = (0.0, 1.0)
-    prob = ODEProblem(f, getdata(u0), tspan, getdata(p); tspan = (0.0, 1.0))
+    prob = ODEProblem(f, CA.getdata(u0), tspan, CA.getdata(p); tspan = (0.0, 1.0))
     #
     mapping = (:k_L => :k_L2, :k_R => :k_P)
     pu = get_ode_problemupdater(KeysProblemParGetter(mapping, keys(u0)), u0, p)
@@ -70,7 +77,7 @@ end;
 
 @testset "get_concrete ProblemParUpdater used in cost function" begin
     mapping = (:k_L => :k_R, :k_L => :k_P)
-    #ps = ComponentVector(SVector{length(p)}(1:length(p)), Axis(keys(p)))
+    #ps = CA.ComponentVector(SVector{length(p)}(1:length(p)), Axis(keys(p)))
     pg = KeysProblemParGetter(mapping, keys(u0)) #not type-stable extractions
     pu = get_ode_problemupdater(pg, keys(u0), keys(p))
     @inferred pg(pu, prob) # type stable getter
