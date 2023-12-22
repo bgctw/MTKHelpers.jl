@@ -39,7 +39,8 @@ function get_system_symbol_dict(sys::AbstractODESystem)
         # get_base_num_dict(ModelingToolkit.namespace_variables(sys)),
         # get_base_num_dict(ModelingToolkit.namespace_parameters(sys)),
         get_base_num_dict(states(sys)),
-        get_base_num_dict(parameters(sys)))
+        get_base_num_dict(parameters(sys)),
+        get_base_num_dict(getproperty.(observed(sys), :lhs)),)
 end
 
 # function get_system_symbol_dict(sys::AbstractSystem,
