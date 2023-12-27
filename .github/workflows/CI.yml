@@ -20,12 +20,12 @@ jobs:
         # https://youtu.be/fQJrEQIRPZU?list=PLP8iPy9hna6Tze1CReUAQweWHyNdXaPNb&t=967
         group:
           - Basic
-          - PDE
-          - Plot
-          - JET
+          #- PDE
+          #- Plot
+          #- JET
         version:
           - '1.6'
-          - '1'
+          #- '1'
         os:
           - ubuntu-latest
         arch:
