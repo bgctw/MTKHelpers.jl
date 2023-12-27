@@ -14,7 +14,8 @@ using ComponentArrays: ComponentArrays as CA
     @test res == MTKHelpers._get_axis(p1)
     # 
     u0 = (x=2,)
-    res = MTKHelpers._get_axis(u0)
+    res = MTKHelpers._get_axis(keys(u0))
+    @test res == MTKHelpers._get_axis(CA.ComponentVector(u0))
 end;
 
 @testset "attach_axis" begin
