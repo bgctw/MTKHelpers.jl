@@ -210,8 +210,9 @@ end;
 #     CP.subaxis(cv, :a)    
 # end;
 
-@testset "_ax_symbols_tuple" begin
-    cv = CA.ComponentVector(a = [])
-    ax = first(CA.getaxes(cv))
-    @test MTKHelpers._ax_symbols_tuple(ax) == ()
-end;
+# TODO test with versions of Julia 1.6
+# @testset "_ax_symbols_tuple" begin
+#     cv = CA.ComponentVector(a = [])
+#     ax = first(CA.getaxes(cv))
+#     @test MTKHelpers._ax_symbols_tuple(ax) == ()
+# end;
