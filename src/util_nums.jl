@@ -35,12 +35,13 @@ All Symbols are prefixed with `<string_sys>₊`
 The second variant merges the dictionaries obtained from several systems.
 """
 function get_system_symbol_dict(sys::AbstractODESystem)
-    merge(
-        # get_base_num_dict(ModelingToolkit.namespace_variables(sys)),
-        # get_base_num_dict(ModelingToolkit.namespace_parameters(sys)),
-        get_base_num_dict(states(sys)),
+    # if there are no observed, return type is Dict(Any,Any) -> need conditional
+    length(observed(sys)) == 0 ?
+    merge(get_base_num_dict(states(sys)),
+        get_base_num_dict(parameters(sys))) :
+    merge(get_base_num_dict(states(sys)),
         get_base_num_dict(parameters(sys)),
-        get_base_num_dict(getproperty.(observed(sys), :lhs)),)
+        get_base_num_dict(getproperty.(observed(sys), :lhs)))
 end
 
 # function get_system_symbol_dict(sys::AbstractSystem,
