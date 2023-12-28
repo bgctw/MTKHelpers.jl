@@ -147,6 +147,7 @@ end
 
 Return an axis with keys corresponding to each symbolic array and values
 to the indices in the given vector of nums.
+Assumes that symbolic arrays are consecutive positions in vector.
 """
 function axis_of_nums(nums)
     pos_nums = indices_of_nums(nums)

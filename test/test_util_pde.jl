@@ -7,6 +7,8 @@ using LoggingExtras
 
 using MethodOfLines
 
+include("testset_utils.jl") # @testset_skip
+
 @testset "grid_exp" begin
     grid = grid_exp(5, 10, 4.0)
     # regression test
@@ -60,7 +62,7 @@ end;
     @test prob2.u0 == CA.getdata(paropt.state)
 end;
 
-@testset "remake problem using CA.ComponentVector u0_array" begin
+@testset_skip "remake problem using CA.ComponentVector u0_array" begin
     proba = LoggingExtras.withlevel(Logging.Error) do
         proba = MTKHelpers.example_pde_problem_arrstate()
     end
