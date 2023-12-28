@@ -9,6 +9,9 @@ axis_length(::FlatAxis) = 0
 #     # depr?: need a full-fledged axis
 #     Axis(Tuple(i for i in symbol_op.(x)))
 # end
+# function _get_axis(x::NTuple{N}) where N
+#     Axis(Tuple(i for i in symbol_op.(x))::NTuple{N})
+# end
 function _get_axis(x::Tuple)
     Axis(Tuple(i for i in symbol_op.(x)))
 end

@@ -12,6 +12,10 @@ using ComponentArrays: ComponentArrays as CA
     cax = first(axes(p1))
     res = MTKHelpers._get_axis(cax)
     @test res == MTKHelpers._get_axis(p1)
+    # 
+    u0 = (x=2,)
+    res = MTKHelpers._get_axis(keys(u0))
+    @test res == MTKHelpers._get_axis(CA.ComponentVector(u0))
 end;
 
 @testset "attach_axis" begin
@@ -207,7 +211,7 @@ end;
 # end;
 
 @testset "_ax_symbols_tuple" begin
-    cv = CA.ComponentVector(a = [])
+    cv = CA.ComponentVector(a = CA.ComponentVector())
     ax = first(CA.getaxes(cv))
     @test MTKHelpers._ax_symbols_tuple(ax) == ()
 end;
