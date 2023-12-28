@@ -19,13 +19,13 @@ jobs:
       matrix:
         # https://youtu.be/fQJrEQIRPZU?list=PLP8iPy9hna6Tze1CReUAQweWHyNdXaPNb&t=967
         group:
-          #- Basic
-          #- PDE
+          - Basic
+          - PDE
           - Plot
           - JET
         version:
           - '1.6'
-          #- '1'
+          - '1'
         os:
           - ubuntu-latest
         arch:
