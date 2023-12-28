@@ -19,10 +19,10 @@ jobs:
       matrix:
         # https://youtu.be/fQJrEQIRPZU?list=PLP8iPy9hna6Tze1CReUAQweWHyNdXaPNb&t=967
         group:
-          - Basic
+          #- Basic
           #- PDE
-          #- Plot
-          #- JET
+          - Plot
+          - JET
         version:
           - '1.6'
           #- '1'
