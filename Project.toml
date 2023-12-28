@@ -14,22 +14,14 @@ LabelledArrays = "2ee39098-c373-598a-b85f-a56591580800"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 NamedArrays = "86f7a689-2022-50b4-a561-43c23ac3c673"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-PDEBase = "a7812802-0625-4b9e-961c-d332478797e5"
 RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 
-[weakdeps]
-CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
-
-[extensions]
-MTKHelpersMakieExt = "CairoMakie"
-MTKHelpersMethodOfLinesExt = "MethodOfLines"
-
 [compat]
+CairoMakie = "0.11.4"
 Chain = "0.5.0"
 ComponentArrays = "0.15.7"
 DiffEqBase = "6.136.0"
@@ -37,10 +29,10 @@ Distributions = "0.25.104"
 DomainSets = "0.6.7"
 InlineStrings = "1.4.0"
 LabelledArrays = "1.15.0"
+MethodOfLines = "0.10.4"
 ModelingToolkit = "8.72.2"
 NamedArrays = "0.10.0"
 OrdinaryDiffEq = "6.58.2"
-PDEBase = "0.1.8"
 RecursiveArrayTools = "2.38.10"
 Requires = "1.3.0"
 SciMLBase = "2.6.0"
@@ -48,6 +40,15 @@ StaticArrays = "1.8.1"
 SymbolicUtils = "1.4.0"
 julia = "1.6"
 
+
+[extensions]
+MTKHelpersMakieExt = "CairoMakie"
+MTKHelpersMethodOfLinesExt = "MethodOfLines"
+
 [extras]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
+
+[weakdeps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
