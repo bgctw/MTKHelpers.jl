@@ -56,7 +56,7 @@ function simplify_symbol(s::AbstractString)
         # remove outer var"..."
         replace(_, r"^var\"(.+)\"$" => s"\1")
         # replace _Any[...] by [...]
-        replace(_, r"_.+\[(.+)\]" => s"[\1]")
+        replace(_, r"_[^_]+\[(.+)\]" => s"[\1]")
     end
 end
 simplify_symbol(sym::Symbol) = Symbol(simplify_symbol(string(sym)))
