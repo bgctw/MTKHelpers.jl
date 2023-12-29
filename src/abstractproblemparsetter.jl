@@ -49,10 +49,13 @@ function get_paropt_labeled(pset::AbstractProblemParSetter,
 
 """
     axis_paropt(pset::AbstractProblemParSetter)
+    axis_paropt_scalar(pset::AbstractProblemParSetter)
 
 Report the Axis of a CompoenentVector of parameters.
+The second version has a scalarized entry for state for each subvector of state.
 """
 function axis_paropt(::AbstractProblemParSetter) end
+function axis_paropt_scalar(::AbstractProblemParSetter) end
 
 """
     function classes_paropt(pset::AbstractProblemParSetter) 

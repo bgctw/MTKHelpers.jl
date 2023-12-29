@@ -1,6 +1,7 @@
 tmp_f = function ()
     pop!(LOAD_PATH)
     push!(LOAD_PATH, joinpath(pwd(),"test"))
+    push!(LOAD_PATH, expanduser("~/julia/16devtools/")) # access local pack
     #
     test_path = splitpath(pwd())[end] == "test" ? "." : "test"
     include(joinpath(test_path,"testset_utils.jl"))

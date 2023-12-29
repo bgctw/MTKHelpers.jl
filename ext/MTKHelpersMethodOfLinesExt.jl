@@ -14,26 +14,25 @@ using Chain
 using DomainSets # for the example system
 using ComponentArrays
 
-function MTKHelpers.get_discrete_space(prob::AbstractODEProblem)
-    sys = get_system(prob)
-    get_discrete_space(sys)
-end
+# function MTKHelpers.get_discrete_space(prob::AbstractODEProblem)
+#     sys = get_system(prob)
+#     get_discrete_space(sys)
+# end
 function MTKHelpers.get_discrete_space(sys::AbstractSystem)
     hasfield(typeof(ModelingToolkit.get_metadata(sys)), :discretespace) ||
         error("Cannot get ConcreteSpace for the system associated to this problem")
     ModelingToolkit.get_metadata(sys).discretespace
 end
 
-function MTKHelpers.get_1d_grid(prob::AbstractODEProblem)
-    ds = get_discrete_space(prob)
+function MTKHelpers.get_1d_grid(sys::AbstractSystem)
+    ds = get_discrete_space(sys)
     length(ds.axies) == 1 ||
         error("Cannot get 1d grid of a problem is associated with a system of " *
               string(length(ds.axies)) * " spatial variables.")
     first(ds.axies).second
 end
 
-function MTKHelpers.get_1d_state_pos(prob::AbstractODEProblem)
-    sys = MTKHelpers.get_system(prob)
+function MTKHelpers.get_1d_state_pos(sys::AbstractSystem)
     ds = MTKHelpers.get_discrete_space(sys)
     length(ds.axies) == 1 ||
         error("Cannot get 1d grid of a problem is associated with a system of " *
@@ -48,7 +47,7 @@ function MTKHelpers.get_1d_state_pos(prob::AbstractODEProblem)
     #     getindex.(2)  # extract the position vector
     #     first.()      # take the first dimension-entry
     # end
-    z_grid = get_1d_grid(prob)
+    z_grid = get_1d_grid(sys)
     @chain us begin
         # only getindex vars, i.e. discretized ones
         filter(x -> isequal(operation(x), getindex), _)

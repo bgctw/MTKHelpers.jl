@@ -16,11 +16,11 @@ base_num(s) = s
 
 Return a Dictionary of Symbol -> Num, for each unique `base_num.(nums)`
 """
-function get_base_num_dict(nums)
+function get_base_num_dict(nums, f_symbol=symbol_op)
     @chain nums begin
         base_num.()
         unique()
-        symbol_op.(_) .=> _
+        f_symbol.(_) .=> _
         Dict()
     end
 end
@@ -121,6 +121,42 @@ end
 function system_num_dict(ca::CA.ComponentVector, symbol_dict::AbstractDict)
     componentvector_to_numdict(ca, symbol_dict)
 end
+
+"""
+    expand_base_num(num, sys::AbstractSystem) 
+    expand_base_num(num, state_pos::AbstractVector{Int}) 
+
+Return the scalaized symbols for a Num of a PDESystem discretized along one dimension.
+The result is subsetted by argument `state_pos`, which defaults to `get_1d_state_pos(sys)`.
+"""
+function expand_base_num(num, sys::AbstractSystem) 
+    state_pos = get_1d_state_pos(sys)
+    expand_base_num(num)[state_pos]
+end
+
+function expand_base_num(num, state_pos::AbstractVector{Int}) 
+    Symbolics.scalarize(num)[state_pos]
+end
+
+"""
+    expand_base_num_axes(cv::ComponentVector, sys::AbstractSystem)
+
+Change the axis of a componentvector to replace vector-valued entries by
+their respective scalarized symbols.    
+"""
+function expand_base_num_axes(cv::ComponentVector, sys::AbstractSystem)
+    sd = get_system_symbol_dict(sys)
+    state_pos = get_1d_state_pos(sys)
+    tmp = map(keys(cv)) do k
+        x = cv[CA.KeepIndex(k)]
+        length(x) == 1 && return(x)
+        ax_scalar = CA.Axis(Symbol.(expand_base_num(sd[Symbol(k)], state_pos)))
+        attach_axis(x, ax_scalar)
+    end
+    cvs = reduce(vcat,tmp) # vcat(tmp...) produces a plain vector in julia 1.6
+end
+
+
 
 function indices_of_nums(nums)
     op_syms = symbol_op.(nums)

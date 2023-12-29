@@ -20,6 +20,7 @@ export AbstractProblemParSetter,
     count_par,
     count_paropt,
     axis_paropt,
+    axis_paropt_scalar,
     axis_par,
     axis_state,
     keys_paropt,
@@ -70,7 +71,7 @@ export par_setter, par_setter
 export get_ode_problemupdater
 include("problemupdater.jl")
 
-export get_system_symbol_dict, system_num_dict
+export get_system_symbol_dict, system_num_dict, get_system_plain_symbol_dict
 export strip_deriv_num
 export base_num, get_base_num_dict
 include("util_nums.jl")
