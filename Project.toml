@@ -20,13 +20,21 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 
+[weakdeps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
+
+[extensions]
+MTKHelpersMakieExt = "CairoMakie"
+MTKHelpersMethodOfLinesExt = "MethodOfLines"
+
 [compat]
 CairoMakie = "0.11.4"
 Chain = "0.5.0"
 ComponentArrays = "0.15.7"
 DiffEqBase = "6.136.0"
 Distributions = "0.25.104"
-DomainSets = "0.6.7"
+DomainSets = "0.6.7, 0.7"
 InlineStrings = "1.4.0"
 LabelledArrays = "1.15.0"
 MethodOfLines = "0.10.4"
@@ -40,15 +48,6 @@ StaticArrays = "1.8.1"
 SymbolicUtils = "1.4.0"
 julia = "1.6"
 
-
-[extensions]
-MTKHelpersMakieExt = "CairoMakie"
-MTKHelpersMethodOfLinesExt = "MethodOfLines"
-
 [extras]
-CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
-
-[weakdeps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
