@@ -1,3 +1,38 @@
+function get_stateindices(system::AbstractODESystem)
+    st = states(sys)
+    dpos = pos_of_base_nums(st)
+
+
+    (num, pos_vec) = first(iterate(dpos))
+    map(iterate(dpos)) do (num, pos_vec)
+        @show num
+        @show pos_vec
+    end
+
+    base_nums = base_num.(states(sys))
+    base_nums_u = unique(base_nums)
+    bnum = first(base_nums)
+    map(base_nums) do bnum
+
+    end
+end
+
+function pos_of_base_nums(st)
+    dpos = Dict{SymbolicUtils.BasicSymbolic, Vector{Int}}()
+    #(pos, sti) = first(enumerate(st))
+    for (pos, sti) in enumerate(st)
+        _bnum = base_num(sti)
+        _posvec = get(dpos, _bnum, Vector{Int}())
+        if isempty(_posvec)
+            dpos[_bnum] = _posvec
+        end
+        push!(_posvec, pos)
+    end
+    dpos
+end
+
+
+
 """
     base_num(s)
 
@@ -10,6 +45,7 @@ function base_num(s::SymbolicUtils.BasicSymbolic)
     base_num(first(arguments(s))) : s
 end
 base_num(s) = s
+
 
 """
     get_base_num_dict(nums)
@@ -144,17 +180,36 @@ end
 Change the axis of a componentvector to replace vector-valued entries by
 their respective scalarized symbols.    
 """
+tmp 
+
 function expand_base_num_axes(cv::ComponentVector, sys::AbstractSystem)
-    sd = get_system_symbol_dict(sys)
-    state_pos = get_1d_state_pos(sys)
+    #sd = get_system_symbol_dict(sys)
+    st = vcat(states(sys), parameters(sys))
+    dpos = pos_of_base_nums(st)
+    dpos_sym = Dict(symbol_op(p.first) => p.second for p in dpos)
+    #state_pos = get_1d_state_pos(sys)
+    #k = first(keys(cv))
+    #k = last(keys(cv))
     tmp = map(keys(cv)) do k
-        x = cv[CA.KeepIndex(k)]
-        length(x) == 1 && return(x)
-        ax_scalar = CA.Axis(Symbol.(expand_base_num(sd[Symbol(k)], state_pos)))
-        attach_axis(x, ax_scalar)
+        length_x = length(cv[CA.KeepIndex(k)])
+        length_x == 1 && return(base_num(k))
+        state_pos = dpos_sym[k]
+        length(state_pos) == length_x ||
+            error("Expected component entry $k to hold $(length(state_pos)) entries, " *
+                  "but was $(length_x)")
+        st_k = @view st[state_pos]
+        _ind = StaticArrays.SVector( (last(arguments(num)) for num in st_k)...)
+        _syms_k  = StaticArrays.SVector( (Symbol(num) for num in st_k)...)
+        _syms_k[sortperm(_ind)] 
     end
-    cvs = reduce(vcat,tmp) # vcat(tmp...) produces a plain vector in julia 1.6
+    syms = reduce(vcat, tmp) # vcat of SA of Symbols bettern than vcat of CA
+    # SA transferred to type - not typestable but saves precompilation compared to
+    # vcat of Sub-ComponentArrays
+    ax_scalar = Axis(syms)   
+    attach_axis(getdata(cv), ax_scalar)
 end
+expand_base_num_axes(cv::UnitRange, sys::AbstractSystem) = cv
+
 
 
 

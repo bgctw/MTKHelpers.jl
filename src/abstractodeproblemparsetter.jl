@@ -100,7 +100,7 @@ end,
 function get_paropt(pset::AbstractODEProblemParSetter, u0, p)
     # depite pset may not be fully inferred, we can determine return type
     T = promote_type(eltype(u0), eltype(p))
-    getdata(get_paropt_labeled(pset, u0, p))::Vector{T}
+    getdata(get_paropt_labeled(pset, u0, p))::AbstractVector{T}
 end
 # need to implement in concrete types: get_paropt_labeled -> ComponentVector
 

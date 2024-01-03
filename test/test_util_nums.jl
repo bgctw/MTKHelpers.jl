@@ -78,3 +78,12 @@ end;
     @test isempty(ret)
     #prob = ODEProblem(sys, [m.x => 0.0], (0.0,10.0), [m.τ => 3.0])
 end;
+
+@testset "expand_base_num_axes" begin
+    @named sys = CP.samplesystem_vec()
+    cv = CA.ComponentVector(p=[2.1,2.2,2.3], i=0.2)
+    cvs = CP.expand_base_num_axes(cv, sys)
+    @test all(cvs .== cv)
+    @test keys(cvs) == (Symbol("getindex(p, 1)"), Symbol("getindex(p, 2)"),
+        Symbol("getindex(p, 3)"), :i)
+end;

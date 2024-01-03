@@ -70,8 +70,9 @@ function MTKHelpers.example_pde_problem(; name = "mp")
         advection_scheme = UpwindScheme(), approx_order = 2)
     # dzs = diff(z_grid)
     # dzsl = vcat(dzs[1]/2, dzs[2:end], dzs[end]/2) # assume first and last layer only half 
-    @parameters k_Y Y0 i_Y ω i_Y_agr[1:2]
-    @variables Y(..) i_Yo(..) adv_Yo(..) dec_Y(..) Y_t(..) Y_zz(..) Yi(..) i_Yi(..) Y_z(..) adv_Yi(..)
+    @parameters k_Y Y0 i_Y ω i_Y_agr[1:2] X0
+    @variables Y(..) i_Yo(..) adv_Yo(..) dec_Y(..) Y_t(..) Y_zz(..) Yi(..) i_Yi(..) Y_z(..) 
+    @variables adv_Yi(..) X(..)
     ∂_t = Differential(t)
     ∂_z = Differential(z)
     params = [
@@ -80,7 +81,8 @@ function MTKHelpers.example_pde_problem(; name = "mp")
         i_Y => 50.0,
         ω => 0.01,
         i_Y_agr[1] => 10.0, # base input
-        i_Y_agr[2] => 50.0, # pulse at t=80       
+        i_Y_agr[2] => 50.0, # pulse at t=80   
+        X0 => 2.0,     
     ]
     #    
     # below-ground inputs (density across depth) exponentially decreasing with depth
@@ -103,6 +105,7 @@ function MTKHelpers.example_pde_problem(; name = "mp")
         dec_Y(t, z) ~ k_Y * Y(t, z),          # observable of decomposition 
         adv_Yo(t, z) ~ -ω * ∂_z(Y(t, z)),     # observable advective flux of Y
         Yi(t, z) ~ Iz(Y(t, z)),               # observable integral from 0 to depth z
+        ∂_t(X(t)) ~ -k_Y * X(t),              # state variable that is not discretized
     ]
     bcs2 = [
         Y(0, z) ~ 1 / z_m * Y0,
@@ -115,8 +118,9 @@ function MTKHelpers.example_pde_problem(; name = "mp")
         ∂_z(dec_Y(t, z_m)) ~ 0.0,
         ∂_z(Yi(t, 0)) ~ 0.0,
         ∂_z(Yi(t, z_m)) ~ 0.0,
+        X(0) ~ X0,
     ]
-    state_vars2 = [Y(t, z), dec_Y(t, z), adv_Yo(t, z), Yi(t, z)]
+    state_vars2 = [Y(t, z), dec_Y(t, z), adv_Yo(t, z), Yi(t, z), X(t)]
     @named pdesys2 = PDESystem(eqs2, bcs2, domains, [t, z], state_vars2, params)
     # Convert the PDE problem into an ODE problem
     prob2 = discretize(pdesys2, discretization_grid)

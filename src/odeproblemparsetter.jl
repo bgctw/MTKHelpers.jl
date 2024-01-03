@@ -28,7 +28,7 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
     ax_paropt_scalar::AbstractAxis
     function ODEProblemParSetter(ax_state::AbstractAxis,
             ax_par::AbstractAxis, ax_paropt::AbstractAxis, ax_paropt_scalar::AbstractAxis,
-            is_validating::Val{isval}) where {isval}
+            ::Val{isval}) where {isval}
         if isval
             is_valid, msg = validate_keys_state_par(ax_paropt_scalar, ax_state, ax_par)
             !is_valid && error(msg)
@@ -46,7 +46,7 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
 end
 
 function ODEProblemParSetter(state_template, par_template, popt_template, 
-        system::AbstractODESystem;
+        system::Union{AbstractODESystem,Nothing} = nothing;
         is_validating = Val{true}())
     ax_paropt = _get_axis(popt_template)
     ax_state = _get_axis(state_template)
@@ -54,30 +54,38 @@ function ODEProblemParSetter(state_template, par_template, popt_template,
     if !(:state ∈ keys(ax_paropt) || :par ∈ keys(ax_paropt))
         ax_paropt = assign_state_par(ax_state, ax_par, ax_paropt)
     end
-    # scalarize vector-valued entries in state and paropt.state
+    (ax_state_scalar, ax_paropt_scalar) = isnothing(system) ?
+                                          (ax_state, ax_paropt) :
+                                          scalarize_par_and_paroptstate(ax_state,
+        ax_paropt, system)
+    ODEProblemParSetter(ax_state_scalar, ax_par, ax_paropt, ax_paropt_scalar, is_validating)
+end
+
+"scalarize vector-valued entries in state and paropt.state"
+function scalarize_par_and_paroptstate(ax_state::AbstractAxis, ax_paropt::AbstractAxis, system::AbstractODESystem)
     cv = ComponentArray(1:axis_length(ax_state), ax_state)
     cvs = expand_base_num_axes(cv, system)
     ax_state_scalar = first(getaxes(cvs))
     cv = ComponentArray(1:axis_length(ax_paropt), ax_paropt)
     cvs = ComponentVector(state=expand_base_num_axes(cv.state, system), par = cv.par)
     ax_paropt_scalar = first(getaxes(cvs))
-    ODEProblemParSetter(ax_state_scalar, ax_par, ax_paropt, ax_paropt_scalar, is_validating)
+    (ax_state_scalar, ax_paropt_scalar)
 end
+
 
 function ODEProblemParSetter(state_template,
         par_template, popt_template::Union{NTuple{N, Symbol}, AbstractVector{Symbol}},
-        system::AbstractODESystem;
+        system::Union{AbstractODESystem,Nothing} = nothing;
         is_validating = Val{true}()) where {N}
     ax_par = _get_axis(par_template)
     ax_state = _get_axis(state_template)
     # construct a template by extracting the components of u0 and p
     u0 = attach_axis(1:axis_length(ax_state), ax_state)
     p = attach_axis(1:axis_length(ax_par), ax_par)
-    #Main.@infiltrate_main
     u0p = vcat(u0, p)
     u0p isa ComponentArray || error("Could not concatenate u0=$u0 and p=$p.")
     popt_template_new = u0p[popt_template]
-    ODEProblemParSetter(ax_state, ax_par, popt_template_new, sys; is_validating)
+    ODEProblemParSetter(ax_state, ax_par, popt_template_new, system; is_validating)
 end
 
 function assign_state_par(ax_state, ax_par, ax_paropt)
@@ -108,12 +116,13 @@ end
 
 function ODEProblemParSetter(sys::ODESystem, paropt)
     # ODEProblemParSetter(axis_of_nums(states(sys)), axis_of_nums(parameters(sys)), paropt, sys)
-    ODEProblemParSetter(Axis(Symbol.(states(sys))), axis_of_nums(parameters(sys)), paropt, sys)
-
+    #ODEProblemParSetter(Axis(Symbol.(states(sys))), axis_of_nums(parameters(sys)), paropt, sys)
+    # simplify X(t) to X but keep (Y(t))[i] intact
+    ODEProblemParSetter(Axis(symbol_op_scalar.(states(sys))), axis_of_nums(parameters(sys)), paropt, sys)
 end
 
 function get_concrete(pset::ODEProblemParSetter)
-    ODEProblemParSetterConcrete(pset.ax_state, pset.ax_par, pset.ax_paropt, Val{false}())
+    ODEProblemParSetterConcrete(pset.ax_state, pset.ax_par, pset.ax_paropt, pset.ax_paropt_scalar, Val{false}())
 end
 
 ODEProblemParSetterU = Union{ODEProblemParSetter, ODEProblemParSetterConcrete}
@@ -202,9 +211,9 @@ function get_paropt_labeled(pset::ODEProblemParSetterU,
     k_state = keys(CA.indexmap(ax).state)
     k_par = keys(CA.indexmap(ax).par)
     #
-    # its sufficient to vcat plain vectors -> no KeepIndex 
-    gen_state = (@view(u0c[k]) for k in k_state)
-    gen_par = (@view(pc[k]) for k in k_par)
+    # axis is attached later - use SVector instead of view into CA to avoid recompiling vcat
+    gen_state = (getindex_svector(u0c,k) for k in k_state)
+    gen_par = (getindex_svector(pc,k) for k in k_par)
     # gen_state = (@view(u0c[KeepIndex(k)]) for k in k_state)
     # gen_par = (@view(pc[KeepIndex(k)]) for k in k_par)
     #
@@ -216,9 +225,11 @@ function get_paropt_labeled(pset::ODEProblemParSetterU,
     # tmp = collect(gen_state)
     # tmp = collect(gen_par)
     #_data = vcat(gen_state..., gen_par...) # does not work with Julia 1.6
-    _data = vcat(reduce(vcat, gen_state), reduce(vcat, gen_par))    
+    _data = vcat(
+        reduce(vcat, gen_state, init=StaticArrays.SA[]),
+        reduce(vcat, gen_par, init=StaticArrays.SA[]))
     T = promote_type(eltype(u0), eltype(p))
-    paropt = attach_axis(_data, axis_paropt(pset))::ComponentVector{T, Vector{T}}
+    paropt = attach_axis(_data, axis_paropt(pset))::ComponentVector{T, AV} where AV<:AbstractVector{T}
     # cv_state = ComponentVector((;zip(k_state,(u0c[k] for k in k_state))...))
     # cv_par = ComponentVector((;zip(k_par,(pc[k] for k in k_par))...))
     # paropt = ComponentVector(state = cv_state, par = cv_par)

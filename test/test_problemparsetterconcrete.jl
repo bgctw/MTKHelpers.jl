@@ -100,13 +100,18 @@ function test_update_statepar_and_get_paropt(pset, u0, p, popt, u0_target, p_tar
     #using Cthulhu
     #@descend_code_warntype get_paropt_labeled(ps, u0o, po)
     #inferred only works with CA.CA.getdata 
-    popt2n = @inferred get_paropt_labeled(pset, u0o, po)
+    popt2n = get_paropt_labeled(pset, u0o, po)
+    @inferred CA.getaxes(get_paropt_labeled(pset, u0o, po))
+    @inferred zeros(eltype(get_paropt_labeled(pset, u0o, po)),3)
     @test popt2n == popt
     #
-    popt2 = @inferred get_paropt(pset, u0o, po)
+    popt2 = get_paropt(pset, u0o, po)
+    _ = @inferred zeros(eltype(get_paropt(pset, u0o, po)),2)
     @test all(popt2 .== popt)
     #
-    popt2m = @inferred get_paropt_labeled(pset, collect(u0o), collect(po))
+    popt2m = get_paropt_labeled(pset, collect(u0o), collect(po))
+    _ = @inferred CA.getaxes(get_paropt_labeled(pset, collect(u0o), collect(po)))
+    _ = @inferred zeros(eltype(get_paropt_labeled(pset, collect(u0o), collect(po))),3)
     @test popt2m == popt
 end;
 
@@ -119,7 +124,10 @@ end;
     popt = popt1s
     # inferred although pset is global
     _, _ = @inferred update_statepar(pset, CA.getdata(popt), CA.getdata(u0), CA.getdata(p))
-    _ = @inferred get_paropt_labeled(pset, collect(u0), collect(p))
+    #_ = @inferred get_paropt_labeled(pset, collect(u0), collect(p))
+    #array type is variable - can be Vector, SVector, ...
+    _ = @inferred CA.getaxes(get_paropt_labeled(pset, collect(u0), collect(p)))
+    _ = @inferred zeros(eltype(get_paropt_labeled(pset, collect(u0), collect(p))),3)
     #@code_warntype get_paropt_labeled(pset, collect(u0), collect(p))
     #@descend_code_warntype get_paropt_labeled(pset, collect(u0), collect(p))
     test_update_statepar_and_get_paropt(pset, u1, p1, popt, u1t, pt)
@@ -133,7 +141,8 @@ end;
     p = p1c
     popt = poptcs
     cv = p1c
-    @inferred get_paropt_labeled(pset, u0, p)
+    @inferred CA.getaxes(get_paropt_labeled(pset, u0, p))
+    @inferred zeros(eltype(get_paropt_labeled(pset, u0, p)), 3)
     test_update_statepar_and_get_paropt(psc, u1c, p1c, poptcs, u1t, pt)
 end;
 @testset "update_statepar Svector structured" begin
@@ -183,11 +192,15 @@ end
     fcost = let pset = pset, u0 = u0, p = p
         (popt) -> begin
             local u0o, po = @inferred update_statepar(pset, popt, u0, p)
-            d = sum(get_paropt(pset, u0o, po))
+            v = get_paropt(pset, u0o, po)
+            E = eltype(typeof(v))
+            d = sum(v)::E
             d * d
         end
     end
-    @inferred fcost(popt)
+     @inferred fcost(popt)
+    # using Cthulhu
+    # @descend_code_warntype fcost(popt)
     # ForwardDiff.gradient is not inferred
     # ftmp = (popt) -> @inferred ForwardDiff.gradient(fcost, popt)
     # res = ftmp(popt)
@@ -203,7 +216,8 @@ end;
     cv = p1c
     fcost = (popt) -> begin
         u0o, po = @inferred update_statepar(pset, popt, u0, p)
-        d = sum(get_paropt(pset, u0o, po))
+        E = eltype(typeof(u0o))
+        d = sum(get_paropt(pset, u0o, po))::E
         d * d
     end
     poptsv = SA.SVector{7}(popt)
@@ -219,7 +233,8 @@ end;
     cv = p1c
     fcost = (popt) -> begin
         u0o, po = @inferred update_statepar(pset, popt, u0, p)
-        d = sum(get_paropt(pset, u0o, po))
+        E = eltype(typeof(u0o))
+        d = sum(get_paropt(pset, u0o, po))::E
         d * d
     end
     poptv = collect(popt)

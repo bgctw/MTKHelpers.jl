@@ -229,6 +229,14 @@ function _labels(x::CA.ComponentIndex{N, <:AbstractAxis}, nview::Int = 0) where 
     _labels(x.ax, length(x.idx))
 end
 
+"""
+returns a plain new SVector.
+Differs from CA.static_getproperty by not wrapping again in ComponentArray
+"""
+function getindex_svector(cv::ComponentVector,k::Symbol) 
+    cv_k = @view(cv[KeepIndex(k)])
+    SVector{axis_length(first(getaxes(cv_k)))}(cv_k)
+end
 
 function _update_cv_top(cv::ComponentVector, s::ComponentVector)
     keyss = keys(s)
@@ -261,15 +269,16 @@ function _update_cv_top(cv::ComponentVector{TD, TAD},
             # extracting the underlying array does not gain performance but 
             # makes problems in vcat? 
             #val = @view s[k]
-            val_s = @view s[KeepIndex(k)]
-            #MVector{axis_length(_get_axis(val_s)),T_EL}(getdata(val_s)) 
+            #val_s = @view s[KeepIndex(k)]
+            val_s = getindex_svector(s,k)
         else
-            val_cv = @view cv[KeepIndex(k)]
+            #val_cv = @view cv[KeepIndex(k)]
+            val_cv = getindex_svector(cv,k)
         end
     end
     g = (ftmp(i, k) for (i, k) in enumerate(keys(cv)))
     #data = vcat(g...) # does not work with julia 1.6 - freezes
-    data = reduce(vcat,g) # takes more resources from small vectors
+    data = reduce(vcat, g, init=StaticArrays.SA[]) 
     T_C = TAD <: StaticArray ?
           similar_type(TAD, T_EL) :
           typeof(similar(getdata(cv), T_EL))

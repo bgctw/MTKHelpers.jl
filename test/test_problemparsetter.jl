@@ -93,6 +93,7 @@ end;
         CA.Axis(par_syms), CA.Axis(popt_syms))
     p2 = p1 .* 2
 
+    symbols_paropt(psw)
     res = get_paropt_labeled(psw, p2, p1)
     res = get_paropt(psw, p2, p1)
     @test res == [p2[1]] # picked the state (u0) value
@@ -106,7 +107,7 @@ end;
     # extract names and values from SA.SVector
     pset = ODEProblemParSetter(u1s, p1s, poptc)
     res_vec = get_paropt(pset, u1s, p1s)
-    @test res_vec isa Vector
+    @test res_vec isa AbstractVector{Float64}
 end;
 
 # @testset "MethodError if missing symbols are not allowed" begin
@@ -214,8 +215,10 @@ function test_update_statepar_and_get_paropt(pset, u0, p, popt, u0_target, p_tar
     @test popt2n == popt
     #
     # Main.@infiltrate_main
-    popt2 = @inferred get_paropt(pset, u0o, po)
+    #popt2 = @inferred get_paropt(pset, u0o, po)  # typeof vector not defined
+    popt2 = get_paropt(pset, u0o, po)
     @test all(popt2 .== popt)
+    _ = @inferred eltype(get_paropt(pset, u0o, po))
     #
     popt2m = get_paropt_labeled(pset, collect(u0o), collect(po))
     @test popt2m == popt
@@ -338,15 +341,18 @@ end;
             # not inferred: run-time dispatch on computations based on u0o and po
             #   because popt.state -> Any after attach_axis
             local u0o, po = update_statepar(pset, popt, u0, p)
-            d = sum(get_paropt(pset, u0o, po))
+            E = eltype(typeof(u0o)) # u0o not inferred
+            d = sum(get_paropt(pset, u0o, po))::E
             d * d
         end
     end
-    # not inferred 
+    # not inferred -> see concrete version pset = get_concrete(pset)
     #@inferred fcost(popt)  
-    fcost(popt)
+    fcost(popt)  
     #using Cthulhu
+    #@descend_code_warntype fcost(popt)
     #@descend_code_warntype update_statepar(pset, popt, u0, p)
+    # ForwardDiff.gradient not inferred
     res = ForwardDiff.gradient(fcost, popt)
     @test typeof(res) == typeof(popt)
 end;

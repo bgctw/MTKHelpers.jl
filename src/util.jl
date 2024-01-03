@@ -77,6 +77,13 @@ function symbol_op(s)
     simplify_symbol(Symbol(s))
 end
 
+"same as symbol_op but does does not simplify getindex"
+function symbol_op_scalar(s::SymbolicUtils.BasicSymbolic)
+    !istree(s) ? simplify_symbol(Symbol(s)) :
+    operation(s) == getindex ? Symbol(s) : symbol_op(operation(s))
+end
+
+
 # function symbol_op(t::Term)
 #     error("Case not yet implemented. Should not dispatch on Term.")
 #     #symbol_op(t.f)
