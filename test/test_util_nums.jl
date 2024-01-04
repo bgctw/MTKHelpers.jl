@@ -9,7 +9,6 @@ test_path = splitpath(pwd())[end] == "test" ? "." : "test"
 #include(joinpath(test_path,"samplesystem.jl"))
 include("samplesystem.jl")
 
-
 @named m = samplesystem()
 @named m2 = samplesystem()
 @named sys = embed_system(m)
@@ -81,7 +80,7 @@ end;
 
 @testset "expand_base_num_axes" begin
     @named sys = CP.samplesystem_vec()
-    cv = CA.ComponentVector(p=[2.1,2.2,2.3], i=0.2)
+    cv = CA.ComponentVector(p = [2.1, 2.2, 2.3], i = 0.2)
     cvs = CP.expand_base_num_axes(cv, sys)
     @test all(cvs .== cv)
     @test keys(cvs) == (Symbol("getindex(p, 1)"), Symbol("getindex(p, 2)"),

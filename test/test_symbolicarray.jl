@@ -173,7 +173,8 @@ end
     p1 = CA.ComponentVector(a = 10.0, b = [20.0, 30.0, 40], c = 50)
     pset = ODEProblemParSetterConcrete(u1,
         p1,
-        CA.ComponentVector(state = u1[CA.KeepIndex(:x)] .* 10, par = p1[CA.KeepIndex(:b)] .* 2))
+        CA.ComponentVector(state = u1[CA.KeepIndex(:x)] .* 10,
+            par = p1[CA.KeepIndex(:b)] .* 2))
     # assume that positions have been changed
     u_new = u1[SA.SA[:y, :x]]
     u_map = get_u_map(u_new, pset)

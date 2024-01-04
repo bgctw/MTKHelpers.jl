@@ -233,7 +233,7 @@ end
 returns a plain new SVector.
 Differs from CA.static_getproperty by not wrapping again in ComponentArray
 """
-function getindex_svector(cv::ComponentVector,k::Symbol) 
+function getindex_svector(cv::ComponentVector, k::Symbol)
     #cv_k = @view(cv[KeepIndex(k)])
     #SVector{axis_length(first(getaxes(cv_k)))}(getdata(cv_k))
     getdata(CA.static_getproperty(cv, Val(k)))
@@ -271,15 +271,15 @@ function _update_cv_top(cv::ComponentVector{TD, TAD},
             # makes problems in vcat? 
             #val = @view s[k]
             #val_s = @view s[KeepIndex(k)]
-            val_s = getindex_svector(s,k)
+            val_s = getindex_svector(s, k)
         else
             #val_cv = @view cv[KeepIndex(k)]
-            val_cv = getindex_svector(cv,k)
+            val_cv = getindex_svector(cv, k)
         end
     end
     g = (ftmp(i, k) for (i, k) in enumerate(keys(cv)))
     #data = vcat(g...) # does not work with julia 1.6 - freezes
-    data = reduce(vcat, g, init=StaticArrays.SA[]) 
+    data = reduce(vcat, g, init = StaticArrays.SA[])
     T_C = TAD <: StaticArray ?
           similar_type(TAD, T_EL) :
           typeof(similar(getdata(cv), T_EL))
@@ -315,4 +315,3 @@ end
 #     end"Y[1]"
 #     Axis(NamedTuple{syms}(nts))
 # end
-

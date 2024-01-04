@@ -2,7 +2,6 @@ function get_stateindices(system::AbstractODESystem)
     st = states(sys)
     dpos = pos_of_base_nums(st)
 
-
     (num, pos_vec) = first(iterate(dpos))
     map(iterate(dpos)) do (num, pos_vec)
         @show num
@@ -13,7 +12,6 @@ function get_stateindices(system::AbstractODESystem)
     base_nums_u = unique(base_nums)
     bnum = first(base_nums)
     map(base_nums) do bnum
-
     end
 end
 
@@ -31,8 +29,6 @@ function pos_of_base_nums(st)
     dpos
 end
 
-
-
 """
     base_num(s)
 
@@ -46,13 +42,12 @@ function base_num(s::SymbolicUtils.BasicSymbolic)
 end
 base_num(s) = s
 
-
 """
     get_base_num_dict(nums)
 
 Return a Dictionary of Symbol -> Num, for each unique `base_num.(nums)`
 """
-function get_base_num_dict(nums, f_symbol=symbol_op)
+function get_base_num_dict(nums, f_symbol = symbol_op)
     @chain nums begin
         base_num.()
         unique()
@@ -165,12 +160,12 @@ end
 Return the scalaized symbols for a Num of a PDESystem discretized along one dimension.
 The result is subsetted by argument `state_pos`, which defaults to `get_1d_state_pos(sys)`.
 """
-function expand_base_num(num, sys::AbstractSystem) 
+function expand_base_num(num, sys::AbstractSystem)
     state_pos = get_1d_state_pos(sys)
     expand_base_num(num)[state_pos]
 end
 
-function expand_base_num(num, state_pos::AbstractVector{Int}) 
+function expand_base_num(num, state_pos::AbstractVector{Int})
     Symbolics.scalarize(num)[state_pos]
 end
 
@@ -180,8 +175,6 @@ end
 Change the axis of a componentvector to replace vector-valued entries by
 their respective scalarized symbols.    
 """
-tmp 
-
 function expand_base_num_axes(cv::ComponentVector, sys::AbstractSystem)
     #sd = get_system_symbol_dict(sys)
     st = vcat(states(sys), parameters(sys))
@@ -192,26 +185,23 @@ function expand_base_num_axes(cv::ComponentVector, sys::AbstractSystem)
     #k = last(keys(cv))
     tmp = map(keys(cv)) do k
         length_x = length(cv[CA.KeepIndex(k)])
-        length_x == 1 && return(base_num(k))
+        length_x == 1 && return (base_num(k))
         state_pos = dpos_sym[k]
         length(state_pos) == length_x ||
             error("Expected component entry $k to hold $(length(state_pos)) entries, " *
                   "but was $(length_x)")
         st_k = @view st[state_pos]
-        _ind = StaticArrays.SVector( (last(arguments(num)) for num in st_k)...)
-        _syms_k  = StaticArrays.SVector( (Symbol(num) for num in st_k)...)
-        _syms_k[sortperm(_ind)] 
+        _ind = StaticArrays.SVector((last(arguments(num)) for num in st_k)...)
+        _syms_k = StaticArrays.SVector((Symbol(num) for num in st_k)...)
+        _syms_k[sortperm(_ind)]
     end
     syms = reduce(vcat, tmp) # vcat of SA of Symbols is better than vcat of CA
     # SA transferred to type - not typestable but saves precompilation compared to
     # vcat of Sub-ComponentArrays
-    ax_scalar = Axis(syms)   
+    ax_scalar = Axis(syms)
     attach_axis(getdata(cv), ax_scalar)
 end
 expand_base_num_axes(cv::UnitRange, sys::AbstractSystem) = cv
-
-
-
 
 function indices_of_nums(nums)
     op_syms = symbol_op.(nums)

@@ -39,8 +39,8 @@ struct ODEProblemParSetterConcrete{NS, NP, POPTA <: AbstractAxis,
     end
 end
 
-function ODEProblemParSetterConcrete(state_template, par_template, popt_template, 
-    system::Union{AbstractODESystem,Nothing} = nothing;
+function ODEProblemParSetterConcrete(state_template, par_template, popt_template,
+        system::Union{AbstractODESystem, Nothing} = nothing;
         is_validating = Val{true}())
     ax_paropt = _get_axis(popt_template)
     ax_state = _get_axis(state_template)
@@ -61,7 +61,7 @@ end
 
 function ODEProblemParSetterConcrete(state_template,
         par_template, popt_template::Union{NTuple{N, Symbol}, AbstractVector{Symbol}},
-        system::Union{AbstractODESystem,Nothing} = nothing;
+        system::Union{AbstractODESystem, Nothing} = nothing;
         is_validating = Val{true}()) where {N}
     ax_par = _get_axis(par_template)
     ax_state = _get_axis(state_template)
@@ -74,5 +74,8 @@ end
 
 function ODEProblemParSetterConcrete(sys::ODESystem, paropt)
     # simplify X(t) to X but keep (Y(t))[i] intact
-    ODEProblemParSetterConcrete(Axis(symbol_op_scalar.(states(sys))), axis_of_nums(parameters(sys)), paropt, sys)
+    ODEProblemParSetterConcrete(Axis(symbol_op_scalar.(states(sys))),
+        axis_of_nums(parameters(sys)),
+        paropt,
+        sys)
 end

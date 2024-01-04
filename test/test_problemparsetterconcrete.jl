@@ -11,7 +11,6 @@ test_path = splitpath(pwd())[end] == "test" ? "." : "test"
 #include(joinpath(test_path,"samplesystem.jl"))
 include("samplesystem.jl")
 
-
 # states and parameters are single entries
 u1 = CA.ComponentVector(L = 10.0)
 p1 = CA.ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
@@ -54,7 +53,8 @@ function test_label_svectors(pset,
     @test label_paropt(pset, popt) == popt
     @test @inferred(label_paropt(pset, convert(Array, popt))) == popt
     @test @inferred(label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt)))) == popt
-    @test (label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt))) |> CA.getdata) isa SA.SVector
+    @test (label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt))) |> CA.getdata) isa
+          SA.SVector
     #
     @test label_state(pset, u0) == u0
     @test @inferred(label_state(pset, convert(Array, u0))) == u0
@@ -86,7 +86,10 @@ function test_update_statepar_and_get_paropt(pset, u0, p, popt, u0_target, p_tar
     #0o, po = update_statepar(pset, popt, u0, p)
     #@descend_code_warntype update_statepar(pset, popt, u0, p)
     #@code_warntype update_statepar(pset, popt, u0, p)
-    u0o, po = @inferred update_statepar(pset, CA.getdata(popt), CA.getdata(u0), CA.getdata(p))
+    u0o, po = @inferred update_statepar(pset,
+        CA.getdata(popt),
+        CA.getdata(u0),
+        CA.getdata(p))
     u0o, po = @inferred update_statepar(pset, popt, u0, p)
     #return u0o, po
     #@btime update_statepar($ps, $popt, $u1, $p1) 
@@ -102,16 +105,16 @@ function test_update_statepar_and_get_paropt(pset, u0, p, popt, u0_target, p_tar
     #inferred only works with CA.CA.getdata 
     popt2n = get_paropt_labeled(pset, u0o, po)
     @inferred CA.getaxes(get_paropt_labeled(pset, u0o, po))
-    @inferred zeros(eltype(get_paropt_labeled(pset, u0o, po)),3)
+    @inferred zeros(eltype(get_paropt_labeled(pset, u0o, po)), 3)
     @test popt2n == popt
     #
     popt2 = get_paropt(pset, u0o, po)
-    _ = @inferred zeros(eltype(get_paropt(pset, u0o, po)),2)
+    _ = @inferred zeros(eltype(get_paropt(pset, u0o, po)), 2)
     @test all(popt2 .== popt)
     #
     popt2m = get_paropt_labeled(pset, collect(u0o), collect(po))
     _ = @inferred CA.getaxes(get_paropt_labeled(pset, collect(u0o), collect(po)))
-    _ = @inferred zeros(eltype(get_paropt_labeled(pset, collect(u0o), collect(po))),3)
+    _ = @inferred zeros(eltype(get_paropt_labeled(pset, collect(u0o), collect(po))), 3)
     @test popt2m == popt
 end;
 
@@ -127,7 +130,7 @@ end;
     #_ = @inferred get_paropt_labeled(pset, collect(u0), collect(p))
     #array type is variable - can be Vector, SVector, ...
     _ = @inferred CA.getaxes(get_paropt_labeled(pset, collect(u0), collect(p)))
-    _ = @inferred zeros(eltype(get_paropt_labeled(pset, collect(u0), collect(p))),3)
+    _ = @inferred zeros(eltype(get_paropt_labeled(pset, collect(u0), collect(p))), 3)
     #@code_warntype get_paropt_labeled(pset, collect(u0), collect(p))
     #@descend_code_warntype get_paropt_labeled(pset, collect(u0), collect(p))
     test_update_statepar_and_get_paropt(pset, u1, p1, popt, u1t, pt)
@@ -198,7 +201,7 @@ end
             d * d
         end
     end
-     @inferred fcost(popt)
+    @inferred fcost(popt)
     # using Cthulhu
     # @descend_code_warntype fcost(popt)
     # ForwardDiff.gradient is not inferred

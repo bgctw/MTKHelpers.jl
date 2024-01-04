@@ -2,7 +2,6 @@ using Test
 using MTKHelpers
 using MTKHelpers: MTKHelpers as CP
 
-
 test_smoothstep = (x_step, dx, a, b) -> begin
     # at the center between edges
     c = (a + b) / 2

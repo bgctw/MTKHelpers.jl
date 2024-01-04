@@ -7,11 +7,9 @@ using StaticArrays: StaticArrays as SA
 
 using ForwardDiff: ForwardDiff
 
-
 test_path = splitpath(pwd())[end] == "test" ? "." : "test"
 #include(joinpath(test_path,"samplesystem.jl"))
 include("samplesystem.jl")
-
 
 # states and parameters are single entries
 u1 = CA.ComponentVector(L = 10.0)
@@ -168,7 +166,8 @@ function test_label_svectors(pset,
     @test (label_paropt(pset, convert(Array, popt))) == popt
     @test (label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt)))) == popt
     #@test @inferred(label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt)))) == popt
-    @test (label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt))) |> CA.getdata) isa SA.SVector
+    @test (label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt))) |> CA.getdata) isa
+          SA.SVector
     #
     @test label_state(pset, u0) == u0
     @test (label_state(pset, convert(Array, u0))) == u0
@@ -348,7 +347,7 @@ end;
     end
     # not inferred -> see concrete version pset = get_concrete(pset)
     #@inferred fcost(popt)  
-    fcost(popt)  
+    fcost(popt)
     #using Cthulhu
     #@descend_code_warntype fcost(popt)
     #@descend_code_warntype update_statepar(pset, popt, u0, p)
