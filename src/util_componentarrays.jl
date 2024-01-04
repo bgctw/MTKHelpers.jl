@@ -234,8 +234,9 @@ returns a plain new SVector.
 Differs from CA.static_getproperty by not wrapping again in ComponentArray
 """
 function getindex_svector(cv::ComponentVector,k::Symbol) 
-    cv_k = @view(cv[KeepIndex(k)])
-    SVector{axis_length(first(getaxes(cv_k)))}(cv_k)
+    #cv_k = @view(cv[KeepIndex(k)])
+    #SVector{axis_length(first(getaxes(cv_k)))}(getdata(cv_k))
+    getdata(CA.static_getproperty(cv, Val(k)))
 end
 
 function _update_cv_top(cv::ComponentVector, s::ComponentVector)

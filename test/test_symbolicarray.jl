@@ -6,6 +6,7 @@ using OrdinaryDiffEq, ModelingToolkit
 using ComponentArrays: ComponentArrays as CA
 using StaticArrays: StaticArrays as SA
 
+#include("test/testset_utils.jl") # @testset_skip
 include("testset_utils.jl") # @testset_skip
 
 @named m2 = MTKHelpers.samplesystem_vec()
