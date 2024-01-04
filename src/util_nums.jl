@@ -202,7 +202,7 @@ function expand_base_num_axes(cv::ComponentVector, sys::AbstractSystem)
         _syms_k  = StaticArrays.SVector( (Symbol(num) for num in st_k)...)
         _syms_k[sortperm(_ind)] 
     end
-    syms = reduce(vcat, tmp) # vcat of SA of Symbols bettern than vcat of CA
+    syms = reduce(vcat, tmp) # vcat of SA of Symbols is better than vcat of CA
     # SA transferred to type - not typestable but saves precompilation compared to
     # vcat of Sub-ComponentArrays
     ax_scalar = Axis(syms)   
