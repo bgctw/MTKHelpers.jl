@@ -291,12 +291,13 @@ function validate_keys_state_par(ax_paropt::AbstractAxis,
     end
     pc = attach_axis((1:axis_length(ax_par)), ax_par)
     for k in keys(paropt.par)
+        length_par_k = length(paropt.par[k])::Int
         k ∉ keys(pc) && return (; isvalid = false,
             msg = String127("Expected optimined paropt.par.$k to be part of parameters, " *
                             "but was not."))
-        length(paropt.par[k]) != length(pc[k]) && return (; isvalid = false,
+        length_par_k != length(pc[k]) && return (; isvalid = false,
             msg = String127("Expected optimized paropt.par.$k to be of length " *
-                            "$(length(pc[k])) but had length $(length(paropt.par[k]))"))
+                            "$(length(pc[k])) but had length $length_par_k"))
     end
     return (; isvalid = true, msg = String127(""))
 end

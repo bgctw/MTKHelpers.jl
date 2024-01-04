@@ -51,7 +51,7 @@ u0_numdict = system_num_dict(u0, sys)
 prob = ODEProblem(sys, u0_numdict, (0,2), p_numdict);
 
 # check the parameters of the created problem
-pset = ODEProblemParSetterConcrete(sys, ComponentVector()) 
+pset = ODEProblemParSetter(sys, ComponentVector()) 
 p_prob = label_par(pset, prob.p)
 p_prob.m₊i == 0.1     # from default
 p_prob.m₊τ == p.m₊τ   # from p
@@ -68,9 +68,21 @@ pset = ODEProblemParSetter(get_system(prob), paropt)
 prob2 = remake(prob, paropt, pset)
 p2_prob = label_par(pset, prob2.p); u2_prob = label_state(pset, prob2.u0)
 p2_prob.m₊τ == paropt.par.m₊τ     # from paropt
-u2_prob.m₊x == paropt.state.m₊x   # from paropt
 p2_prob.m₊p == p_prob.m₊p         # from original prob
+#all(u2_prob .== paropt.state.m₊x) # order may fail
+get_paropt_labeled(pset, prob2).state.m₊x == paropt.state.m₊x
 nothing # hide
+```
+
+Note that the keys in state are scalarized version of the symbolic array,
+because the order of the entries may change.
+Hence, in the optimized parameter component array 
+the state vector, `x`, can be accessed by key `m₊x`,
+but in the labeled state, only each of the components can be accesed,
+by a rather complicated symbol.
+
+```@example doc
+keys(u2_prob)
 ```
 
 ## API
