@@ -78,7 +78,7 @@ Note that the keys in state are scalarized version of the symbolic array,
 because the order of the entries may change.
 Hence, in the optimized parameter component array 
 the state vector, `x`, can be accessed by key `m₊x`,
-but in the labeled state, only each of the components can be accesed,
+but in the labeled state, only each of the components can be accessed,
 by a rather complicated symbol.
 
 ```@example doc
