@@ -83,7 +83,6 @@ function symbol_op_scalar(s::SymbolicUtils.BasicSymbolic)
     operation(s) == getindex ? Symbol(s) : symbol_op(operation(s))
 end
 
-
 # function symbol_op(t::Term)
 #     error("Case not yet implemented. Should not dispatch on Term.")
 #     #symbol_op(t.f)

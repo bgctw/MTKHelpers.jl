@@ -13,7 +13,7 @@ using ComponentArrays: ComponentArrays as CA
     res = MTKHelpers._get_axis(cax)
     @test res == MTKHelpers._get_axis(p1)
     # 
-    u0 = (x=2,)
+    u0 = (x = 2,)
     res = MTKHelpers._get_axis(keys(u0))
     @test res == MTKHelpers._get_axis(CA.ComponentVector(u0))
 end;
@@ -166,7 +166,11 @@ end
     @test MTKHelpers._labels(x) == [".c.a", ".c.b[1]", ".c.b[2]"]
     x = (a = 1, b = [1, 2])
     @test MTKHelpers._labels(x) == [".a", ".b[1]", ".b[2]"]
-    x = first(CA.getaxes(CA.ComponentArray(c = [(a = [1, 2],), (a = [2, 3],), (a = [3, 4],)])))
+    x = first(CA.getaxes(CA.ComponentArray(c = [
+        (a = [1, 2],),
+        (a = [2, 3],),
+        (a = [3, 4],),
+    ])))
     @test MTKHelpers._labels(x) == [
         ".c[1].a[1]",
         ".c[1].a[2]",

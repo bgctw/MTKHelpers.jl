@@ -71,7 +71,7 @@ function MTKHelpers.example_pde_problem(; name = "mp")
     # dzs = diff(z_grid)
     # dzsl = vcat(dzs[1]/2, dzs[2:end], dzs[end]/2) # assume first and last layer only half 
     @parameters k_Y Y0 i_Y ω i_Y_agr[1:2] X0
-    @variables Y(..) i_Yo(..) adv_Yo(..) dec_Y(..) Y_t(..) Y_zz(..) Yi(..) i_Yi(..) Y_z(..) 
+    @variables Y(..) i_Yo(..) adv_Yo(..) dec_Y(..) Y_t(..) Y_zz(..) Yi(..) i_Yi(..) Y_z(..)
     @variables adv_Yi(..) X(..)
     ∂_t = Differential(t)
     ∂_z = Differential(z)
@@ -82,7 +82,7 @@ function MTKHelpers.example_pde_problem(; name = "mp")
         ω => 0.01,
         i_Y_agr[1] => 10.0, # base input
         i_Y_agr[2] => 50.0, # pulse at t=80   
-        X0 => 2.0,     
+        X0 => 2.0,
     ]
     #    
     # below-ground inputs (density across depth) exponentially decreasing with depth

@@ -32,7 +32,7 @@ end
 tmpf = () -> begin
     prob.tspan
     sol = solve(prob, Tsit5())
-    X = getproperty(get_system(prob), :X; namespace=false)
+    X = getproperty(get_system(prob), :X; namespace = false)
     sol[X]
 end
 
@@ -59,14 +59,15 @@ tmpf = () -> begin
     k = last(keys(cv))
     simplify_symbol(k)
     symbol_op(k)
-    (;zip(simplify_symbol.(keys(cv)), values(cv))...)
+    (; zip(simplify_symbol.(keys(cv)), values(cv))...)
 end
 
 @testset "remake problem using CA.ComponentVector" begin
     sys = get_system(prob)
     state_pos = get_1d_state_pos(sys)
     Y_new = 200.0 .+ (1:length(state_pos)) ./ 100
-    paropt = CA.ComponentVector(state = (Y = Y_new,), par = (Y0 = 201, i_Y_agr = [20.0, 30.0]))
+    paropt = CA.ComponentVector(state = (Y = Y_new,),
+        par = (Y0 = 201, i_Y_agr = [20.0, 30.0]))
     #
     pset = ODEProblemParSetter(sys, paropt)
     label_state(pset, prob.u0)
@@ -78,7 +79,8 @@ end
     @test label_par(pset, prob2.p).Y0 == paropt.par.Y0
     # test the order
     @test label_state(pset, prob2.u0)[CA.KeepIndex(1)][1] == paropt.state[:Y][1]
-    @test label_state(pset, prob2.u0)[CA.KeepIndex(length(Y_new))][1] == paropt.state[:Y][end]
+    @test label_state(pset, prob2.u0)[CA.KeepIndex(length(Y_new))][1] ==
+          paropt.state[:Y][end]
     #
     paropt2 = get_paropt_labeled(pset, prob2)
     @test paropt2 == paropt
@@ -96,15 +98,15 @@ end;
 @testset "remake problem using CA.ComponentVector u0_array" begin
     proba = LoggingExtras.withlevel(Logging.Error) do
         proba = MTKHelpers.example_pde_problem_arrstate()
-    end;
+    end
     #
-    sys = get_system(proba);
+    sys = get_system(proba)
     z_grid = get_1d_grid(sys)
     state_pos = get_1d_state_pos(sys)
     n_state = length(state_pos)
     z_m = z_grid[end]
     Y_R0 = 300.0 / z_m
-    Y_R = repeat([Y_R0], n_state) .+ sort(state_pos) ./10
+    Y_R = repeat([Y_R0], n_state) .+ sort(state_pos) ./ 10
     Y_L = Y_R * 3
     #
     # need to translate Y[L] to Y[1] key name
@@ -146,23 +148,24 @@ end;
 
 tmp_f = () -> begin
     # setting state by Dict num -> value
-    sys = get_system(proba);
+    sys = get_system(proba)
     sd = get_system_symbol_dict(sys)
-    tmp2 = Symbolics.scalarize(sd[Symbol("Y[1]")])[state_pos] .=> identity.(z_grid[state_pos])
-    prob3 = remake(proba, u0=tmp2)
+    tmp2 = Symbolics.scalarize(sd[Symbol("Y[1]")])[state_pos] .=>
+        identity.(z_grid[state_pos])
+    prob3 = remake(proba, u0 = tmp2)
     #
     # translating ComponentVector(vector) to CompoenentVector(scalars...)
     tmp = CP.expand_base_num(sd[Symbol("Y[1]")], state_pos)
     tmp = CP.expand_base_num(sd[Symbol("Y[1]")], sys)
     ax_scalar = CA.Axis(Symbol.(tmp)...)
-    sys = get_system(proba);
+    sys = get_system(proba)
     s1 = states(sys)[1]
     nums = Tuple(states(get_system(proba)))
     CP._get_axis(Symbol.(nums))
     u_popt = CA.ComponentVector(var"Y[1]" = z_grid[state_pos])
     u_popt_s = CP.attach_axis(u_popt, ax_scalar)
     u_popt_s[Symbol(tmp[1])] == z_grid[state_pos[1]]
-    prob3 = remake(proba, u0=u_popt_s)
+    prob3 = remake(proba, u0 = u_popt_s)
     keys(u_popt_s)[1]
     pos_nums = CP.indices_of_nums()
     #
@@ -171,14 +174,11 @@ tmp_f = () -> begin
     @test all(cvs .== cv)
     #
     st = states(sys)
-    t = 
-    NamedTuple(t...)
-    cvs = CA.ComponentVector(;zip(Symbol.(st), 1:length(st))...)
+    t = NamedTuple(t...)
+    cvs = CA.ComponentVector(; zip(Symbol.(st), 1:length(st))...)
     cvs[Symbol.(tmp)]
     keys(cvs)
     # 
-    paropt = CA.ComponentVector(state=(var"Y[1]" = z_grid[state_pos],), par=(k_Y=2.1,))
-    
-
-
+    paropt = CA.ComponentVector(state = (var"Y[1]" = z_grid[state_pos],),
+        par = (k_Y = 2.1,))
 end
