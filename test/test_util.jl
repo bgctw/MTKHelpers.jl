@@ -15,6 +15,11 @@ include("samplesystem.jl")
     @test symbols_par(m) == [:τ, :p1, :p2, :i]
 end
 
+@testset "simplify_symbol" begin
+    @test CP.simplify_symbol("var\"Y_Any[1]\"") == "Y[1]"
+    @test CP.simplify_symbol("var\"Y_t_Any[1]\"") == "Y_t[1]"
+end;
+
 @testset "symbol_op" begin
     @named m = samplesystem()
     Symbol(m.x)

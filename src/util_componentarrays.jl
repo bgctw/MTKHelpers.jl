@@ -229,6 +229,16 @@ function _labels(x::CA.ComponentIndex{N, <:AbstractAxis}, nview::Int = 0) where 
     _labels(x.ax, length(x.idx))
 end
 
+"""
+returns a plain new SVector.
+Differs from CA.static_getproperty by not wrapping again in ComponentArray
+"""
+function getindex_svector(cv::ComponentVector,k::Symbol) 
+    #cv_k = @view(cv[KeepIndex(k)])
+    #SVector{axis_length(first(getaxes(cv_k)))}(getdata(cv_k))
+    getdata(CA.static_getproperty(cv, Val(k)))
+end
+
 function _update_cv_top(cv::ComponentVector, s::ComponentVector)
     keyss = keys(s)
     mkeys = (!(k ∈ keys(cv)) for k in keyss)
@@ -243,9 +253,9 @@ end
 """
     _update_cv_top(cv::ComponentVector{TD}, s::ComponentVector{TS}, is_updated)
 
-Return a new ComponentVector of eltype `promote_type(TD, TS)` with those components at position, i,
-, for which `is_key_updated[i]` is true, are replaced by the corresponding name of 
-source s. 
+Return a new ComponentVector of eltype `promote_type(TD, TS)` with those components 
+in `cv` at position, `i`, for which `is_key_updated[i]` is true, are replaced by the 
+corresponding name of source s. 
 """
 function _update_cv_top(cv::ComponentVector{TD, TAD},
         s::ComponentVector{TS},
@@ -257,18 +267,19 @@ function _update_cv_top(cv::ComponentVector{TD, TAD},
     #(i,k) = last(enumerate(keys(cv)))
     ftmp = (i, k) -> begin
         if is_updated[i]
-            # extracting the underlying array does not gain performance but makes problems
-            # in vcat: #val = @view s[k]
-            val_s = @view s[KeepIndex(k)]
-            #MVector{axis_length(_get_axis(val_s)),T_EL}(getdata(val_s)) 
+            # extracting the underlying array does not gain performance but 
+            # makes problems in vcat? 
+            #val = @view s[k]
+            #val_s = @view s[KeepIndex(k)]
+            val_s = getindex_svector(s,k)
         else
-            val_cv = @view cv[KeepIndex(k)]
+            #val_cv = @view cv[KeepIndex(k)]
+            val_cv = getindex_svector(cv,k)
         end
     end
     g = (ftmp(i, k) for (i, k) in enumerate(keys(cv)))
-    data = vcat(g...)
-    # data = reduce(vcat,g) # takes more resources from small vectors
-    #Main.@infiltrate_main
+    #data = vcat(g...) # does not work with julia 1.6 - freezes
+    data = reduce(vcat, g, init=StaticArrays.SA[]) 
     T_C = TAD <: StaticArray ?
           similar_type(TAD, T_EL) :
           typeof(similar(getdata(cv), T_EL))
@@ -301,6 +312,7 @@ end
 #     nts = map(syms) do sym
 #         ax_sym = indexmap(ax)[sym]
 #         reindex(ax_sym, start_axt[sym]-start_axs[sym])
-#     end
+#     end"Y[1]"
 #     Axis(NamedTuple{syms}(nts))
 # end
+

@@ -201,8 +201,8 @@ using ComponentArrays
 # ω not specified
 par_new = ComponentVector(k_Y = 1/10, Y0 = 80.0, i_Y = 10.0,  i_Y_agr = [2.0, 50.0]) 
 #
-zs = get_1d_grid(prob)
-state_pos = get_1d_state_pos(prob)
+zs = get_1d_grid(get_system(prob))
+state_pos = get_1d_state_pos(get_system(prob))
 u0 = ComponentVector(Y = Dz_lin.(zs[state_pos], z_m) * par_new.Y0)
 
 paropt = ComponentVector(state = u0, par = par_new)
@@ -215,7 +215,8 @@ We can check the new parameters
 
 ```@example pde
 label_par(pset, prob2.p)[keys(par_new)] == par_new
-label_state(pset, prob2.u0)[keys(u0)] == u0
+#all(label_state(pset, prob2.u0) .== u0) # order may fail
+get_paropt_labeled(pset, prob2).state == u0
 ```
 
 And solve the problem and display the results.
@@ -225,13 +226,15 @@ nothing # hide
 ```
 
 ```@example pde
-using Plots # hide
-Y_ex = extrema(sol[Y(t,z)]) # hide
-anim = @animate for (i_t, t_i) in enumerate(sol[t]) # hide
-    Plots.plot(sol[Y(t,z)][i_t,:], sol[z], xlim=Y_ex, xlab="Y(z)", ylab="z (m)",  # hide
-    title="t = $(round(t_i;sigdigits=2))", # hide
-    yflip=true, # hide
-    ) # hide
-end; # hide
-gif(anim, fps=3) # hide
+# current [bug](https://github.com/SciML/ModelingToolkit.jl/issues/2408) in MOL
+println("TODO")
+# using Plots # hide
+# Y_ex = extrema(sol[Y(t,z)]) # hide 
+# anim = @animate for (i_t, t_i) in enumerate(sol[t]) # hide
+#     Plots.plot(sol[Y(t,z)][i_t,:], sol[z], xlim=Y_ex, xlab="Y(z)", ylab="z (m)",  # hide
+#     title="t = $(round(t_i;sigdigits=2))", # hide
+#     yflip=true, # hide
+#     ) # hide
+# end; # hide
+# gif(anim, fps=3) # hide
 ```

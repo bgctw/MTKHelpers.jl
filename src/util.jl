@@ -56,7 +56,7 @@ function simplify_symbol(s::AbstractString)
         # remove outer var"..."
         replace(_, r"^var\"(.+)\"$" => s"\1")
         # replace _Any[...] by [...]
-        replace(_, r"_.+\[(.+)\]" => s"[\1]")
+        replace(_, r"_[^_]+\[(.+)\]" => s"[\1]")
     end
 end
 simplify_symbol(sym::Symbol) = Symbol(simplify_symbol(string(sym)))
@@ -76,6 +76,13 @@ symbol_op(s::AbstractString) = Symbol(simplify_symbol(s))
 function symbol_op(s)
     simplify_symbol(Symbol(s))
 end
+
+"same as symbol_op but does does not simplify getindex"
+function symbol_op_scalar(s::SymbolicUtils.BasicSymbolic)
+    !istree(s) ? simplify_symbol(Symbol(s)) :
+    operation(s) == getindex ? Symbol(s) : symbol_op(operation(s))
+end
+
 
 # function symbol_op(t::Term)
 #     error("Case not yet implemented. Should not dispatch on Term.")
