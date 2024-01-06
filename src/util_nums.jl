@@ -68,7 +68,8 @@ function get_scalarized_num_dict(nums)
     nums_tree = filter(x -> istree(x) && (operation(x) == getindex), nums)
     # need to take care of type, because empty case returns Dict{Any,Any}
     isempty(nums_tree) ? Dict{Symbol, eltype(nums)}() :
-    Dict(Symbol.(nums_tree) .=> nums_tree)::Dict{Symbol, eltype(nums)}
+    # in Julia 1.6 nums maybe Any, but Dict has values of more specific type -> convert
+    convert(Dict{Symbol, eltype(nums)}, Dict(Symbol.(nums_tree) .=> nums_tree))::Dict{Symbol, eltype(nums)}
     # chain version is not inferred
     # @chain nums begin 
     #     filter(istree, _)
