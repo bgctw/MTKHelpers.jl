@@ -78,11 +78,21 @@ end;
     #prob = ODEProblem(sys, [m.x => 0.0], (0.0,10.0), [m.τ => 3.0])
 end;
 
+@named sys_vec = CP.samplesystem_vec()
+
 @testset "expand_base_num_axes" begin
-    @named sys = CP.samplesystem_vec()
     cv = CA.ComponentVector(p = [2.1, 2.2, 2.3], i = 0.2)
-    cvs = CP.expand_base_num_axes(cv, sys)
+    cvs = CP.expand_base_num_axes(cv, sys_vec)
     @test all(cvs .== cv)
     @test keys(cvs) == (Symbol("getindex(p, 1)"), Symbol("getindex(p, 2)"),
         Symbol("getindex(p, 3)"), :i)
+end;
+
+@testset "get_scalarized_num_dict" begin
+    nums = states(sys_vec)
+    nums2 = vcat(nums, parameters(sys_vec))
+    d = CP.get_scalarized_num_dict(nums2)
+    @test d[Symbol(nums[1])] === nums[1]
+    #
+    # see test_symbolicarray for system_num_dict(cv, Dict)
 end;

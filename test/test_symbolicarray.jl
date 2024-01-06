@@ -24,10 +24,22 @@ using StaticArrays: StaticArrays as SA
     #plot(sol, vars=[m2.x,m2.RHS])    
     #
     # specify by symbol_op instead of num
+    tmp = @inferred CP.get_scalarized_num_dict(states(sys))
     _dict_nums = get_system_symbol_dict(sys)
     st = Symbolics.scalarize(_dict_nums[:m2₊x] .=> [10.1, 10.2])
     prob = ODEProblem(sys, st, (0.0, 10.0), [_dict_nums[:m2₊τ] => 3.0])
     @test prob.u0 == [10.1, 10.2]
+    #
+    # specify scalarized x
+    pset = ODEProblemParSetter(sys, ())
+    u0 = label_state(pset, prob.u0)
+    d = system_num_dict(u0, _dict_nums)
+    # same keys and contents as in st
+    @test length(intersect(keys(d), first.(st))) == length(st)
+    @test get.(Ref(d), first.(st), nothing) == last.(st)
+    d2 = system_num_dict(CA.ComponentVector(m2₊x= [10.1, 10.2]), _dict_nums)
+    @test length(intersect(keys(d2), first.(st))) == length(st)
+    @test get.(Ref(d2), first.(st), nothing) == last.(st)
 end;
 
 @testset "indices_of_nums and axis_of_nums" begin

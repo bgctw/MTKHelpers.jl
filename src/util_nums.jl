@@ -1,4 +1,5 @@
 function get_stateindices(system::AbstractODESystem)
+    error("implement get_stateindices")
     st = states(sys)
     dpos = pos_of_base_nums(st)
 
@@ -13,6 +14,10 @@ function get_stateindices(system::AbstractODESystem)
     bnum = first(base_nums)
     map(base_nums) do bnum
     end
+end
+
+function is_symbolicarray(s::SymbolicUtils.BasicSymbolic)
+    istree(s) && (operation(s) == getindex) 
 end
 
 function pos_of_base_nums(st)
@@ -57,6 +62,25 @@ function get_base_num_dict(nums, f_symbol = symbol_op)
 end
 
 """
+Return a Dictionar y of Symbol -> Num but only for each symbolicarray among nums
+"""
+function get_scalarized_num_dict(nums)
+    nums_tree = filter(x -> istree(x) && (operation(x) == getindex), nums)
+    # need to take care of type, because empty case returns Dict{Any,Any}
+    isempty(nums_tree) ? Dict{Symbol, eltype(nums)}() :
+    Dict(Symbol.(nums_tree) .=> nums_tree)::Dict{Symbol, eltype(nums)}
+    # chain version is not inferred
+    # @chain nums begin 
+    #     filter(istree, _)
+    #     filter(x -> , _)
+    #     Symbol.(_) .=> _
+    #     # Dict()        
+    # end
+end
+
+
+
+"""
     get_system_symbol_dict(sys::AbstractSystem, string_sys::String=string(nameof(sys)))
     get_system_symbol_dict(systems...)
 
@@ -67,12 +91,17 @@ The second variant merges the dictionaries obtained from several systems.
 """
 function get_system_symbol_dict(sys::AbstractODESystem)
     # if there are no observed, return type is Dict(Any,Any) -> need conditional
-    length(observed(sys)) == 0 ?
-    merge(get_base_num_dict(states(sys)),
-        get_base_num_dict(parameters(sys))) :
-    merge(get_base_num_dict(states(sys)),
+    dicts = (
+        get_base_num_dict(states(sys)),
         get_base_num_dict(parameters(sys)),
-        get_base_num_dict(getproperty.(observed(sys), :lhs)))
+        get_scalarized_num_dict(states(sys)),
+        get_scalarized_num_dict(parameters(sys)),
+        get_base_num_dict(getproperty.(observed(sys), :lhs)),
+        get_scalarized_num_dict(getproperty.(observed(sys), :lhs)),                
+    )
+    # only merge nonemtpy dictionaries, otherwise the eltype becomes Any
+    dicts_nonempty = filter(d -> !isempty(d), dicts)
+    merge(dicts_nonempty...)
 end
 
 # function get_system_symbol_dict(sys::AbstractSystem,
@@ -90,19 +119,25 @@ end
 
 @deprecate strip_deriv_num(x) symbol_op(x)
 
-function componentvector_to_numdict(cv::ComponentVector{T}, num_dict::Dict{Symbol, S};
-        indices = nothing) where {T, S}
-    tmp = @chain keys(cv) begin
-        #filter(k -> k ∈ keys(num_dict), _)
-        isnothing(indices) ?
-        (Symbolics.scalarize(k) .=> cv[symbol_op(k)] for k in getindex.(Ref(num_dict), _)) :
-        (Symbolics.scalarize(k)[indices] .=> cv[symbol_op(k)]
-         for k in getindex.(Ref(num_dict), _))
-        vcat(_...)
-        Dict(_)
-    end
-    isempty(tmp) && return Dict{SymbolicUtils.BasicSymbolic{Real}, T}()
-    tmp::Dict{SymbolicUtils.BasicSymbolic{Real}, T}
+function componentvector_to_numdict(cv::ComponentVector{T}, num_dict::Dict{Symbol,S};
+    indices=nothing) where {T,S}
+    #kcv = first(keys(cv)) # kcv=last(keys(cv))
+    get_pairs = (kcv) -> begin # returns either Pair or Vector{Pair}
+        num = num_dict[kcv]
+        num_s = Symbolics.scalarize(num)
+        # is_vector = is_symbolicarray(num) 
+        # _pairs = !is_vector ? num => cv[symbol_op_scalar(num)] :
+        #     isnothing(indices) ? 
+        #     num_s .=> cv[symbol_op_scalar(num)] : 
+        #     num_s[indices] .=> cv[symbol_op_scalar(num)]
+        _pairs = isnothing(indices) ? 
+            num_s .=> cv[symbol_op_scalar(num)] : 
+            num_s[indices] .=> cv[symbol_op_scalar(num)]
+        end
+    _pairs_gen = (get_pairs(kcv) for kcv in keys(cv))
+    _pairs_all = reduce(vcat, _pairs_gen; init=Vector{T}())
+    isempty(_pairs_all) && return Dict{SymbolicUtils.BasicSymbolic{Real}}()
+    Dict(_pairs_all...)::Dict{SymbolicUtils.BasicSymbolic{Real}}
 end
 # fallback for empty subvectors of a ComponentArray
 function componentvector_to_numdict(cv::SubArray{T}, num_dict::Dict{Symbol, S}) where {T, S}
