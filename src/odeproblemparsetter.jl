@@ -84,12 +84,14 @@ function ODEProblemParSetter(state_template,
     ax_state_array = isnothing(system) ?
                      _get_axis(state_template) :
                      axis_of_nums(states(system))
-    # construct a template by extracting the components of u0 and p
-    u0 = attach_axis(1:axis_length(ax_state_array), ax_state_array)
-    p = attach_axis(1:axis_length(ax_par), ax_par)
-    u0p = vcat(u0, p)
-    u0p isa ComponentArray || error("Could not concatenate u0=$u0 and p=$p.")
-    popt_template_new = u0p[popt_template]
+    popt_template_new = length(popt_template) == 0 ? Axis() : begin
+        # construct a template by extracting the components of u0 and p
+        u0 = attach_axis(1:axis_length(ax_state_array), ax_state_array)
+        p = attach_axis(1:axis_length(ax_par), ax_par)
+        u0p = vcat(u0, p)
+        u0p isa ComponentArray || error("Could not concatenate u0=$u0 and p=$p.")
+        popt_template_new = u0p[popt_template]
+    end
     ODEProblemParSetter(state_template, ax_par, popt_template_new, system; is_validating)
 end
 
