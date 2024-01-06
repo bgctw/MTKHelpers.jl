@@ -1,10 +1,7 @@
-tmp_f = function ()
+tmpf = () -> begin
     pop!(LOAD_PATH)
-    push!(LOAD_PATH, joinpath(pwd(), "test"))
-    push!(LOAD_PATH, expanduser("~/julia/16devtools/")) # access local pack
-    #
-    test_path = splitpath(pwd())[end] == "test" ? "." : "test"
-    include(joinpath(test_path, "testset_utils.jl"))
+    push!(LOAD_PATH, joinpath(pwd(), "test/"))
+    push!(LOAD_PATH, expanduser("~/julia/devtools_$(VERSION.major).$(VERSION.minor)"))
 end
 
 using Test, SafeTestsets
