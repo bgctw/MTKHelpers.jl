@@ -231,12 +231,12 @@ end
 
 """
 returns a plain new SVector.
-Differs from CA.static_getproperty by not wrapping again in ComponentArray
 """
 function getindex_svector(cv::ComponentVector, k::Symbol)
-    #cv_k = @view(cv[KeepIndex(k)])
-    #SVector{axis_length(first(getaxes(cv_k)))}(getdata(cv_k))
-    getdata(CA.static_getproperty(cv, Val(k)))
+    cv_k = @view(cv[KeepIndex(k)])
+    SVector{axis_length(first(getaxes(cv_k)))}(getdata(cv_k))
+    # only available with ComponentArrays 0.15, need to downgrade to 0.13.8 to use Turing
+    #getdata(CA.static_getproperty(cv, Val(k)))
 end
 
 function _update_cv_top(cv::ComponentVector, s::ComponentVector)
