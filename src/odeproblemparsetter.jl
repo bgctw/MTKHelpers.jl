@@ -52,8 +52,9 @@ function ODEProblemParSetter(state_template, par_template, popt_template,
     ax_paropt = _get_axis(popt_template)
     ax_state = _get_axis(state_template)
     ax_par = _get_axis(par_template)
+    ax_state_array = isnothing(system) ? ax_state : axis_of_nums(states(system))
     if !(:state ∈ keys(ax_paropt) || :par ∈ keys(ax_paropt))
-        ax_paropt = assign_state_par(ax_state, ax_par, ax_paropt)
+        ax_paropt = assign_state_par(ax_state_array, ax_par, ax_paropt)
     end
     (ax_state_scalar, ax_paropt_scalar) = isnothing(system) ?
                                           (ax_state, ax_paropt) :
