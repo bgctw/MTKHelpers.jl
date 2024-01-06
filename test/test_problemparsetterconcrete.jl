@@ -17,8 +17,8 @@ p1 = CA.ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
 popt1 = CA.ComponentVector(L = 10.1, k_L = 1.1, k_R = 1 / 20.1)
 popt1s = CA.ComponentVector(state = (L = 10.1,), par = (k_L = 1.1, k_R = 1 / 20.1))
 # use Axis for type stability, but here, check with non-typestable ps
-#ps = @inferred ODEProblemParSetterConcrete(CA.Axis(keys(u1)),CA.Axis(keys(p1)),CA.Axis(keys(popt)))
-ps = ps1 = ODEProblemParSetterConcrete(u1, p1, popt1)
+#ps = @inferred get_concrete(ODEProblemParSetter(CA.Axis(keys(u1)),CA.Axis(keys(p1)),CA.Axis(keys(popt))))
+ps = ps1 = get_concrete(ODEProblemParSetter(u1, p1, popt1))
 
 # entries with substructure
 u1c = CA.ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
@@ -29,7 +29,7 @@ p1c = CA.ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
 #poptc = CA.ComponentVector(a=(a2=1:2,), c=1:2) 
 poptc = vcat(u1c[CA.KeepIndex(:a)], p1c[(:b, :c)])
 poptcs = CA.ComponentVector(state = u1c[CA.KeepIndex(:a)], par = p1c[(:b, :c)])
-psc = pset = ODEProblemParSetterConcrete(u1c, p1c, poptc)
+psc = pset = get_concrete(ODEProblemParSetter(u1c, p1c, poptc))
 #u0 = u1c; p=p1c; popt=poptc
 
 # test states and parameters and CA.ComponentVector{SA.SVector}
@@ -247,8 +247,8 @@ end;
 
 function test_system(ps1, popt_names, m)
     #Msin.@infiltrate_main
-    #@code_warntype ODEProblemParSetterConcrete(m, CA.Axis(popt_names))
-    #@descend_code_warntype ODEProblemParSetterConcrete(m, CA.Axis(popt_names))
+    #@code_warntype get_concrete(ODEProblemParSetter(m, CA.Axis(popt_names)))
+    #@descend_code_warntype get_concrete(ODEProblemParSetter(m, CA.Axis(popt_names)))
     @test @inferred(keys(axis_state(ps1))) == (:x, :RHS)
     @test @inferred(keys(axis_par(ps1))) == (:τ, :p1, :p2, :i)
     @test @inferred(keys_paropt(ps1)) == popt_names
@@ -256,7 +256,7 @@ end
 @testset "construct from ODESystem" begin
     @named m = samplesystem()
     popt_names = (:RHS, :τ)
-    ps1 = ODEProblemParSetterConcrete(m, CA.Axis(popt_names))
+    ps1 = get_concrete(ODEProblemParSetter(m, CA.Axis(popt_names)))
     # only type stable after function boundary
     test_system(ps1, popt_names, m)
 end;

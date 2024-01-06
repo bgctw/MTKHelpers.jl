@@ -219,3 +219,25 @@ end;
     ax = first(CA.getaxes(cv))
     @test MTKHelpers._ax_symbols_tuple(ax) == ()
 end;
+
+@testset "flatten1" begin
+    cv = CA.ComponentVector(state=(x=1,y=2),par=(k=[3,4],))
+    cvf = flatten1(cv)
+    @test keys(cvf) == (:x, :y, :k)
+    @test cvf.x == cv.state.x
+    @test cvf.y == cv.state.y
+    @test cvf.k == cv.par.k
+    #
+    cv = CA.ComponentVector(par=(k=3,))
+    cvf = flatten1(cv)
+    @test keys(cvf) == (:k,)
+    #
+    cv = CA.ComponentVector(k=3)
+    cvf = flatten1(cv) 
+    cvf == 3
+    cvf isa Int
+    #CA.getaxes(cvf)
+    #@test keys(cvf) == ()
+    #
+    #no method @test flatten1(cvf) == cvf
+end;

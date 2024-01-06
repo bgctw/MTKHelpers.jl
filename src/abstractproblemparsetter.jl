@@ -113,11 +113,18 @@ end
 
 """
     label_paropt(pset::AbstractProblemParSetter, popt::AbstractVector) 
+    label_paropt_flat1(pset::AbstractProblemParSetter, popt::AbstractVector) 
 
 Produce a labeled version, i.e. a ComponentVector of optimized parameters.
+The second version omits the highest level of labels, e.g. state and par in 
+`ODEProblemParSetter`.
 """
 function label_paropt(pset::AbstractProblemParSetter, popt)
     attach_axis(popt, axis_paropt(pset))
+end,
+function label_paropt_flat1(pset::AbstractProblemParSetter, popt)
+    # TODO ? store flat axis to avoid repeated reduce(vcat(ComponentVector 
+    flatten1(label_paropt(pset, popt))
 end
 
 """

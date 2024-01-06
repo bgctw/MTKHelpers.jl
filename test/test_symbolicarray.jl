@@ -54,63 +54,63 @@ end;
     popt_state = CA.ComponentVector(state = CA.ComponentVector(y = [11, 12]))
     popt_par = CA.ComponentVector(par = CA.ComponentVector(c = 40, b = [12, 13]))
     # valid case, different ordering in par
-    pset = ODEProblemParSetterConcrete(u1, p1, vcat(popt_state, popt_par))
+    pset = get_concrete(ODEProblemParSetter(u1, p1, vcat(popt_state, popt_par)))
     res = @inferred MTKHelpers.validate_keys(pset) #TODO check inferred
     @test res.isvalid
     @test isempty(res.msg)
     # no state keyword 
-    @test_throws ErrorException ODEProblemParSetterConcrete(u1, p1, popt_par)
+    @test_throws ErrorException get_concrete(ODEProblemParSetter(u1, p1, popt_par))
     try
-        ODEProblemParSetterConcrete(u1, p1, popt_par)
+        get_concrete(ODEProblemParSetter(u1, p1, popt_par))
     catch e
         @test occursin(r"state", e.msg)
     end
     # no par keyword 
-    @test_throws ErrorException ODEProblemParSetterConcrete(u1, p1, popt_state)
+    @test_throws ErrorException get_concrete(ODEProblemParSetter(u1, p1, popt_state))
     try
-        ODEProblemParSetterConcrete(u1, p1, popt_state)
+        get_concrete(ODEProblemParSetter(u1, p1, popt_state))
     catch e
         @test occursin(r"par", e.msg)
     end
     # paropt.state of wrong type
-    pset = ODEProblemParSetterConcrete(u1, p1,
+    pset = get_concrete(ODEProblemParSetter(u1, p1,
         vcat(CA.ComponentVector(state = (1:3)), popt_par);
-        is_validating = Val(false))
+        is_validating = Val(false)))
     res = @inferred MTKHelpers.validate_keys(pset)
     @test !res.isvalid
     @test occursin(r"paropt.state <: ComponentVector", res.msg)
     # paropt.par of wrong type
-    pset = ODEProblemParSetterConcrete(u1, p1,
+    pset = get_concrete(ODEProblemParSetter(u1, p1,
         vcat(popt_state, CA.ComponentVector(par = (1:3)));
-        is_validating = Val(false))
+        is_validating = Val(false)))
     res = @inferred MTKHelpers.validate_keys(pset)
     @test !res.isvalid
     @test occursin(r"paropt.par <: ComponentVector", res.msg)
     # missing state key
-    pset = ODEProblemParSetterConcrete(u1, p1,
+    pset = get_concrete(ODEProblemParSetter(u1, p1,
         vcat(CA.ComponentVector(state = CA.ComponentVector(foo = 5)), popt_par);
-        is_validating = Val(false))
+        is_validating = Val(false)))
     res = @inferred MTKHelpers.validate_keys(pset)
     @test !res.isvalid
     @test occursin(r"part of state", res.msg)
     # wrong length state key
-    pset = ODEProblemParSetterConcrete(u1, p1,
+    pset = get_concrete(ODEProblemParSetter(u1, p1,
         vcat(CA.ComponentVector(state = CA.ComponentVector(y = 11)), popt_par);
-        is_validating = Val(false))
+        is_validating = Val(false)))
     res = @inferred MTKHelpers.validate_keys(pset)
     @test !res.isvalid
     @test occursin(r"length", res.msg)
     # missing par key
-    pset = ODEProblemParSetterConcrete(u1, p1,
+    pset = get_concrete(ODEProblemParSetter(u1, p1,
         vcat(popt_state, CA.ComponentVector(par = CA.ComponentVector(foo = 5)));
-        is_validating = Val(false))
+        is_validating = Val(false)))
     res = @inferred MTKHelpers.validate_keys(pset)
     @test !res.isvalid
     @test occursin(r"part of parameters", res.msg)
     # wrong length par key
-    pset = ODEProblemParSetterConcrete(u1, p1,
+    pset = get_concrete(ODEProblemParSetter(u1, p1,
         vcat(popt_state, CA.ComponentVector(par = CA.ComponentVector(c = [41, 42])));
-        is_validating = Val(false))
+        is_validating = Val(false)))
     res = @inferred MTKHelpers.validate_keys(pset)
     @test !res.isvalid
     @test occursin(r"length", res.msg)
@@ -129,9 +129,9 @@ end;
     ax_paropt = first(CA.getaxes(paropt))
     # tmp = attach_axis(collect(1:length(ax_paropt)) * 10, ax_paropt)
     # tmp.state.m2₊x
-    #pset1 = ODEProblemParSetterConcrete(ax_state, ax_par, paropt)
+    #pset1 = get_concrete(ODEProblemParSetter(ax_state, ax_par, paropt))
     pset = ODEProblemParSetter(sys, paropt_nonsplit)
-    pset = ODEProblemParSetterConcrete(sys, paropt_nonsplit)
+    pset = get_concrete(ODEProblemParSetter(sys, paropt_nonsplit))
     @test axis_paropt(pset) == ax_paropt
     explore_create_SVector = () -> begin
         tmpf = (paropt) -> begin
@@ -152,7 +152,7 @@ end;
     # initialized pset with symbols
     symbols_state(pset)
     paropt_keys = keys_paropt(pset)
-    pset2 = ODEProblemParSetterConcrete(sys, paropt_keys)
+    pset2 = get_concrete(ODEProblemParSetter(sys, paropt_keys))
     @test axis_paropt(pset2) == ax_paropt
 end;
 
@@ -161,7 +161,7 @@ end;
     p1 = CA.ComponentVector(a = 1, b = [2, 3], c = 4)
     paropt = CA.ComponentVector(y = [11, 12], c = 40, b = [12, 13])
     # valid case, different ordering in par
-    pset = ODEProblemParSetterConcrete(u1, p1, paropt)
+    pset = get_concrete(ODEProblemParSetter(u1, p1, paropt))
     tmp = label_paropt(pset, 1:count_paropt(pset))
     @test tmp.state.y == [1, 2]
     @test tmp.par.c == 3
@@ -171,10 +171,10 @@ end
 @testset "get_u_map and get_p_map" begin
     u1 = CA.ComponentVector(x = 1.0, y = [2.0, 3.0])
     p1 = CA.ComponentVector(a = 10.0, b = [20.0, 30.0, 40], c = 50)
-    pset = ODEProblemParSetterConcrete(u1,
+    pset = get_concrete(ODEProblemParSetter(u1,
         p1,
         CA.ComponentVector(state = u1[CA.KeepIndex(:x)] .* 10,
-            par = p1[CA.KeepIndex(:b)] .* 2))
+            par = p1[CA.KeepIndex(:b)] .* 2)))
     # assume that positions have been changed
     u_new = u1[SA.SA[:y, :x]]
     u_map = get_u_map(u_new, pset)

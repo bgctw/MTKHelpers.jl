@@ -81,14 +81,16 @@ function ODEProblemParSetter(state_template,
         system::Union{AbstractODESystem, Nothing} = nothing;
         is_validating = Val{true}()) where {N}
     ax_par = _get_axis(par_template)
-    ax_state = _get_axis(state_template)
+    ax_state_array = isnothing(system) ?
+                     _get_axis(state_template) :
+                     axis_of_nums(states(system))
     # construct a template by extracting the components of u0 and p
-    u0 = attach_axis(1:axis_length(ax_state), ax_state)
+    u0 = attach_axis(1:axis_length(ax_state_array), ax_state_array)
     p = attach_axis(1:axis_length(ax_par), ax_par)
     u0p = vcat(u0, p)
     u0p isa ComponentArray || error("Could not concatenate u0=$u0 and p=$p.")
     popt_template_new = u0p[popt_template]
-    ODEProblemParSetter(ax_state, ax_par, popt_template_new, system; is_validating)
+    ODEProblemParSetter(state_template, ax_par, popt_template_new, system; is_validating)
 end
 
 function assign_state_par(ax_state, ax_par, ax_paropt)
@@ -210,11 +212,10 @@ For obtaining a StaticVector instead, pass MTKHelpers.ODEMVectorCreator()
 as the fourth argument. This method should work with any AbstractVectorCreator
 that returns a mutable AbstractVector.
 """
-function get_paropt_labeled(pset::ODEProblemParSetterU,
-        u0,
-        p
+function get_paropt_labeled(pset::ODEProblemParSetterU, u0, p;
+        flatten1::Val{is_flatten1} = Val(false)
         #vec_creator::AbstractVectorCreator=ODEVectorCreator()
-)
+) where is_flatten1
     u0c = attach_axis(u0, axis_state(pset))
     pc = attach_axis(p, axis_par(pset))
     ax = axis_paropt_scalar(pset)
@@ -238,8 +239,9 @@ function get_paropt_labeled(pset::ODEProblemParSetterU,
     _data = vcat(reduce(vcat, gen_state, init = StaticArrays.SA[]),
         reduce(vcat, gen_par, init = StaticArrays.SA[]))
     T = promote_type(eltype(u0), eltype(p))
-    paropt = attach_axis(_data,
-        axis_paropt(pset))::ComponentVector{T, AV} where {AV <: AbstractVector{T}}
+    paropt = (
+        is_flatten1 ? label_paropt_flat1(pset, _data) : label_paropt(pset, _data)
+        )::ComponentVector{T, AV} where {AV <: AbstractVector{T}}
     # cv_state = ComponentVector((;zip(k_state,(u0c[k] for k in k_state))...))
     # cv_par = ComponentVector((;zip(k_par,(pc[k] for k in k_par))...))
     # paropt = ComponentVector(state = cv_state, par = cv_par)

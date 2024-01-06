@@ -163,6 +163,7 @@ function test_label_svectors(pset,
     #Main.@infiltrate_main
     # not inferred - compare to test_problemparsettertyped
     @test label_paropt(pset, popt) == popt
+    @test label_paropt_flat1(pset, popt) == flatten1(popt)
     @test (label_paropt(pset, convert(Array, popt))) == popt
     @test (label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt)))) == popt
     #@test @inferred(label_paropt(pset, SA.SVector{NOPT}(CA.getdata(popt)))) == popt

@@ -15,7 +15,7 @@ prob = ODEProblem(f, collect(u0), tspan, collect(p))
 @testset "KeysProblemParGetter" begin
     mapping = (:k_L => :k_R, :k_L => :k_P)
     pg = KeysProblemParGetter(mapping, keys(u0))
-    # pset = ODEProblemParSetterConcrete(Axis(keys(u0)),Axis(keys(p)),Axis(keys(pg)))
+    # pset = get_concrete(ODEProblemParSetter(Axis(keys(u0)),Axis(keys(p)),Axis(keys(pg))))
     # pu = ProblemUpdater(pg, pset)
     pu = get_ode_problemupdater(pg, keys(u0), keys(p))
     prob2 = pu(prob)
