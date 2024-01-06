@@ -178,6 +178,7 @@ function override_system(eqs, basesys::AbstractSystem;
 end
 
 # https://discourse.julialang.org/t/efficient-tuple-concatenation/5398/8
+@inline tuplejoin() = ()
 @inline tuplejoin(x) = x
 @inline tuplejoin(x, y) = (x..., y...)
 @inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)

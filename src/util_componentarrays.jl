@@ -315,3 +315,17 @@ end
 #     end"Y[1]"
 #     Axis(NamedTuple{syms}(nts))
 # end
+
+"""
+Removes the highest level of keys.
+"""
+function flatten1(cv::ComponentVector)
+    flat_gen = (cv[k] for k in keys(cv)) 
+    # TODO think of preventing vcat(ComponentArray)
+    reduce(vcat, flat_gen)
+    # axis length information is not kept with joining tuples (each of length 1)
+    # keys_flat_gen = (keys(cv[k]) for k in keys(cv)) 
+    # keys_flat = tuplejoin(keys_flat_gen...)
+    # ax = Axis(keys_flat)
+    # attach_axis(cv, ax)
+end

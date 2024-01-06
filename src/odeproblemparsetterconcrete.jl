@@ -1,10 +1,11 @@
 """
-    ODEProblemParSetterConcrete(state_template,par_template,popt_template) 
-    ODEProblemParSetterConcrete(sys::ODESystem, popt_template) 
+    ODEProblemParSetterConcrete
 
 Helps keeping track of a subset of initial states and parameters to be optimized.
 Similar to [`ODEProblemParSetter`](@ref), but with axis and length information
 as type parameters.
+
+It is constructed by `get_concrete(ODEProblemParSetter(...))`.
 `
 """
 struct ODEProblemParSetterConcrete{NS, NP, POPTA <: AbstractAxis,
@@ -39,46 +40,46 @@ struct ODEProblemParSetterConcrete{NS, NP, POPTA <: AbstractAxis,
     end
 end
 
-function ODEProblemParSetterConcrete(state_template, par_template, popt_template,
-        system::Union{AbstractODESystem, Nothing} = nothing;
-        is_validating = Val{true}())
-    ax_paropt = _get_axis(popt_template)
-    ax_state = _get_axis(state_template)
-    ax_par = _get_axis(par_template)
-    ax_state_array = isnothing(system) ? ax_state : axis_of_nums(states(system))
-    if !(:state ∈ keys(ax_paropt) || :par ∈ keys(ax_paropt))
-        ax_paropt = assign_state_par(ax_state_array, ax_par, ax_paropt)
-    end
-    (ax_state_scalar, ax_paropt_scalar) = isnothing(system) ?
-                                          (ax_state, ax_paropt) :
-                                          scalarize_par_and_paroptstate(ax_state,
-        ax_paropt, system)
-    ODEProblemParSetterConcrete(ax_state_scalar,
-        ax_par,
-        ax_paropt,
-        ax_paropt_scalar,
-        is_validating)
-end
+# function ODEProblemParSetterConcrete(state_template, par_template, popt_template,
+#         system::Union{AbstractODESystem, Nothing} = nothing;
+#         is_validating = Val{true}())
+#     ax_paropt = _get_axis(popt_template)
+#     ax_state = _get_axis(state_template)
+#     ax_par = _get_axis(par_template)
+#     ax_state_array = isnothing(system) ? ax_state : axis_of_nums(states(system))
+#     if !(:state ∈ keys(ax_paropt) || :par ∈ keys(ax_paropt))
+#         ax_paropt = assign_state_par(ax_state_array, ax_par, ax_paropt)
+#     end
+#     (ax_state_scalar, ax_paropt_scalar) = isnothing(system) ?
+#                                           (ax_state, ax_paropt) :
+#                                           scalarize_par_and_paroptstate(ax_state,
+#         ax_paropt, system)
+#     ODEProblemParSetterConcrete(ax_state_scalar,
+#         ax_par,
+#         ax_paropt,
+#         ax_paropt_scalar,
+#         is_validating)
+# end
 
-function ODEProblemParSetterConcrete(state_template,
-        par_template, popt_template::Union{NTuple{N, Symbol}, AbstractVector{Symbol}},
-        system::Union{AbstractODESystem, Nothing} = nothing;
-        is_validating = Val{true}()) where {N}
-    ax_par = _get_axis(par_template)
-    #ax_state = _get_axis(state_template)
-    ax_state_array = isnothing(system) ? _get_axis(state_template) : axis_of_nums(states(system))
-    #construct a template by extracting the components of u0 and p
-    u0 = attach_axis(1:axis_length(ax_state_array), ax_state_array)
-    p = attach_axis(1:axis_length(ax_par), ax_par)
-    popt_template_new = vcat(u0, p)[popt_template]
-    #popt_template_new = _get_axis(popt_template) # not the correct length of arrays
-    ODEProblemParSetterConcrete(state_template, ax_par, popt_template_new, system; is_validating)
-end
+# function ODEProblemParSetterConcrete(state_template,
+#         par_template, popt_template::Union{NTuple{N, Symbol}, AbstractVector{Symbol}},
+#         system::Union{AbstractODESystem, Nothing} = nothing;
+#         is_validating = Val{true}()) where {N}
+#     ax_par = _get_axis(par_template)
+#     #ax_state = _get_axis(state_template)
+#     ax_state_array = isnothing(system) ? _get_axis(state_template) : axis_of_nums(states(system))
+#     #construct a template by extracting the components of u0 and p
+#     u0 = attach_axis(1:axis_length(ax_state_array), ax_state_array)
+#     p = attach_axis(1:axis_length(ax_par), ax_par)
+#     popt_template_new = vcat(u0, p)[popt_template]
+#     #popt_template_new = _get_axis(popt_template) # not the correct length of arrays
+#     get_concrete(ODEProblemParSetter(state_template, ax_par, popt_template_new, system; is_validating))
+# end
 
-function ODEProblemParSetterConcrete(sys::ODESystem, paropt)
-    # simplify X(t) to X but keep (Y(t))[i] intact
-    ODEProblemParSetterConcrete(Axis(symbol_op_scalar.(states(sys))),
-        axis_of_nums(parameters(sys)),
-        paropt,
-        sys)
-end
+# function get_concrete(ODEProblemParSetter(sys::ODESystem, paropt))
+#     # simplify X(t) to X but keep (Y(t))[i] intact
+#     get_concrete(ODEProblemParSetter(Axis(symbol_op_scalar.(states(sys)))),
+#         axis_of_nums(parameters(sys)),
+#         paropt,
+#         sys)
+# end

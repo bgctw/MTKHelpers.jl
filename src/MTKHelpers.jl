@@ -33,6 +33,7 @@ export AbstractProblemParSetter,
     get_paropt,
     get_paropt_labeled,
     label_paropt,
+    label_paropt_flat1,
     label_par,
     label_state,
     name_paropt,
@@ -50,6 +51,7 @@ export symbol_op, embed_system, override_system
 include("util.jl")
 
 #export _get_index_axis, _set_index_axis!, attach_axis, _update_cv, _labels
+export flatten1
 include("util_componentarrays.jl")
 
 include("abstractproblemparsetter.jl")
