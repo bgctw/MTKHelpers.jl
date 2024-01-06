@@ -120,17 +120,18 @@ end;
     #_dict_nums = get_system_symbol_dict(sys)
     st = Symbolics.scalarize(m2.x .=> [1.0, 2.0])
     prob = ODEProblem(sys, st, (0.0, 10.0))
-    # paropt = CA.ComponentArray(state=CA.ComponentArray(m2₊x=[1.1, 1.2]), 
-    #     par=CA.ComponentArray(m2₊p=[10.1, 10.2, 10.3]))
     paropt = CA.ComponentArray(state = (m2₊x = [1.1, 1.2],),
         par = (m2₊p = [10.1, 10.2, 10.3],))
+    # test assigning paropt to non-scalarized state and parameters
+    paropt_nonsplit = vcat(paropt.state, paropt.par)
     ax_state = MTKHelpers.axis_of_nums(states(sys))
     ax_par = MTKHelpers.axis_of_nums(parameters(sys))
     ax_paropt = first(CA.getaxes(paropt))
     # tmp = attach_axis(collect(1:length(ax_paropt)) * 10, ax_paropt)
     # tmp.state.m2₊x
     #pset1 = ODEProblemParSetterConcrete(ax_state, ax_par, paropt)
-    pset = ODEProblemParSetterConcrete(sys, paropt)
+    pset = ODEProblemParSetter(sys, paropt_nonsplit)
+    pset = ODEProblemParSetterConcrete(sys, paropt_nonsplit)
     @test axis_paropt(pset) == ax_paropt
     explore_create_SVector = () -> begin
         tmpf = (paropt) -> begin
@@ -149,11 +150,10 @@ end;
     @test paropt2 == paropt
     #
     # initialized pset with symbols
-    # does not work with array state, because axis_u0 holds scalars
     symbols_state(pset)
-    # paropt_keys = keys_paropt(pset)
-    # pset2 = ODEProblemParSetterConcrete(sys, paropt_keys)
-    # @test axis_paropt(pset2) == ax_paropt
+    paropt_keys = keys_paropt(pset)
+    pset2 = ODEProblemParSetterConcrete(sys, paropt_keys)
+    @test axis_paropt(pset2) == ax_paropt
 end;
 
 @testset "assign_state_par" begin
