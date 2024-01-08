@@ -319,3 +319,18 @@ function validate_keys_state_par(ax_paropt::AbstractAxis,
     end
     return (; isvalid = true, msg = String127(""))
 end
+
+"""
+    vcat_statesfirst(cvs; system)
+
+Concatenate ComponentVectors, cvs, but move state entries before parameter entries.   
+"""
+function vcat_statesfirst(cvs...; system::AbstractSystem)
+    popt0 = reduce(vcat,cvs)
+    pset = LoggingExtras.withlevel(Logging.Error) do
+        pset = ODEProblemParSetter(system, popt0)
+    end
+    popt_template = label_paropt_flat1(pset, 1:count_paropt(pset)) 
+    popt0[keys(popt_template)]
+end
+
