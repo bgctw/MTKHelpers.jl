@@ -76,7 +76,7 @@ end
     par_syms = keys(p1)
     popt_syms = (:L, :k_L, :M1, :M2)
     @test_throws ErrorException ODEProblemParSetter(state_syms, par_syms, popt_syms)
-    psw = @test_logs (:warn, r"M1.+M2") ODEProblemParSetter(CA.Axis(state_syms),
+    psw = @test_logs (:warn, r"M1.+M2") (:warn,) ODEProblemParSetter(CA.Axis(state_syms),
         CA.Axis(par_syms), CA.Axis(popt_syms))
     #get_paropt(psw, u1, p1) # error, because Missing not allowed
     #test if setting parameters does work
