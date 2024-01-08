@@ -320,12 +320,31 @@ end
 Removes the highest level of keys.
 """
 function flatten1(cv::ComponentVector)
-    flat_gen = (cv[k] for k in keys(cv)) 
+    flat_gen_nonempty = (cv[k] for k in keys(cv) if !isempty(cv[k])) 
+    # collect(flat_gen_nonempty)
     # TODO think of preventing vcat(ComponentArray)
-    reduce(vcat, flat_gen)
+    reduce(vcat, flat_gen_nonempty)
     # axis length information is not kept with joining tuples (each of length 1)
-    # keys_flat_gen = (keys(cv[k]) for k in keys(cv)) 
-    # keys_flat = tuplejoin(keys_flat_gen...)
+    # keys_flat_gen_nonempty = (keys(cv[k]) for k in keys(cv)) 
+    # keys_flat = tuplejoin(keys_flat_gen_nonempty...)
     # ax = Axis(keys_flat)
     # attach_axis(cv, ax)
 end
+
+"""
+Takes several ComponentVectors of subvectors and merges each subvector
+MAYBE
+"""
+function merge_subvectors(cvs...;mkeys)
+    # k = :state # k = :par
+    # allkeys = union(collect.(keys.(cvs))...) # unclear order
+    tup = map(mkeys) do k
+        tmp = (x[k] for x in cvs if k ∈ keys(x))
+        tmp2 = reduce(vcat, tmp)
+        CA.ComponentVector(;zip((k,), (tmp2,))...)
+    end
+    tup_nonempty = (t for t in tup if !isempty(t))
+    reduce(vcat,tup_nonempty)
+end
+#popt = merge_subvectors(fixed, random, indiv; mkeys=(:state, :par))
+

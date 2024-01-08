@@ -17,3 +17,10 @@ macro testset_skip(args...)
     end
     return ex
 end
+
+# using Pkg: Pkg
+# # https://www.juliabloggers.com/how-to-check-the-version-of-a-package/
+# function get_pkg_version(name::AbstractString)
+#     only(x for x in values(Pkg.dependencies()) if x.name == name).version
+# end
+
