@@ -389,22 +389,6 @@ end;
     @test typeof(ForwardDiff.gradient(fcost, poptv)) == typeof(poptv)
 end;
 
-function test_system(ps1, popt_names, m)
-    #Main.@infiltrate_main
-    #@code_warntype ODEProblemParSetter(m, popt_names)
-    # not inferred
-    @test (keys(axis_state(ps1))) == (:x, :RHS)
-    @test (keys(axis_par(ps1))) == (:τ, :p1, :p2, :i)
-    @test (keys_paropt(ps1)) == popt_names
-end
-@testset "construct from ODESystem" begin
-    @named m = samplesystem()
-    popt_names = (:RHS, :τ)
-    ps1 = ODEProblemParSetter(m, popt_names)
-    # only type stable after function boundary
-    test_system(ps1, popt_names, m)
-end;
-
 @testset "name_paropt" begin
     pset = ps
     xn = @inferred name_paropt(pset, collect(1:count_paropt(pset)))
@@ -431,3 +415,31 @@ end;
     xl = label_paropt(psr, collect(1:count_paropt(psr))) # ok?
     xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))
 end;
+
+
+
+function test_system(ps1, popt_names, m)
+    #Main.@infiltrate_main
+    #@code_warntype ODEProblemParSetter(m, popt_names)
+    # not inferred
+    @test (keys(axis_state(ps1))) == (:x, :RHS)
+    @test (keys(axis_par(ps1))) == (:τ, :p1, :p2, :i)
+    @test (keys_paropt(ps1)) == popt_names
+end
+@testset "construct from ODESystem" begin
+    @named m = samplesystem()
+    popt_names = (:RHS, :τ)
+    ps1 = ODEProblemParSetter(m, popt_names)
+    # only type stable after function boundary
+    test_system(ps1, popt_names, m)
+end;
+
+@testset "states after parameters" begin
+    @named m = samplesystem()
+    popt_names = (:p1, :RHS, :τ) # note parameter :p1 before state :RHS
+    ps1 = @test_logs (:warn, r"state keys first") ODEProblemParSetter(m, popt_names)
+    #
+    # will fail:
+    #test_system(ps1, popt_names, m)
+end;
+

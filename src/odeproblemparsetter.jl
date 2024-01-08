@@ -118,6 +118,10 @@ function assign_state_par(ax_state, ax_par, ax_paropt)
     tmp_state = @view tmp[state_keys]
     tmp_par = @view tmp[par_keys]
     tmp2 = CA.ComponentVector(state = tmp_state, par = tmp_par)
+    (state_keys..., par_keys...) != keys(ax_paropt) &&
+        @warn("expected ax_paropt to contain state keys first: "*
+              "$((state_keys..., par_keys...)), "*"but was $(keys(ax_paropt)). " *
+              "label_paropt(), get_paropt(), etc. assume the first order.")
     return _get_axis(tmp2)
 end
 

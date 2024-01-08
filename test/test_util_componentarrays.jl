@@ -5,7 +5,8 @@ using OrdinaryDiffEq, ModelingToolkit
 using ComponentArrays: ComponentArrays as CA
 #using StaticArrays: StaticArrays as SA
 
-include("testset_utils.jl") # @testset_skip
+#include("test/testset_utils.jl") 
+include("testset_utils.jl") # @testset_skip, get_pkg_version
 
 @testset "_get_axis" begin
     p1 = CA.ComponentVector(CA.ComponentVector(x = [1, 2, 3]),
@@ -223,7 +224,12 @@ end;
 end;
 
 @testset "flatten1" begin
-    cv = CA.ComponentVector(state=(x=1,y=2),par=(k=[3,4],),empty=[])
+    cv = CA.ComponentVector(state=(x=1,y=2), par=(k=[3,4],))
+    # https://discourse.julialang.org/t/how-to-execute-code-depending-on-julia-version/75029/3?u=progtw1
+    @static if get_pkg_version("ComponentArrays") >= VersionNumber("0.15") 
+        # test for empty subarray given sufficient version of StaticArrays 
+        cv = vcat(cv, CA.ComponentVector(empty = []))
+    end
     cvf = flatten1(cv)
     @test keys(cvf) == (:x, :y, :k)
     @test cvf.x == cv.state.x
