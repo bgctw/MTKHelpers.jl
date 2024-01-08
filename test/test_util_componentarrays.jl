@@ -224,12 +224,13 @@ end;
 end;
 
 @testset "flatten1" begin
-    cv = CA.ComponentVector(state=(x=1,y=2), par=(k=[3,4],))
-    # https://discourse.julialang.org/t/how-to-execute-code-depending-on-julia-version/75029/3?u=progtw1
-    @static if get_pkg_version("ComponentArrays") >= VersionNumber("0.15") 
-        # test for empty subarray given sufficient version of StaticArrays 
-        cv = vcat(cv, CA.ComponentVector(empty = []))
-    end
+    # for CA 0.13 need to put Type in front of empty subarray
+    cv = CA.ComponentVector(state=(x=1,y=2), par=(k=[3,4], empty=Float64[]))
+    # # https://discourse.julialang.org/t/how-to-execute-code-depending-on-julia-version/75029/3?u=progtw1
+    # @static if get_pkg_version("ComponentArrays") >= VersionNumber("0.15") 
+    #     # test for empty subarray given sufficient version of StaticArrays 
+    #     cv = vcat(cv, CA.ComponentVector(empty = []))
+    # end
     cvf = flatten1(cv)
     @test keys(cvf) == (:x, :y, :k)
     @test cvf.x == cv.state.x
