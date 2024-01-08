@@ -223,7 +223,7 @@ end;
 end;
 
 @testset "flatten1" begin
-    cv = CA.ComponentVector(state=(x=1,y=2),par=(k=[3,4],))
+    cv = CA.ComponentVector(state=(x=1,y=2),par=(k=[3,4],),empty=[])
     cvf = flatten1(cv)
     @test keys(cvf) == (:x, :y, :k)
     @test cvf.x == cv.state.x
@@ -242,4 +242,5 @@ end;
     #@test keys(cvf) == ()
     #
     #no method @test flatten1(cvf) == cvf
+
 end;

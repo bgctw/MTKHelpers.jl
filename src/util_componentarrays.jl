@@ -320,12 +320,12 @@ end
 Removes the highest level of keys.
 """
 function flatten1(cv::ComponentVector)
-    flat_gen = (cv[k] for k in keys(cv)) 
+    flat_gen_nonempty = (cv[k] for k in keys(cv) if !isempty(cv[k])) 
     # TODO think of preventing vcat(ComponentArray)
-    reduce(vcat, flat_gen)
+    reduce(vcat, flat_gen_nonempty)
     # axis length information is not kept with joining tuples (each of length 1)
-    # keys_flat_gen = (keys(cv[k]) for k in keys(cv)) 
-    # keys_flat = tuplejoin(keys_flat_gen...)
+    # keys_flat_gen_nonempty = (keys(cv[k]) for k in keys(cv)) 
+    # keys_flat = tuplejoin(keys_flat_gen_nonempty...)
     # ax = Axis(keys_flat)
     # attach_axis(cv, ax)
 end
