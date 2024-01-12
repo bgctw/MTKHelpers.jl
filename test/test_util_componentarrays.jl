@@ -269,8 +269,9 @@ end;
     @test CA.getaxes(cv3) == CA.getaxes(cv)
     @test all(cv3 .== 2*cv)
     #
-    cv = CA.ComponentVector(state=[])
-    @test_throws ErrorException map_keys(Base.Fix1(*,2), cv)
+    # error on ComponentArrays 0.13 and julia 1.6
+    # cv = CA.ComponentVector(state=[])
+    # @test_throws ErrorException map_keys(Base.Fix1(*,2), cv)
     #
     cv = CA.ComponentVector()
     cv3 = map_keys(Base.Fix1(*,2), cv)
