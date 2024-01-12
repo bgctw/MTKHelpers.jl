@@ -53,7 +53,7 @@ export symbol_op, embed_system, override_system
 include("util.jl")
 
 #export _get_index_axis, _set_index_axis!, attach_axis, _update_cv, _labels
-export flatten1, vcat_statesfirst
+export flatten1, vcat_statesfirst, map_keys
 include("util_componentarrays.jl")
 
 include("abstractproblemparsetter.jl")

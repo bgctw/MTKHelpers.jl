@@ -348,3 +348,18 @@ function merge_subvectors(cvs...;mkeys)
 end
 #popt = merge_subvectors(fixed, random, indiv; mkeys=(:state, :par))
 
+"""
+    map_keys(FUN, cv::ComponentVector; rewrap::Val{is_rewrap}=Val(true)) 
+
+Apply a function to all sub-vectors and create a new ComponentVector with
+the same top-level keys.
+"""
+function map_keys(FUN, cv::ComponentVector; rewrap::Val{is_rewrap}=Val(true)) where is_rewrap
+    tup = map(keys(cv)) do k
+        ret = FUN(cv[k])
+        eltype(ret) != Union{} || error("For mapping empty keys, provide a proper eltype."*
+        "Did you accidentally write key=[] instead of e.g. Float64[] ?")
+        ret
+    end
+    is_rewrap ? ComponentVector(;zip(keys(cv),tup)...) : tup
+end
