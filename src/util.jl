@@ -182,3 +182,9 @@ end
 @inline tuplejoin(x) = x
 @inline tuplejoin(x, y) = (x..., y...)
 @inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
+
+# Inflation of methods that need to be compiled
+# @inline namedtuplejoin() = (;)
+# @inline namedtuplejoin(x) = x
+# @inline namedtuplejoin(x, y) = (; x..., y...)
+# @inline namedtuplejoin(x, y, z...) = (; x..., namedtuplejoin(y, z...)...)

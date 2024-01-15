@@ -318,17 +318,18 @@ end
 
 """
 Removes the highest level of keys.
+Keeps the reference to the underlying data, but changes the axis.
+If first-level vector has no sub-names, an error (Aguement Error tuple must be non-empty)
+is thrown.
 """
 function flatten1(cv::ComponentVector)
-    flat_gen_nonempty = (cv[k] for k in keys(cv) if !isempty(cv[k])) 
-    # collect(flat_gen_nonempty)
-    # TODO think of preventing vcat(ComponentArray)
-    reduce(vcat, flat_gen_nonempty)
-    # axis length information is not kept with joining tuples (each of length 1)
-    # keys_flat_gen_nonempty = (keys(cv[k]) for k in keys(cv)) 
-    # keys_flat = tuplejoin(keys_flat_gen_nonempty...)
-    # ax = Axis(keys_flat)
-    # attach_axis(cv, ax)
+    # return a tuple of (key, value) as zip(keys, values) would do
+    # gen = (((ks, cv[k][ks]) for ks in keys(cv[k])) for k in keys(cv) if !isempty(cv[k]))
+    # cv_new = CA.ComponentVector(; Iterators.Flatten(gen)...)
+    # benchmarks show that the vcat variant is more efficient
+    gen_cvs = (cv[k] for k in keys(cv) if !isempty(cv[k]))
+    cv_new = reduce(vcat, gen_cvs)
+    attach_axis(cv, first(getaxes(cv_new)))
 end
 
 """

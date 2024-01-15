@@ -225,7 +225,7 @@ end;
 
 @testset "flatten1" begin
     # for CA 0.13 need to put Type in front of empty subarray
-    cv = CA.ComponentVector(state=(x=1,y=2), par=(k=[3,4],), empty=Float64[])
+    cv = CA.ComponentVector(state=(x=1,y=2), par=(k=[3,4],), empty=Float64[])  #, t3=(j=5,), t4=(l=5,))
     # # https://discourse.julialang.org/t/how-to-execute-code-depending-on-julia-version/75029/3?u=progtw1
     # @static if get_pkg_version("ComponentArrays") >= VersionNumber("0.15") 
     #     # test for empty subarray given sufficient version of StaticArrays 
@@ -236,19 +236,26 @@ end;
     @test cvf.x == cv.state.x
     @test cvf.y == cv.state.y
     @test cvf.k == cv.par.k
+    @test CA.getdata(cvf) === CA.getdata(cv)
     #
     cv = CA.ComponentVector(par=(k=3,))
     cvf = flatten1(cv)
     @test keys(cvf) == (:k,)
+    @test CA.getdata(cvf) === CA.getdata(cv)
     #
+    # need to have sub-names
     cv = CA.ComponentVector(k=3)
-    cvf = flatten1(cv) 
-    cvf == 3
-    cvf isa Int
+    @test_throws Exception cvf = flatten1(cv) 
+    #cvf == 3
+    #cvf isa Int
     #CA.getaxes(cvf)
     #@test keys(cvf) == ()
     #
     #no method @test flatten1(cvf) == cvf
+    tmpf = () -> begin
+        cv = CA.ComponentVector(state=(x=1,y=2), par=(j=[3,4],), empty=Float64[])  #, t3=(j=5,), t4=(l=5,))
+        @time cvf = flatten1(cv)
+    end
 end;
 
 @testset "mapkeys" begin
