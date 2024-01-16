@@ -26,9 +26,10 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
     is_updated_state_i::AbstractVector
     is_updated_par_i::AbstractVector
     ax_paropt_scalar::AbstractAxis
+    ax_paropt_flat1::AbstractAxis
     function ODEProblemParSetter(ax_state::AbstractAxis,
             ax_par::AbstractAxis, ax_paropt::AbstractAxis, ax_paropt_scalar::AbstractAxis,
-            ::Val{isval}) where {isval}
+            ax_paropt_flat1::AbstractAxis, ::Val{isval}) where {isval}
         if isval
             is_valid, msg = validate_keys_state_par(ax_paropt_scalar, ax_state, ax_par)
             !is_valid && error(msg)
@@ -42,7 +43,7 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
                            SVector{0, Bool}() :
                            SVector((k ∈ keys_paropt_par for k in keys(ax_par))...)
         new(ax_paropt, ax_state, ax_par, is_updated_state_i, is_updated_par_i,
-            ax_paropt_scalar)
+            ax_paropt_scalar, ax_paropt_flat1)
     end
 end
 
@@ -60,7 +61,15 @@ function ODEProblemParSetter(state_template, par_template, popt_template,
                                           (ax_state, ax_paropt) :
                                           scalarize_par_and_paroptstate(ax_state,
         ax_paropt, system)
-    ODEProblemParSetter(ax_state_scalar, ax_par, ax_paropt, ax_paropt_scalar, is_validating)
+    #Main.@infiltrate_main        
+    ax_paropt_flat1 = try
+        first(getaxes(flatten1(ComponentVector(1:axis_length(ax_paropt),ax_paropt))))
+    catch e
+        @warn("Could not produce flattened version of axis_paropt=$ax_paropt. " * 
+        "Are there duplicate keys in state and parameters?")
+        FlatAxis()
+    end
+    ODEProblemParSetter(ax_state_scalar, ax_par, ax_paropt, ax_paropt_scalar, ax_paropt_flat1, is_validating)
 end
 
 "scalarize vector-valued entries in state and paropt.state"
@@ -140,6 +149,7 @@ function get_concrete(pset::ODEProblemParSetter)
         pset.ax_par,
         pset.ax_paropt,
         pset.ax_paropt_scalar,
+        pset.ax_paropt_flat1,
         Val{false}())
 end
 
@@ -149,6 +159,7 @@ axis_state(ps::ODEProblemParSetterU) = ps.ax_state
 axis_par(ps::ODEProblemParSetterU) = ps.ax_par
 axis_paropt(ps::ODEProblemParSetterU) = ps.ax_paropt
 axis_paropt_scalar(ps::ODEProblemParSetterU) = ps.ax_paropt_scalar
+axis_paropt_flat1(ps::ODEProblemParSetterU) = ps.ax_paropt_flat1
 
 classes_paropt(pset::ODEProblemParSetterU) = (:state, :par)
 
@@ -219,7 +230,7 @@ as the fourth argument. This method should work with any AbstractVectorCreator
 that returns a mutable AbstractVector.
 """
 function get_paropt_labeled(pset::ODEProblemParSetterU, u0, p;
-        flatten1::Val{is_flatten1} = Val(false)
+        flat1::Val{is_flatten1} = Val(false)
         #vec_creator::AbstractVectorCreator=ODEVectorCreator()
 ) where is_flatten1
     u0c = attach_axis(u0, axis_state(pset))

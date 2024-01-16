@@ -11,9 +11,8 @@ using OrdinaryDiffEq, ModelingToolkit
 
 using CairoMakie
 
-test_path = splitpath(pwd())[end] == "test" ? "." : "test"
-#include(joinpath(test_path,"samplesystem.jl"))
-include("samplesystem.jl")
+pkgdir = dirname(dirname(pathof(MTKHelpers)))
+include(joinpath(pkgdir,"test","samplesystem.jl"))
 
 @testset "series_sol" begin
     @named m = samplesystem()

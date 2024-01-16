@@ -12,6 +12,7 @@ struct ODEProblemParSetterConcrete{NS, NP, POPTA <: AbstractAxis,
     SA <: AbstractAxis,
     PA <: AbstractAxis,
     POPTAS <: AbstractAxis,
+    POPTAF <: AbstractAxis,
 } <: AbstractODEProblemParSetter
     ax_paropt::POPTA
     ax_state::SA
@@ -19,9 +20,10 @@ struct ODEProblemParSetterConcrete{NS, NP, POPTA <: AbstractAxis,
     is_updated_state_i::StaticVector{NS, Bool}
     is_updated_par_i::StaticVector{NP, Bool}
     ax_paropt_scalar::POPTAS
+    ax_paropt_flat1::POPTAF
     function ODEProblemParSetterConcrete(ax_state::AbstractAxis,
             ax_par::AbstractAxis, ax_paropt::AbstractAxis, ax_paropt_scalar::AbstractAxis,
-            ::Val{isval}) where {isval}
+            ax_paropt_flat1::AbstractAxis, ::Val{isval}) where {isval}
         if isval
             is_valid, msg = validate_keys_state_par(ax_paropt_scalar, ax_state, ax_par)
             !is_valid && error(msg)
@@ -35,8 +37,8 @@ struct ODEProblemParSetterConcrete{NS, NP, POPTA <: AbstractAxis,
                            SVector{0, Bool}() :
                            SVector((k ∈ keys_paropt_par for k in keys(ax_par))...)
         new{length(is_updated_state_i), length(is_updated_par_i),
-            typeof(ax_paropt), typeof(ax_state), typeof(ax_par), typeof(ax_paropt_scalar)}(ax_paropt,
-            ax_state, ax_par, is_updated_state_i, is_updated_par_i, ax_paropt_scalar)
+            typeof(ax_paropt), typeof(ax_state), typeof(ax_par), typeof(ax_paropt_scalar), typeof(ax_paropt_flat1)}(ax_paropt,
+            ax_state, ax_par, is_updated_state_i, is_updated_par_i, ax_paropt_scalar, ax_paropt_flat1)
     end
 end
 

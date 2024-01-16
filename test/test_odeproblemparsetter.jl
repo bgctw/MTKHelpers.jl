@@ -7,9 +7,9 @@ using StaticArrays: StaticArrays as SA
 
 using ForwardDiff: ForwardDiff
 
-test_path = splitpath(pwd())[end] == "test" ? "." : "test"
-#include(joinpath(test_path,"samplesystem.jl"))
-include("samplesystem.jl")
+pkgdir = dirname(dirname(pathof(MTKHelpers)))
+include(joinpath(pkgdir,"test","samplesystem.jl"))
+
 @named m = samplesystem()
 
 # states and parameters are single entries
@@ -449,5 +449,23 @@ end;
     @test keys(popt_ordered) == (:RHS, :p1, :τ)
     @test popt_ordered[keys(popt)] == popt
 end;    
+
+@testset "warning when not flat version can be setup" begin
+    u1 = CA.ComponentVector(L = 10.0)
+    p1 = CA.ComponentVector(L = 1.0, k_R = 1 / 20, m = 2.0)
+    popt1s = CA.ComponentVector(state = CA.ComponentVector(L = 10.1),
+        par = CA.ComponentVector(L = 1.1, k_R = 1 / 20.1))
+    # use Axis for type stability, but here, check with non-typestable ps
+    #ps = @inferred ODEProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(keys(popt)))
+    ps1 = @test_logs (:warn, r"flat") ODEProblemParSetter(u1, p1, popt1s)
+    @test popt2 = label_paropt(ps1, CA.getdata(popt1s)) == popt1s
+    @test axis_paropt_flat1(ps1) isa CA.FlatAxis
+    popt2f = @test_logs (:warn, r"no flat")  label_paropt_flat1(ps1, CA.getdata(popt1s))
+    @test all(popt2f .== CA.getdata(popt1s))
+    #
+    ps1c = get_concrete(ps1)
+    popt2f = @test_logs (:warn, r"no flat")  label_paropt_flat1(ps1c, CA.getdata(popt1s))
+end;
+
 
 

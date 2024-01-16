@@ -7,9 +7,8 @@ using ComponentArrays: ComponentArrays as CA
 
 include("testset_utils.jl") # @testset_skip
 
-test_path = splitpath(pwd())[end] == "test" ? "." : "test"
-#include(joinpath(test_path,"samplesystem.jl"))
-include("samplesystem.jl")
+pkgdir = dirname(dirname(pathof(MTKHelpers)))
+include(joinpath(pkgdir,"test","samplesystem.jl"))
 
 @named m = samplesystem()
 @named m2 = samplesystem()
