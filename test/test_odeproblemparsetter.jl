@@ -7,9 +7,8 @@ using StaticArrays: StaticArrays as SA
 
 using ForwardDiff: ForwardDiff
 
-test_path = splitpath(pwd())[end] == "test" ? "." : "test"
-#include(joinpath(test_path,"samplesystem.jl"))
-include("samplesystem.jl")
+pkgdir = dirname(dirname(pathof(MTKHelpers)))
+include(joinpath(pkgdir,"test","samplesystem.jl"))
 @named m = samplesystem()
 
 # states and parameters are single entries

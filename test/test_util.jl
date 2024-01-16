@@ -3,9 +3,8 @@ using MTKHelpers
 using MTKHelpers: MTKHelpers as CP
 using OrdinaryDiffEq, ModelingToolkit
 
-test_path = splitpath(pwd())[end] == "test" ? "." : "test"
-#include(joinpath(test_path,"samplesystem.jl"))
-include("samplesystem.jl")
+pkgdir = dirname(dirname(pathof(MTKHelpers)))
+include(joinpath(pkgdir,"test","samplesystem.jl"))
 
 @testset "symbols_state ODE" begin
     @named m = samplesystem()

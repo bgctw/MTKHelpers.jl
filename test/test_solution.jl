@@ -6,9 +6,8 @@ using OrdinaryDiffEq, ModelingToolkit
 # using StaticArrays: StaticArrays as SA
 using NamedArrays: NamedArrays
 
-test_path = splitpath(pwd())[end] == "test" ? "." : "test"
-#include(joinpath(test_path,"samplesystem.jl"))
-include("samplesystem.jl")
+pkgdir = dirname(dirname(pathof(MTKHelpers)))
+include(joinpath(pkgdir,"test","samplesystem.jl"))
 
 @testset "getlast" begin
     @named m = samplesystem()
