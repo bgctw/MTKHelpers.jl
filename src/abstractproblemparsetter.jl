@@ -50,12 +50,15 @@ function get_paropt_labeled(pset::AbstractProblemParSetter,
 """
     axis_paropt(pset::AbstractProblemParSetter)
     axis_paropt_scalar(pset::AbstractProblemParSetter)
+    axis_paropt_flat1(pset::AbstractProblemParSetter)
 
 Report the Axis of a CompoenentVector of parameters.
-The second version has a scalarized entry for state for each subvector of state.
+The second version has a scalarized entry for state for each subvector of state. The third version provides an axis corresponding to 
+`flatten1(paropt)`.
 """
 function axis_paropt(::AbstractProblemParSetter) end
 function axis_paropt_scalar(::AbstractProblemParSetter) end
+function axis_paropt_flat1(::AbstractProblemParSetter) end
 
 """
     function classes_paropt(pset::AbstractProblemParSetter) 
@@ -123,8 +126,13 @@ function label_paropt(pset::AbstractProblemParSetter, popt)
     attach_axis(popt, axis_paropt(pset))
 end,
 function label_paropt_flat1(pset::AbstractProblemParSetter, popt)
-    # TODO ? store flat axis to avoid repeated reduce(vcat(ComponentVector 
-    flatten1(label_paropt(pset, popt))
+    # use stored flat axis to avoid repeated reduce(vcat(ComponentVector 
+    # with flatten1
+    ax = axis_paropt_flat1(pset)
+    ax isa FlatAxis && 
+    @warn("Called label_paropt_flat1 with a ProblemParSetter that has no flat version.")
+    attach_axis(popt, ax)
+    #flatten1(label_paropt(pset, popt))
 end
 
 """
