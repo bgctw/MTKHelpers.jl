@@ -216,8 +216,10 @@ function _labels(x::CA.PartitionedAxis{PartSz, IdxMap}, nview::Int) where {PartS
     v = vcat(("[$i]" for i in 1:ncomp)...)
     vcat((vi .* a for (a, vi) in Iterators.product(la, v))...)
 end
-function _labels(x::CA.ShapedAxis{Shape, IdxMap}, nview::Int) where {Shape, IdxMap}
-    la = _labels(IdxMap)
+#function _labels(x::CA.ShapedAxis{Shape, IdxMap}, nview::Int) where {Shape, IdxMap}
+function _labels(x::CA.ShapedAxis{Shape}, nview::Int) where {Shape}
+    #la = _labels(IdxMap)
+    la = _labels(CA.indexmap(x))
     v = vcat(("[" * join(i.I, ",") * "]" for i in CartesianIndices(Shape))...)
     vcat((vi .* a for (a, vi) in Iterators.product(la, v))...)
 end
