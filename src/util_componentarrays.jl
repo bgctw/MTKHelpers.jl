@@ -216,10 +216,15 @@ function _labels(x::CA.PartitionedAxis{PartSz, IdxMap}, nview::Int) where {PartS
     v = vcat(("[$i]" for i in 1:ncomp)...)
     vcat((vi .* a for (a, vi) in Iterators.product(la, v))...)
 end
-function _labels(x::CA.ShapedAxis{Shape, IdxMap}, nview::Int) where {Shape, IdxMap}
-    la = _labels(IdxMap)
-    v = vcat(("[" * join(i.I, ",") * "]" for i in CartesianIndices(Shape))...)
-    vcat((vi .* a for (a, vi) in Iterators.product(la, v))...)
+#function _labels(x::CA.ShapedAxis{Shape, IdxMap}, nview::Int) where {Shape, IdxMap}
+function _labels(x::CA.ShapedAxis{Shape}, nview::Int) where {Shape}
+    #la = _labels(IdxMap)
+    # idx = CA.indexmap(x)
+    # @show typeof(idx), idx
+    #la = _labels(CA.indexmap(x))
+    vcat(("[" * join(i.I, ",") * "]" for i in CartesianIndices(Shape))...)
+    #@show la, v
+    #vcat((vi .* a for (a, vi) in Iterators.product(la, v))...)
 end
 
 function _labels(x::CA.ComponentIndex{N, FlatAxis}, nview::Int = 0) where {N}
@@ -228,6 +233,8 @@ end
 function _labels(x::CA.ComponentIndex{N, <:AbstractAxis}, nview::Int = 0) where {N}
     _labels(x.ax, length(x.idx))
 end
+
+
 
 """
 returns a plain new SVector.
