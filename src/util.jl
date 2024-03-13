@@ -123,7 +123,7 @@ symbols_par(sys::ODESystem) = symbol_op.(parameters(sys))
 using ModelingToolkit:
     AbstractSystem,
     get_eqs,
-    get_states,
+    get_unknowns,
     get_ps,
     get_observed,
     get_continuous_events,
@@ -161,7 +161,7 @@ function override_system(eqs, basesys::AbstractSystem;
     eqs_base_keys = setdiff(keys(eqs_base_dict), eqs_new_keys)
     eqs_base_no_overwrite = get.(Ref(eqs_base_dict), eqs_base_keys, missing)
     eqs_ext = union(eqs_base_no_overwrite, eqs)
-    sts = get_states(basesys)
+    sts = get_unknowns(basesys)
     ps_ext = union(get_ps(basesys), ps)
     obs_ext = union(get_observed(basesys), obs)
     evs_ext = union(get_continuous_events(basesys), evs)

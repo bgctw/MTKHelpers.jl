@@ -38,7 +38,7 @@ function MTKHelpers.get_1d_state_pos(sys::AbstractSystem)
         error("Cannot get 1d grid of a problem is associated with a system of " *
               string(length(ds.axies)) * " spatial variables.")
     # ds.discvars relates to non-simplified and holds all observables -> need sys
-    us = MTKHelpers.get_states(sys)
+    us = MTKHelpers.get_unknowns(sys)
     # get_gridloc  does not work for Symbolic-Array-States
     #g_vars = MethodOfLines.get_gridloc.(us, (ds,)) # .Tuple{Num, d_vector_pos}
     # @chain g_vars begin
