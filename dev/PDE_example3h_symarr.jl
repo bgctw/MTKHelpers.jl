@@ -128,7 +128,7 @@ tmp_f = () -> begin
     observed(odesys)
     equations(odesys)
     parameters(odesys)
-    states(odesys)
+    unknowns(odesys)
     # removes observables - state only contains Y
 end
 

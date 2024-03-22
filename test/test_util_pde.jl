@@ -139,8 +139,8 @@ end;
     # otherkeys = Tuple(setdiff(keys(p_old), keys(paropt.par)))
     # @test p_new[otherkeys] == p_old[otherkeys]
     # #
-    # tmp = states(get_system(proba))
-    # axis_u = MTKHelpers.axis_of_nums(Tuple(states(get_system(proba))))
+    # tmp = unknowns(get_system(proba))
+    # axis_u = MTKHelpers.axis_of_nums(Tuple(unknowns(get_system(proba))))
     # u_new = CA.ComponentVector(prob2.u0, axis_u)
     # @test u_new.var"Y[1]" == CA.getdata(paropt.state.var"Y[1]")
     # @test u_new.var"Y[2]" == CA.getdata(paropt.state.var"Y[2]")
@@ -159,8 +159,8 @@ tmp_f = () -> begin
     tmp = CP.expand_base_num(sd[Symbol("Y[1]")], sys)
     ax_scalar = CA.Axis(Symbol.(tmp)...)
     sys = get_system(proba)
-    s1 = states(sys)[1]
-    nums = Tuple(states(get_system(proba)))
+    s1 = unknowns(sys)[1]
+    nums = Tuple(unknowns(get_system(proba)))
     CP._get_axis(Symbol.(nums))
     u_popt = CA.ComponentVector(var"Y[1]" = z_grid[state_pos])
     u_popt_s = CP.attach_axis(u_popt, ax_scalar)
@@ -173,7 +173,7 @@ tmp_f = () -> begin
     cvs = CP.expand_base_num_axes(cv, sys)
     @test all(cvs .== cv)
     #
-    st = states(sys)
+    st = unknowns(sys)
     t = NamedTuple(t...)
     cvs = CA.ComponentVector(; zip(Symbol.(st), 1:length(st))...)
     cvs[Symbol.(tmp)]

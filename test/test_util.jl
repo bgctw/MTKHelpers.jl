@@ -2,6 +2,7 @@ using Test
 using MTKHelpers
 using MTKHelpers: MTKHelpers as CP
 using OrdinaryDiffEq, ModelingToolkit
+using ModelingToolkit: t_nounits as t, D_nounits as D
 
 pkgdir = dirname(dirname(pathof(MTKHelpers)))
 include(joinpath(pkgdir,"test","samplesystem.jl"))
@@ -72,9 +73,7 @@ end;
     name = :me
     m = samplesystem(; name)
     @unpack p1, x = m
-    @parameters t
     ps = @parameters RHS_0 = -0.1
-    D = Differential(t)
     eqs = [
         p1 ~ RHS_0 * x,  # but p1 is not a right-hand-side item
     ]

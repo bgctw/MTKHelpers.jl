@@ -8,9 +8,8 @@ Apply getindex for each var to sol and return a NamedArray.
 using ModelingToolkit, OrdinaryDiffEq
 using MTKHelpers
 using NamedArrays
+using ModelingToolkit: t_nounits as t, D_nounits as D
 function samplesystem(;name) 
-    @variables t 
-    D = Differential(t) 
     sts = @variables x(t) RHS(t)  # RHS is observed
     ps = @parameters τ       # parameters
     ODESystem([ RHS  ~ (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)

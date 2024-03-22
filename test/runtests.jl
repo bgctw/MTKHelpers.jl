@@ -1,4 +1,5 @@
 tmpf = () -> begin
+    TestEnv.activate()
     pop!(LOAD_PATH)
     push!(LOAD_PATH, joinpath(pwd(), "test/"))
     push!(LOAD_PATH, expanduser("~/julia/devtools_$(VERSION.major).$(VERSION.minor)"))
@@ -11,6 +12,8 @@ const GROUP = get(ENV, "GROUP", "All") # defined in in CI.yml
 @time begin
     if GROUP == "All" || GROUP == "Basic"
         #join_path(test_path, ...) does not work, because test_path is unknown in new module
+        #@safetestset "Tests" include("test/test_pde.jl")
+        @time @safetestset "test_pde" include("test_pde.jl")
         #@safetestset "Tests" include("test/test_symbolicarray.jl")
         @time @safetestset "test_symbolicarray" include("test_symbolicarray.jl")
         #@safetestset "Tests" include("test/test_util_componentarrays.jl")
@@ -35,10 +38,11 @@ const GROUP = get(ENV, "GROUP", "All") # defined in in CI.yml
         @time @safetestset "test_util_nums" include("test_util_nums.jl")
     end
 
-    if GROUP == "All" || GROUP == "PDE"
-        #@safetestset "Tests" include("test/test_util_pde.jl")
-        @time @safetestset "test_util_pde" include("test_util_pde.jl")
-    end
+    # TODO uncomment when MethodOfLines allows MTK 9
+    # if GROUP == "All" || GROUP == "PDE"
+    #     #@safetestset "Tests" include("test/test_util_pde.jl")
+    #     @time @safetestset "test_util_pde" include("test_util_pde.jl")
+    # end
 
     if GROUP == "All" || GROUP == "Plot"
         #@safetestset "Tests" include("test/test_cairomakie.jl")

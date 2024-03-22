@@ -8,7 +8,7 @@ Often one wants to change a subset of the initial
 states,`u0`, and a subset of parameters,`p`, of an AbstractODEProblem during an optimization.
 
 Given `u0` and `p` can be expressed as ComponentVectors, 
-and `popt` can be expressed as a ComponentVector of optimized parameters, 
+then `popt` can be expressed as a ComponentVector of optimized parameters, 
 which may include initial states. The initial states and parameter components 
 must have different names.
 
@@ -16,9 +16,8 @@ The following example system employs a scalar and a vector-valued parameter.
 ```@example doc
 using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
 using MTKHelpers
+using ModelingToolkit: t_nounits as t, D_nounits as D
 function samplesystem(;name,τ = 3.0, p=[1.1, 1.2]) 
-    @variables t 
-    D = Differential(t) 
     sts = @variables x(t) RHS(t)        # RHS is observed
     ps = @parameters τ=τ p[1:2] = p 
     ODESystem([ RHS  ~ p[1] + -p[2]*x + (1 - x)/τ, D(x) ~ RHS ], t, sts, vcat(ps...); name)
@@ -31,6 +30,10 @@ nothing # hide
 
 An [`ODEProblemParSetter`](@ref) then can be used to update a subset of states
 and parameters in the derived problem.
+Because the state of the problem can reorder components of a symbolic array
+and the parameter object of the problem is complex, use functions
+`get_par(pset, prob)` and `get_state(pset, prob)` or their labeled versions to 
+inspect state and parameters of a problem.
 
 ```@example doc
 # setup position matching, note τ is not in parameters optimized
@@ -44,9 +47,8 @@ name_paropt(pset, prob)         # NamedVector
 
 # update states and parameters
 prob2 = remake(prob, popt, pset)
-prob2.p # p is still a plain vector
-label_par(pset, prob2.p).m₊p == popt.par.m₊p # attach labels and access properties
-label_state(pset, prob2.u0).m₊x == popt.state.m₊x # attach labels and access properties
+get_par_labeled(pset, prob2).m₊p == popt.par.m₊p # attach labels and access properties
+get_state_labeled(pset, prob2).m₊x == popt.state.m₊x # attach labels and access properties
 get_paropt_labeled(pset, prob2) == popt
 nothing # hide
 ```
@@ -57,7 +59,7 @@ in [Concrete ProblemUpdater](@ref).
 
 ## ProblemUpdater
 A [`ODEProblemParSetterConcrete`](@ref) can be combined with a [`KeysProblemParGetter`](@ref)
-or other specific implementations of [`AbstractProblemParGetter`](@ref) to 
+or another specific implementation of [`AbstractProblemParGetter`](@ref) to 
 update an AbstractODEProblem based on information already present in the AbstractODEProblem.
 
 The following example updates parameters `k_R` and `k_P` in the AbstractODEProblem
@@ -69,21 +71,32 @@ the source keys to provide its destination keys. It should implement the keys me
 so that when constructing the ProblemUpdater, consistent keys are used,
 as in the example below.
 
+First, create an example system and example problem.
 ```@example doc
 using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
 using MTKHelpers
-f = (u,p,t) -> p[1]*u
-u0 = ComponentVector(L=1/2)
-p = ComponentVector(k_L = 1.0, k_R = [2.0,3.0], k_P = [4.0,5.0], k_L2 = 6.0)
-tspan = (0.,1.)
-prob = ODEProblem(f,getdata(u0),tspan,getdata(p))
-#
-mapping = (:k_L => :k_L2, :k_R => :k_P)
-pu = get_ode_problemupdater(KeysProblemParGetter(mapping, keys(u0)), u0, p)
-#axis_par(par_setter(pu))
+function get_sys1()
+    sts = @variables L(t)
+    ps = @parameters k_L, k_R, k_P
+    eq = [D(L) ~ 0]
+    sys1 = ODESystem(eq, t, sts, vcat(ps...); name = :sys1)
+end
+sys1 = structural_simplify(get_sys1())
+u0 = ComponentVector(L = 10.0)
+p = ComponentVector(k_L = 1.0, k_R = 1 / 20, k_P = 2.0)
+prob = ODEProblem(sys1,
+    get_system_symbol_dict(sys1, u0), (0.0, 1.0),
+    get_system_symbol_dict(sys1, p))
+nothing # hide
+```
+
+Next, setup a ProblemUpdater, `pu`, and apply it to the problem via `prob2 = pu(prob)`.
+```@example doc
+mapping = (:k_L => :k_R, :k_L => :k_P)
+pu = get_ode_problemupdater(KeysProblemParGetter(mapping, keys(u0)), get_system(prob))
 prob2 = pu(prob)
-p2 = label_par(par_setter(pu), prob2.p)
-p2.k_P == p.k_R
-p2.k_L2 == p.k_L
+p2 = get_par_labeled(par_setter(pu), prob2)
+p2.k_P == p.k_L
+p2.k_R == p.k_L
 nothing # hide
 ```

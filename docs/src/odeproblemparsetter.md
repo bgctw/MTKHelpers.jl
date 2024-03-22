@@ -28,11 +28,6 @@ label_state(::AbstractODEProblemParSetter, u0)
 name_state(::AbstractODEProblemParSetter, state::AbstractVector)
 ```
 
-## Setting entire state and parameter vectors
-```@docs
-get_u_map
-```
-
 # ODEProblemParSetter
 
 ```@docs

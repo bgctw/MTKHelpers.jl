@@ -214,9 +214,10 @@ nothing # hide
 We can check the new parameters
 
 ```@example pde
-label_par(pset, prob2.p)[keys(par_new)] == par_new
-#all(label_state(pset, prob2.u0) .== u0) # order may fail
+get_par_labeled(pset, prob2)[keys(par_new)] == par_new
+get_state_labeled(pset, prob2)[keys(u0)] == u0
 get_paropt_labeled(pset, prob2).state == u0
+get_paropt_labeled(pset, prob2).par == par_new
 ```
 
 And solve the problem and display the results.
