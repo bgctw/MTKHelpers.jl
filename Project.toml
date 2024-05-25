@@ -31,7 +31,7 @@ MTKHelpersMakieExt = "CairoMakie"
 MTKHelpersMethodOfLinesExt = "MethodOfLines"
 
 [compat]
-CairoMakie = "0.11.4"
+CairoMakie = "0.11.4, 0.12"
 Chain = "0.5.0, 0.6"
 ComponentArrays = "0.13.10, 0.14, 0.15"
 DiffEqBase = "6.130.0"
