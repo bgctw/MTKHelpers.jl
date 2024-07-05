@@ -10,7 +10,7 @@ embed_system
 
 # Overriding equations of an existing system
 
-For debugging bigger systems, it is helful to set some equations
+For debugging bigger systems, it is helpful to set some equations
 to zero or modify/simplify the system in other ways.
 
 Function `override_system` takes a set of equations and matches the
