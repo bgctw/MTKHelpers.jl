@@ -31,14 +31,21 @@ is based on a closure in which the types are inferred.
 
 First, lets setup a small example problem
 ```@example doc
-using OrdinaryDiffEq, ComponentArrays, MTKHelpers, Test    
+using OrdinaryDiffEq, ComponentArrays, MTKHelpers, Test, ModelingToolkit   
+using ModelingToolkit: t_nounits as t, D_nounits as D
 
-f = (u, p, t) -> p[1] * u
-u0 = (L = 1 / 2,)
-p = (k_L = 1.0, k_R = 2.0, k_P = 3.0)
-tspan = (0.0, 1.0)
-#prob = ODEProblem(f,SVector(Tuple(u0)),tspan,SVector(Tuple(p))) # SVector broken
-prob = ODEProblem(f, collect(u0), tspan, collect(p))
+function get_sys1()
+    sts = @variables L(t)
+    ps = @parameters k_L, k_R, k_P
+    eq = [D(L) ~ 0]
+    sys1 = ODESystem(eq, t, sts, vcat(ps...); name = :sys1)
+end
+sys1 = structural_simplify(get_sys1())
+u0 = ComponentVector(L = 10.0)
+p = ComponentVector(k_L = 1.0, k_R = 1 / 20, k_P = 2.0)
+prob = ODEProblem(sys1,
+    get_system_symbol_dict(sys1, u0), (0.0, 1.0),
+    get_system_symbol_dict(sys1, p))
 nothing # hide
 ```
 
@@ -47,7 +54,7 @@ problem.
 ```@example doc
 mapping = (:k_L => :k_R, :k_L => :k_P)
 pg = KeysProblemParGetter(mapping, keys(u0)) 
-pu = get_ode_problemupdater(pg, keys(u0), keys(p))
+pu = get_ode_problemupdater(pg, get_system(prob))
 prob2 = pu(prob) # not inferred
 nothing # hide
 ```
@@ -55,7 +62,8 @@ nothing # hide
 But we can use `get_concrete` to obtain a type-inferred version. 
 ```@example doc
 puc1 = get_concrete(pu)
-prob3 = @inferred puc1(prob)
+#prob3 = @inferred puc1(prob) # currently not working because remake not type-stable
+prob3 = puc1(prob)
 nothing # hide
 ```
 
@@ -67,11 +75,13 @@ the type-stable variant.
 # through a function barrier to a closure (function within let)
 get_fopt = (puc=get_concrete(pu)) -> let puc=puc
     (prob) -> begin
-        prob_upd = @inferred puc(prob)
+        #prob_upd = @inferred puc(prob) # TODO inferred
+        prob_upd = puc(prob)
     end # fopt function
 end # let, get_fopt
 fopt = get_fopt()
-prob4 = @inferred fopt(prob)
+#prob4 = @inferred fopt(prob) # TODO inferred
+prob4 = fopt(prob)
 nothing # hide
 ```
 

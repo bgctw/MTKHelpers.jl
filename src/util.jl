@@ -8,9 +8,8 @@ the namespace of the system.
 ```jldocstest; output=false
 using ModelingToolkit, OrdinaryDiffEq
 using MTKHelpers
+using ModelingToolkit: t_nounits as t, D_nounits as D
 function samplesystem(;name) 
-    @variables t 
-    D = Differential(t) 
     sts = @variables x(t) RHS(t)  # RHS is observed
     ps = @parameters τ       # parameters
     ODESystem([ RHS  ~ (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)
@@ -67,7 +66,8 @@ simplify_symbol(sym::Symbol) = Symbol(simplify_symbol(string(sym)))
 Extract the inner symbol_op from a Term, Num, or BasicSymbolic object.
 """
 function symbol_op(s::SymbolicUtils.BasicSymbolic)
-    !istree(s) ? simplify_symbol(Symbol(s)) :
+    #!istree(s) ? simplify_symbol(Symbol(s)) :
+    !iscall(s) ? simplify_symbol(Symbol(s)) :
     operation(s) == getindex ? symbol_op(first(arguments(s))) : symbol_op(operation(s))
 end
 symbol_op(s::Symbolics.Arr) = symbol_op(s.value)
@@ -79,8 +79,11 @@ end
 
 "same as symbol_op but does does not simplify getindex"
 function symbol_op_scalar(s::SymbolicUtils.BasicSymbolic)
-    !istree(s) ? simplify_symbol(Symbol(s)) :
-    operation(s) == getindex ? Symbol(s) : symbol_op(operation(s))
+    #!istree(s) ? simplify_symbol(Symbol(s)) :
+    #Main.@infiltrate_main
+    !iscall(s) ? simplify_symbol(Symbol(s)) :
+    #operation(s) == getindex ? Symbol(s) : symbol_op(operation(s))
+    operation(s) == getindex ? symbol_num_getindex(s) : symbol_op(operation(s))
 end
 
 # function symbol_op(t::Term)
@@ -107,7 +110,8 @@ end
 Extract the basic symbols without namespace of system states and system parameters.
 """
 function symbols_state(sys::ODESystem)
-    symbol_op.(states(sys))
+    symbol_op_scalar.(unknowns(sys))
+    
 end
 symbols_par(sys::ODESystem) = symbol_op.(parameters(sys))
 
@@ -123,7 +127,7 @@ symbols_par(sys::ODESystem) = symbol_op.(parameters(sys))
 using ModelingToolkit:
     AbstractSystem,
     get_eqs,
-    get_states,
+    get_unknowns,
     get_ps,
     get_observed,
     get_continuous_events,
@@ -161,7 +165,7 @@ function override_system(eqs, basesys::AbstractSystem;
     eqs_base_keys = setdiff(keys(eqs_base_dict), eqs_new_keys)
     eqs_base_no_overwrite = get.(Ref(eqs_base_dict), eqs_base_keys, missing)
     eqs_ext = union(eqs_base_no_overwrite, eqs)
-    sts = get_states(basesys)
+    sts = get_unknowns(basesys)
     ps_ext = union(get_ps(basesys), ps)
     obs_ext = union(get_observed(basesys), obs)
     evs_ext = union(get_continuous_events(basesys), evs)

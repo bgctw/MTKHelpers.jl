@@ -24,7 +24,8 @@ jobs:
           - Plot
           - JET
         version:
-          - '1.6'
+          #- '1.6'  # RecursiveArrayTools-SymbolicIndexingInterface_0.3 require 1.10
+          - '1.10'
           - '1'
         os:
           - ubuntu-latest

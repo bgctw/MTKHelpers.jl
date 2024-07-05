@@ -2,6 +2,7 @@ module MTKHelpers
 
 using ModelingToolkit, OrdinaryDiffEq
 using ModelingToolkit: AbstractODESystem
+using ModelingToolkit: t_nounits as t, D_nounits as D
 using SciMLBase: SciMLBase, AbstractODEProblem
 using StaticArrays, LabelledArrays
 using NamedArrays: NamedArrays
@@ -12,6 +13,8 @@ using InlineStrings
 using Chain
 using LoggingExtras: LoggingExtras
 using Logging: Logging
+using SciMLStructures
+using SymbolicIndexingInterface: setp, SymbolicIndexingInterface as SII
 #using Infiltrator
 
 export AbstractProblemParSetter,
@@ -26,6 +29,7 @@ export AbstractProblemParSetter,
     axis_paropt_flat1,
     axis_par,
     axis_state,
+    axis_state_scalar,
     keys_paropt,
     keys_par,
     keys_state,
@@ -37,13 +41,17 @@ export AbstractProblemParSetter,
     get_paropt_labeled,
     label_paropt,
     label_paropt_flat1,
+    get_par,
+    get_par_labeled,
+    get_state,
+    get_state_labeled,
     label_par,
     label_state,
     name_paropt,
     name_par,
     name_state,
-    get_u_map,
-    get_p_map,
+    #get_u_map,
+    #get_p_map,
     get_concrete
 
 # extending 
@@ -54,7 +62,8 @@ export symbol_op, embed_system, override_system
 include("util.jl")
 
 #export _get_index_axis, _set_index_axis!, attach_axis, _update_cv, _labels
-export flatten1, vcat_statesfirst, map_keys
+export flatten1
+#export vcat_statesfirst, map_keys
 include("util_componentarrays.jl")
 
 include("abstractproblemparsetter.jl")

@@ -20,13 +20,17 @@ struct DummyProblemParSetter <: AbstractODEProblemParSetter end # for testing er
 
 """
     axis_state(pset::AbstractODEProblemParSetter)
+    axis_state_scalar(pset::AbstractODEProblemParSetter)
     axis_par(pset::AbstractODEProblemParSetter)
 
 Report the Axis, i.e. nested component symbols of problem states, and problem parameters
 respectively.
+There is a scalarized version, where symbolic arrays are scalarized, to support
+updating a subset of the indices.
 Returns an AbstractAxis.
 """
 function axis_state(::AbstractODEProblemParSetter) end,
+function axis_state_scalar(::AbstractODEProblemParSetter) end,    
 function axis_par(::AbstractODEProblemParSetter) end
 # need to implement in concrete types
 
@@ -77,9 +81,13 @@ end
 Report the names, i.e. symbols of problem states, problem parameters
 respectively, i.e. the concatenation of components.
 Similar to `ComponentArrays.label`, but inferred from Axis object.   
+
+Reports the scalarized version of symbolic array, 
+because the ordering of components is not fixed.
 """
 function symbols_state(pset::AbstractODEProblemParSetter)
-    _ax_symbols_tuple(axis_state(pset))
+    #_ax_symbols_tuple(axis_state(pset))
+    keys(axis_state_scalar(pset))
 end,
 function symbols_par(pset::AbstractODEProblemParSetter)
     _ax_symbols_tuple(axis_par(pset))
@@ -88,21 +96,34 @@ end
 @deprecate statesyms(pset::AbstractODEProblemParSetter) symbols_state(pset)
 @deprecate parsyms(pset::AbstractODEProblemParSetter) symbols_par(pset)
 
-# dispatch to get_paropt_labeled(pset, u0, p)
-function get_paropt(pset::AbstractODEProblemParSetter, prob::AbstractODEProblem; kwargs...)
-    get_paropt(pset, prob.u0, prob.p; kwargs...)
-end,
+function get_paropt(pset::AbstractODEProblemParSetter, prob::AbstractODEProblem; kwargs...) end
+
 function get_paropt_labeled(pset::AbstractODEProblemParSetter,
         prob::AbstractODEProblem;
         kwargs...)
-    get_paropt_labeled(pset, prob.u0, prob.p; kwargs...)
+    paropt = get_paropt(pset, prob; kwargs...)
+    label_paropt(pset, paropt)
 end,
 function get_paropt(pset::AbstractODEProblemParSetter, u0, p)
-    # depite pset may not be fully inferred, we can determine return type
-    T = promote_type(eltype(u0), eltype(p))
-    getdata(get_paropt_labeled(pset, u0, p))::AbstractVector{T}
+    error("deprecated: use get_paropt(pset, prob)")
+    # despite pset may not be fully inferred, we can determine return type
+    # T = promote_type(eltype(u0), eltype(p))
+    # getdata(get_paropt_labeled(pset, u0, p))::AbstractVector{T}
 end
-# need to implement in concrete types: get_paropt_labeled -> ComponentVector
+
+function get_state(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem;
+    kwargs...) 
+    prob.u0
+end
+function get_state_labeled(pset::AbstractProblemParSetter,
+    prob::SciMLBase.AbstractSciMLProblem;
+    kwargs...) 
+    s = get_state(pset, prob)
+    label_state(pset, s)
+end
+
+# need to implement in concrete types: get_paropt_labeled(pset, u0, p) -> ComponentVector
+# need to implement in concrete types: get_par(pset, prob) -> AbstractVector
 
 """
     label_state(pset::AbstractODEProblemParSetter, u::AbstractVector) 
@@ -135,7 +156,7 @@ end
 
 """
     prob_new = remake(prob::AbstractODEProblem, popt, ps::AbstractODEProblemParSetter)
-    u0new, pnew = update_statepar(ps::AbstractODEProblemParSetter, popt, u0, p) 
+    deprecated: u0new, pnew = update_statepar(ps::AbstractODEProblemParSetter, popt, u0, p) 
     deprecated: prob_new = update_statepar(ps::AbstractODEProblemParSetter, popt, prob::AbstractODEProblem) 
 
 Return an updated problem by updating states and parameters where
@@ -143,8 +164,14 @@ values corresponding to positions in `popt` hold the values of popt.
 The type is changed to the promotion type of popt, to allow working with dual numbers.
 """
 function remake_pset(prob::AbstractODEProblem, popt, pset::AbstractODEProblemParSetter)
-    u0, p = update_statepar(pset, popt, prob.u0, prob.p)
-    remake(prob; u0, p)
+    popta = attach_axis(popt, axis_paropt(pset))
+    # T = eltype(pset.opt_state_nums)
+    # T[]    
+    # # F = eltype(popt)
+    du = Dict(pset.opt_state_nums .=> popta.state) #::Dict{T,F}
+    dp = Dict(pset.opt_par_nums .=> popta.par)
+    probu = remake(prob; u0 = du, p=dp) 
+    probu
 end
 # need to implement update_statepar in concrete subtypes
 @deprecate(update_statepar(pset::AbstractODEProblemParSetter,
@@ -152,50 +179,49 @@ end
         prob::AbstractODEProblem),
     remake(prob, popt, pset))
 
-"""
-    get_u_map(u_new, pset::AbstractODEProblemParSetter)
-    get_p_map(p_new, pset::AbstractODEProblemParSetter)
+# """
+#     get_u_map(u_new, pset::AbstractODEProblemParSetter)
 
-Map each state and parameter the `AbstractODEProblemParSetter` `pset` to a position in names.
+# Map each state and parameter the `AbstractODEProblemParSetter` `pset` to a position in names.
 
-When construction an AbstractODEProblem from a ODESystem, the order of states and 
-parameters may have changed compared with a previous construction.
+# When construction an AbstractODEProblem from a ODESystem, the order of states 
+# may have changed compared with a previous construction.
 
-In order to set entire state or parameter vectors, a mapping from current
-to previous positions, i.e. integer indices, is required, 
-so that one can get a vectors in the new format by 
-- `u0_old[u_map] .= u_new`
-- `p_old[p_map] .= p_new`
+# In order to set entire state, a mapping from current
+# to previous positions, i.e. integer indices, is required, 
+# so that one can get a vectors in the new format by 
+# - `u0_old[u_map] .= u_new`
 
-`u_new` can be anything for which an axis can be extracted, whose keys are used.
-Specifically it can be the ComponentVector of new states itself, or a vector of symbols.
+# `u_new` can be anything for which an axis can be extracted, whose keys are used.
+# Specifically it can be the ComponentVector of new states itself, or a vector of symbols.
 
-## Keyword arguments
-- `is_warn_missing`: set to true to issue warnings if some ODESystem state or 
-  parameter names are not found in the old names. This may give false warnings
-  for System parameters that have defaults and do not need to be part
-  of the parameter vector.
-"""
-function get_u_map(u_new, pset::AbstractODEProblemParSetter; is_warn_missing = false)
-    ax_new = MTKHelpers._get_axis(u_new)
-    pos_old = attach_axis(1:count_state(pset), axis_state(pset))
-    if is_warn_missing
-        missing_keys = setdiff(keys_state(pset), keys(ax_new))
-        !isempty(missing_keys) &&
-            @warn("problem states $missing_keys are missing in u_new.")
-    end
-    getdata(pos_old[keys(ax_new)])
-end,
-function get_p_map(p_new, pset::AbstractODEProblemParSetter; is_warn_missing = false)
-    ax_new = MTKHelpers._get_axis(p_new)
-    pos_old = attach_axis(1:count_par(pset), axis_par(pset))
-    if is_warn_missing
-        missing_keys = setdiff(keys_par(pset), keys(ax_new))
-        !isempty(missing_keys) &&
-            @warn("problem parameters $missing_keys are missing in u_new.")
-    end
-    getdata(pos_old[keys(ax_new)])
-end
+# ## Keyword arguments
+# - `is_warn_missing`: set to true to issue warnings if some ODESystem state or 
+#   parameter names are not found in the old names. This may give false warnings
+#   for System parameters that have defaults and do not need to be part
+#   of the parameter vector.
+# """
+# function get_u_map(u_new, pset::AbstractODEProblemParSetter; is_warn_missing = false)
+#     ax_new = MTKHelpers._get_axis(u_new)
+#     pos_old = attach_axis(1:count_state(pset), axis_state(pset))
+#     if is_warn_missing
+#         missing_keys = setdiff(keys_state(pset), keys(ax_new))
+#         !isempty(missing_keys) &&
+#             @warn("problem states $missing_keys are missing in u_new.")
+#     end
+#     #Main.@infiltrate_main
+#     getdata(pos_old[keys(ax_new)])
+# end
+# function get_p_map(p_new, pset::AbstractODEProblemParSetter; is_warn_missing = false)
+#     ax_new = MTKHelpers._get_axis(p_new)
+#     pos_old = attach_axis(1:count_par(pset), axis_par(pset))
+#     if is_warn_missing
+#         missing_keys = setdiff(keys_par(pset), keys(ax_new))
+#         !isempty(missing_keys) &&
+#             @warn("problem parameters $missing_keys are missing in u_new.")
+#     end
+#     getdata(pos_old[keys(ax_new)])
+# end
 
 """
     get_system(prob::AbstractODEProblem) 

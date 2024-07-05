@@ -3,4 +3,9 @@ Missings = "Missings"
 devide = "divide"
 exluding = "excluding"
 
+[default]
+extend-ignore-identifiers-re = [
+    "EIS",
+]
+
 

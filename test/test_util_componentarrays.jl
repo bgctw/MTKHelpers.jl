@@ -258,21 +258,21 @@ end;
     end
 end;
 
-@testset "mapkeys" begin
+@testset "map_keys" begin
     cv = CA.ComponentVector(state=(x=1,y=2),par=(z=3,))
-    cv2 = map_keys(identity, cv)
+    cv2 = CP.map_keys(identity, cv)
     @test cv2 == cv
-    cv3 = map_keys(Base.Fix1(*,2), cv)
+    cv3 = CP.map_keys(Base.Fix1(*,2), cv)
     @test CA.getaxes(cv3) == CA.getaxes(cv)
     @test all(cv3 .== 2*cv)
     #
     cv = CA.ComponentVector(state=(x=1,y=2),par=3)
-    cv3 = map_keys(Base.Fix1(*,2), cv)
+    cv3 = CP.map_keys(Base.Fix1(*,2), cv)
     @test CA.getaxes(cv3) == CA.getaxes(cv)
     @test all(cv3 .== 2*cv)
     #
     cv = CA.ComponentVector(state=Float64[])
-    cv3 = map_keys(Base.Fix1(*,2), cv)
+    cv3 = CP.map_keys(Base.Fix1(*,2), cv)
     @test CA.getaxes(cv3) == CA.getaxes(cv)
     @test all(cv3 .== 2*cv)
     #
@@ -281,7 +281,7 @@ end;
     # @test_throws ErrorException map_keys(Base.Fix1(*,2), cv)
     #
     cv = CA.ComponentVector()
-    cv3 = map_keys(Base.Fix1(*,2), cv)
+    cv3 = CP.map_keys(Base.Fix1(*,2), cv)
     @test CA.getaxes(cv3) == CA.getaxes(cv)
     @test all(cv3 .== 2*cv)
 end;

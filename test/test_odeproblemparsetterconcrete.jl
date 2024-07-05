@@ -1,41 +1,34 @@
+#TestEnv.activate()
 using Test
 using MTKHelpers
 using MTKHelpers: MTKHelpers as CP
 using OrdinaryDiffEq, ModelingToolkit
 using ComponentArrays: ComponentArrays as CA
 using StaticArrays: StaticArrays as SA
+#using SymbolicIndexingInterface: SymbolicIndexingInterface as SII
 
 using ForwardDiff: ForwardDiff
 
 pkgdir = dirname(dirname(pathof(MTKHelpers)))
-include(joinpath(pkgdir,"test","samplesystem.jl"))
+include(joinpath(pkgdir, "test", "samplesystem.jl"))
 
-# states and parameters are single entries
-u1 = CA.ComponentVector(L = 10.0)
-p1 = CA.ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
-popt1 = CA.ComponentVector(L = 10.1, k_L = 1.1, k_R = 1 / 20.1)
-popt1s = CA.ComponentVector(state = (L = 10.1,), par = (k_L = 1.1, k_R = 1 / 20.1))
-# use Axis for type stability, but here, check with non-typestable ps
-#ps = @inferred get_concrete(ODEProblemParSetter(CA.Axis(keys(u1)),CA.Axis(keys(p1)),CA.Axis(keys(popt))))
-ps = ps1 = get_concrete(ODEProblemParSetter(u1, p1, popt1))
 
-# entries with substructure
-u1c = CA.ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
-p1c = CA.ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
-# as long as ComponentArrays does not support Axis-indexing, focus on top-level components rather than implementing this indexing in MTKHelpers
-# note: no a1 no b, 
-# a2 and c need to have correct length for updating
-#poptc = CA.ComponentVector(a=(a2=1:2,), c=1:2) 
-poptc = vcat(u1c[CA.KeepIndex(:a)], p1c[(:b, :c)])
-poptcs = CA.ComponentVector(state = u1c[CA.KeepIndex(:a)], par = p1c[(:b, :c)])
-psc = pset = get_concrete(ODEProblemParSetter(u1c, p1c, poptc))
-#u0 = u1c; p=p1c; popt=poptc
+(u1, p1, popt1s, prob_sys1) = get_sys_ex_scalar();
+popt1 = flatten1(popt1s)
+ps1ps = ps1 = get_concrete(ODEProblemParSetter(get_system(prob_sys1), popt1))
+@inferred get_paropt_labeled(ps1, prob_sys1)
+
+(u1c, p1c, poptcs, prob_sys2) = get_sys_ex_vec();
+poptc = flatten1(poptcs)
+psc = pset = get_concrete(ODEProblemParSetter(get_system(prob_sys2), poptc))
+@inferred get_paropt_labeled(pset, prob_sys2)
 
 # test states and parameters and CA.ComponentVector{SA.SVector}
 u1s = label_state(psc, SA.SVector{3}(CA.getdata(u1c)))
 p1s = label_par(psc, SA.SVector{5}(CA.getdata(p1c))) # convert to CA.ComponentVector{SA.SVector}
 
 @testset "access keys and counts" begin
+    ps = ps1
     @test (@inferred keys(axis_state(ps))) == keys(u1)
     @test (@inferred keys(axis_par(ps))) == keys(p1)
     @test (@inferred keys(axis_paropt(ps))) == (:state, :par)
@@ -72,7 +65,7 @@ function test_label_svectors(pset,
 end
 
 @testset "label Vectors unstructured" begin
-    test_label_svectors(ps, u1, p1, popt1s, Val(1), Val(3), Val(3))
+    test_label_svectors(ps1, u1, p1, popt1s, Val(1), Val(3), Val(3))
 end;
 @testset "label Vectors structured" begin
     test_label_svectors(psc, u1c, p1c, poptcs, Val(3), Val(5), Val(7))
@@ -81,80 +74,84 @@ end;
     test_label_svectors(psc, u1s, p1s, poptcs, Val(3), Val(5), Val(7))
 end;
 
-function test_update_statepar_and_get_paropt(pset, u0, p, popt, u0_target, p_target)
+function test_remake_and_get_paropt(pset, prob, u0, p, popt, u0_target, p_target)
     #0o, po = update_statepar(pset, popt, u0, p)
     #@descend_code_warntype update_statepar(pset, popt, u0, p)
     #@code_warntype update_statepar(pset, popt, u0, p)
-    u0o, po = @inferred update_statepar(pset,
-        CA.getdata(popt),
-        CA.getdata(u0),
-        CA.getdata(p))
-    u0o, po = @inferred update_statepar(pset, popt, u0, p)
+    sys = get_system(prob)
+    probo = remake(
+        prob, u0=get_system_symbol_dict(sys,u0), p=get_system_symbol_dict(sys,p))
+    #probu = @inferred remake(probo, CA.getdata(popt), pset)
+    probu = remake(probo, CA.getdata(popt), pset)
+    #
+    u0o = get_state_labeled(pset, probu)
+    po = get_par_labeled(pset, probu)
+    #u0o, po = @inferred update_statepar(pset, popt, u0, p)
     #return u0o, po
     #@btime update_statepar($ps, $popt, $u1, $p1) 
     @test CA.getaxes(u0o) == CA.getaxes(u0)
     @test CA.getaxes(po) == CA.getaxes(p)
-    @test typeof(CA.getdata(u0o)) == typeof(CA.getdata(u0))
-    @test typeof(CA.getdata(po)) == typeof(CA.getdata(p))
+    #@test typeof(CA.getdata(u0o)) == typeof(CA.getdata(u0)) # SVector always
+    # weakter test: only elty
+    @test eltype(CA.getdata(u0o)) == eltype(CA.getdata(u0))
+    # for concrete, returns SVector
+    #@test typeof(CA.getdata(po)) == typeof(CA.getdata(p))
+    @test eltype(CA.getdata(po)) == eltype(CA.getdata(p))
     @test all(u0o .≈ u0_target)
     @test all(po .≈ p_target)
     #
     #using Cthulhu
     #@descend_code_warntype get_paropt_labeled(ps, u0o, po)
     #inferred only works with CA.CA.getdata 
-    popt2n = get_paropt_labeled(pset, u0o, po)
-    @inferred CA.getaxes(get_paropt_labeled(pset, u0o, po))
-    @inferred zeros(eltype(get_paropt_labeled(pset, u0o, po)), 3)
+    #popt2n = get_paropt_labeled(pset, u0o, po)
+    #probu.ps[pset.opt_par_nums]
+    popt2n = get_paropt_labeled(pset, probu)
+    #@inferred CA.getaxes(get_paropt_labeled(pset, u0o, po))
+    #@inferred zeros(eltype(get_paropt_labeled(pset, u0o, po)), 3)
     @test popt2n == popt
     #
-    popt2 = get_paropt(pset, u0o, po)
-    _ = @inferred zeros(eltype(get_paropt(pset, u0o, po)), 2)
-    @test all(popt2 .== popt)
-    #
-    popt2m = get_paropt_labeled(pset, collect(u0o), collect(po))
-    _ = @inferred CA.getaxes(get_paropt_labeled(pset, collect(u0o), collect(po)))
-    _ = @inferred zeros(eltype(get_paropt_labeled(pset, collect(u0o), collect(po))), 3)
-    @test popt2m == popt
+    # popt2 = get_paropt(pset, u0o, po)
+    # _ = @inferred zeros(eltype(get_paropt(pset, u0o, po)), 2)
+    # @test all(popt2 .== popt)
+    # #
+    # popt2m = get_paropt_labeled(pset, collect(u0o), collect(po))
+    # _ = @inferred CA.getaxes(get_paropt_labeled(pset, collect(u0o), collect(po)))
+    # _ = @inferred zeros(eltype(get_paropt_labeled(pset, collect(u0o), collect(po))), 3)
+    # @test popt2m == popt
 end;
 
-@testset "update_statepar vector unstructured" begin
-    u1t = CA.ComponentVector(L = 10.1)
-    pt = CA.ComponentVector(k_L = 1.1, k_R = 1 / 20.1, m = 2.0)
-    pset = ps
+@testset "remake_pset vector unstructured" begin
+    u0_target = u1t = CA.ComponentVector(L = 10.1)
+    p_target = pt = CA.ComponentVector(k_L = 1.1, k_R = 1 / 20.1, m = 2.0)
+    pset = ps1
+    prob = prob_sys1
     u0 = u1
     p = p1
     popt = popt1s
-    # inferred although pset is global
-    _, _ = @inferred update_statepar(pset, CA.getdata(popt), CA.getdata(u0), CA.getdata(p))
-    #_ = @inferred get_paropt_labeled(pset, collect(u0), collect(p))
-    #array type is variable - can be Vector, SVector, ...
-    _ = @inferred CA.getaxes(get_paropt_labeled(pset, collect(u0), collect(p)))
-    _ = @inferred zeros(eltype(get_paropt_labeled(pset, collect(u0), collect(p))), 3)
     #@code_warntype get_paropt_labeled(pset, collect(u0), collect(p))
     #@descend_code_warntype get_paropt_labeled(pset, collect(u0), collect(p))
-    test_update_statepar_and_get_paropt(pset, u1, p1, popt, u1t, pt)
+    test_remake_and_get_paropt(pset, prob, u0, p, popt, u1t, pt)
 end;
-@testset "update_statepar vector structured" begin
+@testset "remake_pset vector structured" begin
     #u1t = CA.ComponentVector(a = (a1 = 1, a2 = (a21 = 1, a22 = 2.0))) # only subcomponent
-    u1t = CA.ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
-    pt = CA.ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
+    u0_target = u1t = CA.ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
+    p_target = pt = CA.ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
     pset = psc
+    prob = prob_sys2
     u0 = u1c
     p = p1c
     popt = poptcs
     cv = p1c
-    @inferred CA.getaxes(get_paropt_labeled(pset, u0, p))
-    @inferred zeros(eltype(get_paropt_labeled(pset, u0, p)), 3)
-    test_update_statepar_and_get_paropt(psc, u1c, p1c, poptcs, u1t, pt)
+    test_remake_and_get_paropt(psc, prob, u1c, p1c, poptcs, u1t, pt)
 end;
-@testset "update_statepar Svector structured" begin
+@testset "remake_pset Svector structured" begin
     u1t = CA.ComponentVector(a = (a1 = 1, a2 = (a21 = 21, a22 = 22.0)))
     pt = CA.ComponentVector(b = (b1 = 0.1, b2 = 0.2), c = [0.01, 0.02], d = 3.0)
-    test_update_statepar_and_get_paropt(psc, u1s, p1s, poptcs, u1t, pt)
+    test_remake_and_get_paropt(psc, prob_sys2, u1s, p1s, poptcs, u1t, pt)
     #using BenchmarkTools
     #@btime get_paropt_labeled($psc, $u1t, $pt)
 end
-# @testset "update_statepar and get_paropt for AxisArray" begin
+# @testset "remake_pset and get_paropt for AxisArray" begin
 #     @test_broken "AxisArray"
 #     # test with AbstractVector different from Vector
 #     # _update_cv returns a Vector because _
@@ -165,7 +162,7 @@ end
 #     tmp = _update_cv(p1a_l, s)
 #     u1t = CA.ComponentVector(L = 10.1)
 #     pt = CA.ComponentVector(k_L = 1.1, k_R = 1/20.1, m = 2.0)
-#     test_update_statepar_and_get_paropt(ps, u1a, p1a, popt, u1t, pt)
+#     test_remake_and_get_paropt(ps, u1a, p1a, popt, u1t, pt)
 # end;
 
 # @testset "merge: create a modified popt AbstractVector" begin
@@ -191,12 +188,13 @@ end
     p = p1c
     popt = poptc
     cv = p1c
-    fcost = let pset = pset, u0 = u0, p = p
+    prob = prob_sys2
+    fcost = let pset = pset, prob=prob
         (popt) -> begin
-            local u0o, po = @inferred update_statepar(pset, popt, u0, p)
-            v = get_paropt(pset, u0o, po)
-            E = eltype(typeof(v))
-            d = sum(v)::E
+            local probo = remake(prob, popt, pset)
+            local v = get_paropt(pset, probo)
+            # probo is not inferred, need to set eltype 
+            local d = sum(v)::eltype(popt)
             d * d
         end
     end
@@ -216,11 +214,15 @@ end;
     p = p1c
     popt = poptc
     cv = p1c
-    fcost = (popt) -> begin
-        u0o, po = @inferred update_statepar(pset, popt, u0, p)
-        E = eltype(typeof(u0o))
-        d = sum(get_paropt(pset, u0o, po))::E
-        d * d
+    prob = prob_sys2
+    fcost = let pset = pset, prob=prob
+        (popt) -> begin
+            local probo = remake(prob, popt, pset)
+            local v = get_paropt(pset, probo)
+            # probo is not inferred, need to set eltype 
+            local d = sum(v)::eltype(popt)
+            d * d
+        end
     end
     poptsv = SA.SVector{7}(popt)
     @inferred fcost(poptsv)
@@ -233,11 +235,15 @@ end;
     p = p1c
     popt = poptc
     cv = p1c
-    fcost = (popt) -> begin
-        u0o, po = @inferred update_statepar(pset, popt, u0, p)
-        E = eltype(typeof(u0o))
-        d = sum(get_paropt(pset, u0o, po))::E
-        d * d
+    prob = prob_sys2
+    fcost = let pset = pset, prob=prob
+        (popt) -> begin
+            local probo = remake(prob, popt, pset)
+            local v = get_paropt(pset, probo)
+            # probo is not inferred, need to set eltype 
+            local d = sum(v)::eltype(popt)
+            d * d
+        end
     end
     poptv = collect(popt)
     @inferred fcost(poptv)
@@ -261,10 +267,7 @@ end
 end;
 
 @testset "get_concrete ODEProblemParSetter used in cost function" begin
-    u1 = CA.ComponentVector(L = 10.0)
-    p1 = CA.ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
-    popt1s = CA.ComponentVector(state = (L = 10.1,), par = (k_L = 1.1, k_R = 1 / 20.1))
-    ps = ps1 = ODEProblemParSetter(u1, p1, popt1s)
+    ps = ps1
     get_fopt = (ps) -> begin
         # get a concrete-type version of the ProblemParSetter and pass it 
         # through a function barrier to a closure (function within let)

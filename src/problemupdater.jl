@@ -60,7 +60,8 @@ function get_ode_problemupdater(par_getter::AbstractProblemParGetter,
     ProblemUpdater(par_getter, ODEProblemParSetter(sys, keys(par_getter)))
 end,
 function get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0, p)
-    ProblemUpdater(par_getter, ODEProblemParSetter(u0, p, keys(par_getter)))
+    error("deprecated: need a system to construct a ProblemPatSetter.")
+    #ProblemUpdater(par_getter, ODEProblemParSetter(u0, p, keys(par_getter)))
 end
 
 @deprecate ProblemUpdater(par_getter, u0_keys, p_keys) get_ode_problemupdater(par_getter,
@@ -89,7 +90,7 @@ Provices callable `(pg::KeysProblemParGetter)(pu::ProblemUpdater, prob), keys_st
 To be used to get the parameters/state vector to be set by `ProblemUpdater`.
 
 Initialize with an mapping of NTuples of symbols (source -> target) that index into 
-either `label_state(pu.pset, prob.u0)` or `label_par(pu.pset, prob.p))`.
+either `get_state_labeled(pu.pset, prob)` or `get_par_labeled(pu.pset, prob))`.
 Argument `keys_state` is a Tuple or Vector that iterates the Symbols in the state of an 
 ODEProblem. It is required to know from which part of the problem to extract.
 """
@@ -104,6 +105,9 @@ function KeysProblemParGetter(mapping::NTuple{N, Pair{Symbol, Symbol}},
         keys_state::Union{AbstractVector{Symbol}, NTuple{NU, Symbol}}) where {N, NU}
     source_keys = ntuple(i -> first(mapping[i]), N)
     dest_keys = ntuple(i -> last(mapping[i]), N)
+    if length(unique(dest_keys)) != length(dest_keys)
+        error("Expected destination of pattern to be distinct, but was not.")
+    end
     is_in_state = SVector{N}(k ∈ keys_state for k in source_keys)
     KeysProblemParGetter(source_keys, dest_keys, is_in_state)
 end
@@ -114,9 +118,9 @@ Base.keys(pg::KeysProblemParGetter) = pg.dest_keys
 
 function (pg::KeysProblemParGetter{N})(pu::AbstractProblemUpdater, prob) where {N}
     pset = pu.pset
-    u0l = label_state(pset, prob.u0)
-    pl = label_par(pu.pset, prob.p)
-    T = promote_type(eltype(prob.u0), eltype(prob.p))
+    u0l = get_state_labeled(pset, prob)
+    pl = get_par_labeled(pu.pset, prob)
+    T = promote_type(eltype(u0l), eltype(pl))
     #u0p = vcat(u0l, pl) # inferred Any with runtime dispatch []
     #vcat((u0p[k] for k in pg.source_keys)...)::Vector{T}
     #ftmp = (k) -> k ∈ keys(u0l) ? u0l[k] : pl[k]
@@ -128,13 +132,11 @@ end
 
 """
 Custom AbstractProblemParGetter used in tests that computes parameters to set.
-update k_R = k_L and k_P = k_L[1]*10
+update k_R = k_L and m = k_L*10
 """
 struct DummyParGetter <: AbstractProblemParGetter end
 function (pg::DummyParGetter)(pu::AbstractProblemUpdater, prob)
-    p = label_par(pu.pset, prob.p)
-    #p_source = getproperty.(Ref(p), SA[:k_L])
-    #(:k_R,:k_P)
-    vcat(p.k_L, p.k_L[1] * 10)
+    p = get_par_labeled(pu.pset, prob)
+    vcat(p[:k_L], p[:k_L] * 10)
 end
-Base.keys(pg::DummyParGetter) = (:k_R, :k_P)
+Base.keys(pg::DummyParGetter) = (:k_R, :m)

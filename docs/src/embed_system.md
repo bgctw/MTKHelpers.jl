@@ -10,7 +10,7 @@ embed_system
 
 # Overriding equations of an existing system
 
-For debugging bigger systems, it is helful to set some equations
+For debugging bigger systems, it is helpful to set some equations
 to zero or modify/simplify the system in other ways.
 
 Function `override_system` takes a set of equations and matches the
@@ -21,9 +21,8 @@ those equations.
 # setting up a simple example composite system and problem
 using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
 using MTKHelpers
+using ModelingToolkit: t_nounits as t, D_nounits as D
 function samplesystem(;name,τ = 3.0, p1=1.1, p2=1.2) 
-    @variables t 
-    D = Differential(t) 
     sts = @variables x(t) RHS(t)             # RHS is observed
     ps = @parameters τ=τ p1=p1 p2=p2       # parameters
     ODESystem([ RHS  ~ p1/p2 * (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)

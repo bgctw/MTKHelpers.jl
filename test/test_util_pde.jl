@@ -70,16 +70,19 @@ end
         par = (Y0 = 201, i_Y_agr = [20.0, 30.0]))
     #
     pset = ODEProblemParSetter(sys, paropt)
-    label_state(pset, prob.u0)
-    label_par(pset, prob.p)
+    get_state_labeled(pset, prob)
+    get_par_labeled(pset, prob)
     label_paropt(pset, CA.getdata(paropt))
-    @test :X ∈ symbols_state(pset)   # scalar variables simplified
+    @test Symbol("(Y(t))[2]") ∈ symbols_state(pset)   
+    @test Symbol("(Y(t))[15]") ∈ symbols_state(pset)   
+    # not simplied to X to be consistent with unknowns(sys)
+    @test Symbol("X(t)") ∈ symbols_state(pset)   
     #
     prob2 = remake(prob, paropt, pset)
-    @test label_par(pset, prob2.p).Y0 == paropt.par.Y0
+    @test get_par_labeled(pset, prob2).Y0 == paropt.par.Y0
     # test the order
-    @test label_state(pset, prob2.u0)[CA.KeepIndex(1)][1] == paropt.state[:Y][1]
-    @test label_state(pset, prob2.u0)[CA.KeepIndex(length(Y_new))][1] ==
+    @test get_state_labeled(pset, prob2)[CA.KeepIndex(1)][1] == paropt.state[:Y][1]
+    @test get_state_labeled(pset, prob2)[CA.KeepIndex(length(Y_new))][1] ==
           paropt.state[:Y][end]
     #
     paropt2 = get_paropt_labeled(pset, prob2)
@@ -116,13 +119,13 @@ end;
         par = (Y0 = 201,))
     #
     pset = ODEProblemParSetter(sys, paropt)
-    label_state(pset, proba.u0)
-    label_par(pset, proba.p)
+    get_state_labeled(pset, proba)
+    get_par_labeled(pset, proba)
     label_paropt(pset, CA.getdata(paropt))
     #
     prob2 = remake(proba, paropt, pset)
-    @test label_par(pset, prob2.p).Y0 == paropt.par.Y0
-    label_state(pset, prob2.u0)
+    @test get_par_labeled(pset, prob2).Y0 == paropt.par.Y0
+    get_state_labeled(pset, prob2)
     # relies on first state pertains to Y[1] == Y[R] - this can change
     #@test label_state(pset, prob2.u0)[CA.KeepIndex(1)][1] == Y_R0 + state_pos[1]/10
     #
@@ -139,8 +142,8 @@ end;
     # otherkeys = Tuple(setdiff(keys(p_old), keys(paropt.par)))
     # @test p_new[otherkeys] == p_old[otherkeys]
     # #
-    # tmp = states(get_system(proba))
-    # axis_u = MTKHelpers.axis_of_nums(Tuple(states(get_system(proba))))
+    # tmp = unknowns(get_system(proba))
+    # axis_u = MTKHelpers.axis_of_nums(Tuple(unknowns(get_system(proba))))
     # u_new = CA.ComponentVector(prob2.u0, axis_u)
     # @test u_new.var"Y[1]" == CA.getdata(paropt.state.var"Y[1]")
     # @test u_new.var"Y[2]" == CA.getdata(paropt.state.var"Y[2]")
@@ -159,8 +162,8 @@ tmp_f = () -> begin
     tmp = CP.expand_base_num(sd[Symbol("Y[1]")], sys)
     ax_scalar = CA.Axis(Symbol.(tmp)...)
     sys = get_system(proba)
-    s1 = states(sys)[1]
-    nums = Tuple(states(get_system(proba)))
+    s1 = unknowns(sys)[1]
+    nums = Tuple(unknowns(get_system(proba)))
     CP._get_axis(Symbol.(nums))
     u_popt = CA.ComponentVector(var"Y[1]" = z_grid[state_pos])
     u_popt_s = CP.attach_axis(u_popt, ax_scalar)
@@ -173,7 +176,7 @@ tmp_f = () -> begin
     cvs = CP.expand_base_num_axes(cv, sys)
     @test all(cvs .== cv)
     #
-    st = states(sys)
+    st = unknowns(sys)
     t = NamedTuple(t...)
     cvs = CA.ComponentVector(; zip(Symbol.(st), 1:length(st))...)
     cvs[Symbol.(tmp)]

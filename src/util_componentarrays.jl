@@ -3,6 +3,7 @@ import ComponentArrays as CA
 
 axis_length(ax::AbstractAxis) = lastindex(ax) - firstindex(ax) + 1
 axis_length(::FlatAxis) = 0
+axis_length(::UnitRange) = 0
 
 # function _get_axis(x::AbstractArray) 
 #     @info("Providing Parameters as Array was deprecated for performance?")
@@ -178,9 +179,13 @@ attach_x_axis(x::ComponentMatrix, ax::AbstractAxis) = ComponentArray(x, (ax, Fla
 #     _enum_dim(s, length(s))
 # end
 
-# CA.labels(ax) would be type piracy II 
-labels_noprefix(ax::AbstractAxis) = map(x -> x[2:end], _labels(ax))
 
+"""
+    _ax_symbols_tuple(ax::AbstractAxis; prefix = "₊")
+
+Expand Vector axes such as `ViewAxis(1:3, Axis(a = 1:3,))` 
+to `Symbol.(("a[1]","a[2]","a[3]"))`
+"""
 function _ax_symbols_tuple(ax::AbstractAxis; prefix = "₊")
     (labels_noprefix(ax) .|> (x -> replace(x, "." => prefix)) .|> Symbol) |> Tuple
 end
@@ -190,6 +195,9 @@ end
 function _ax_symbols_vector(ax::AbstractAxis; prefix = "₊")
     (labels_noprefix(ax) .|> (x -> replace(x, "." => prefix)) .|> Symbol)::Vector{Symbol}
 end
+
+# CA.labels(ax) would be type piracy II 
+labels_noprefix(ax::AbstractAxis) = map(x -> x[2:end], _labels(ax))
 
 function _labels(x::AbstractAxis, nview::Int = 0)
     #@info "Absract:$(typeof(x))"
@@ -334,9 +342,13 @@ function flatten1(cv::ComponentVector)
     # gen = (((ks, cv[k][ks]) for ks in keys(cv[k])) for k in keys(cv) if !isempty(cv[k]))
     # cv_new = CA.ComponentVector(; Iterators.Flatten(gen)...)
     # benchmarks show that the vcat variant is more efficient
-    gen_cvs = (cv[k] for k in keys(cv) if !isempty(cv[k]))
-    cv_new = reduce(vcat, gen_cvs)
-    attach_axis(cv, first(getaxes(cv_new)))
+    if length(cv)==0 
+        return attach_axis(cv, FlatAxis())
+    else
+        gen_cvs = (cv[k] for k in keys(cv) if !isempty(cv[k]))
+        cv_new = reduce(vcat, gen_cvs)
+        attach_axis(cv, first(getaxes(cv_new)))
+    end
 end
 
 """

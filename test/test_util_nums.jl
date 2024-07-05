@@ -1,3 +1,4 @@
+#TestEnv.activate()
 using Test
 using MTKHelpers
 using MTKHelpers: MTKHelpers as CP
@@ -14,6 +15,8 @@ include(joinpath(pkgdir,"test","samplesystem.jl"))
 @named m2 = samplesystem()
 @named sys = embed_system(m)
 
+@named sys_vec = CP.samplesystem_vec()
+
 @testset "system_num_dict single" begin
     symd = get_system_symbol_dict(m)
     @test symd isa Dict
@@ -28,7 +31,7 @@ include(joinpath(pkgdir,"test","samplesystem.jl"))
     numd = system_num_dict(p1, m)
     @test numd isa Dict
     num_τ = parameters(m)[1] # defined only inside samplesystem()
-    num_x = states(m)[1]
+    num_x = unknowns(m)[1]
     @test num_τ ∈ keys(numd)
     @test num_x ∈ keys(numd)
     @test numd[num_x] == p1.x
@@ -59,7 +62,7 @@ end;
 end;
 
 @testset "base_num" begin
-    s = first(states(m))
+    s = first(unknowns(m))
     ret = base_num(s)
     @test isequal(ret, s)
     sym = :bla
@@ -83,18 +86,20 @@ end;
 end;
 
 
-@named sys_vec = CP.samplesystem_vec()
 
 @testset "expand_base_num_axes" begin
     cv = CA.ComponentVector(p = [2.1, 2.2, 2.3], i = 0.2)
-    cvs = CP.expand_base_num_axes(cv, sys_vec)
+    scalar_num_map = CP.get_scalar_num_map(sys_vec)
+    #tmp = scalar_num_map[first(keys(scalar_num_map))]
+    cvs = CP.expand_base_num_axes(cv, scalar_num_map)
     @test all(cvs .== cv)
-    @test keys(cvs) == (Symbol("getindex(p, 1)"), Symbol("getindex(p, 2)"),
-        Symbol("getindex(p, 3)"), :i)
+    #@test keys(cvs) == (Symbol("getindex(p, 1)"), Symbol("getindex(p, 2)"),
+        #Symbol("getindex(p, 3)"), :i)
+    @test keys(cvs) == Symbol.(("p[1]","p[2]","p[3]","i"))
 end;
 
 @testset "get_scalarized_num_dict" begin
-    nums = states(sys_vec)
+    nums = unknowns(sys_vec)
     nums2 = vcat(nums, parameters(sys_vec))
     d = CP.get_scalarized_num_dict(nums2)
     @test d[Symbol(nums[1])] === nums[1]

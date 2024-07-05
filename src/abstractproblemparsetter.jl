@@ -47,6 +47,24 @@ function get_paropt_labeled(pset::AbstractProblemParSetter,
         prob::SciMLBase.AbstractSciMLProblem;
         kwargs...) end
 
+
+"""
+    get_par(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem; kwargs...)
+    get_par_labeled(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem; kwargs...)
+
+Extract parameters in the order of parameters(sys) from the Problem.
+The labeled versions additionally calls [`label_par`](@ref)
+on the return value.
+"""
+function get_par(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem;
+        kwargs...) end,
+function get_par_labeled(pset::AbstractProblemParSetter,
+        prob::SciMLBase.AbstractSciMLProblem;
+        kwargs...) 
+    p = get_par(pset, prob; kwargs...)
+    label_par(pset, p)
+end
+
 """
     axis_paropt(pset::AbstractProblemParSetter)
     axis_paropt_scalar(pset::AbstractProblemParSetter)
@@ -86,24 +104,26 @@ end
 
 Report the keys of paropt below the classification level.
 """
-function keys_paropt(ps::AbstractProblemParSetter)
-    ax = axis_paropt(ps)
+function keys_paropt(pset::AbstractProblemParSetter)
+    ax = axis_paropt(pset)
     # for each top-key access the subaxis and apply keys
-    gen = (getproperty(CA.indexmap(ax), k) |> x -> keys(x) for k in classes_paropt(ps))
+    gen = (getproperty(CA.indexmap(ax), k) |> x -> keys(x) for k in classes_paropt(pset))
     tuplejoin(gen...)
 end
 
 """
     symbols_paropt(pset::AbstractProblemParSetter)
 
-Report the names, i.e. symbols of optimiz parameters respectively, 
+Report the names, i.e. symbols of optimized parameters respectively, 
 i.e. the concatenation of components.
 Similar to `ComponentArrays.label`, but inferred from Axis object.  
 Returns a Vector of length [`count_paropt`](@ref)
 """
 function symbols_paropt(pset::AbstractProblemParSetter)
-    ax = axis_paropt(pset)
+    ax = axis_paropt_scalar(pset)
     # for each key access the subaxis and apply _ax_symbols_tuple
+    #k = first(classes_paropt(pset))
+    #x = getproperty(CA.indexmap(ax), k)
     gen = (getproperty(CA.indexmap(ax), k) |> x -> _ax_symbols_tuple(x)
            for k in classes_paropt(pset))
     # concatenate the generator of tuples

@@ -1,4 +1,5 @@
 tmpf = () -> begin
+    TestEnv.activate()
     pop!(LOAD_PATH)
     push!(LOAD_PATH, joinpath(pwd(), "test/"))
     push!(LOAD_PATH, expanduser("~/julia/devtools_$(VERSION.major).$(VERSION.minor)"))
@@ -38,6 +39,8 @@ const GROUP = get(ENV, "GROUP", "All") # defined in in CI.yml
     if GROUP == "All" || GROUP == "PDE"
         #@safetestset "Tests" include("test/test_util_pde.jl")
         @time @safetestset "test_util_pde" include("test_util_pde.jl")
+        #@safetestset "Tests" include("test/test_pde.jl")
+        @time @safetestset "test_pde" include("test_pde.jl")
     end
 
     if GROUP == "All" || GROUP == "Plot"
