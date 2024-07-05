@@ -42,7 +42,7 @@ res = ForwardDiff.gradient(tmp, [popt.par.m])
 
 
 tmpf = () -> begin
-  # cannot use setter with FowardDiff
+  # cannot use setter with ForwardDiff
   setter! = SII.setp(sys1, [sys1.m])
   setter!(prob, [popt.par.m])
 

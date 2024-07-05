@@ -70,7 +70,7 @@ function ODEProblemParSetter(state_template, par_template, popt_template,
     ax_state = _get_axis(state_template)
     ax_par = _get_axis(par_template)
     ax_state_array = axis_of_nums(unknowns(system))
-    # for each uniqe state or parameter (maybe vector), 
+    # for each unique state or parameter (maybe vector), 
     if !(:state ∈ keys(ax_paropt) || :par ∈ keys(ax_paropt))
         ax_paropt = assign_state_par(ax_state_array, ax_par, ax_paropt)
     end

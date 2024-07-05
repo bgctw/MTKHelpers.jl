@@ -228,9 +228,9 @@ end
 Change the axis of a componentvector to replace vector-valued entries by
 their respective scalarized symbols. 
 For array-symbols, assume only one index and order symbols by that index.
-E.g. Y=[1:14] gets transformed to [Y(t))[2], (Y(t))[3], ..., (Y(t)[15]],
-where the Y(t))[i] are part of unknows(sys) and can appear in any order in
-thes system.
+E.g. `Y=[1:14]` gets transformed to `[Y(t))[2], (Y(t))[3], ..., (Y(t)[15]]`,
+where the `Y(t))[i]` are part of `unknows(sys)` and can appear in any order in
+the system.
 """
 function expand_base_num_axes(cv::ComponentVector, sys::AbstractSystem)
     @warn("deprecated: use expand_base_num_axes(cv, get_scalar_num_map(sys))")

@@ -35,7 +35,7 @@ data = Array(sol)
 # add some random noise
 data = data + 0.01 * randn(size(data))
 
-# obtain temlate and indices of parameters
+# obtain template and indices of parameters
 function make_template_and_pos(odeprob, odesys, par_opt)
        x_template = collect(canonicalize(Tunable(), odeprob.p)[1])
        prob_ind = remake(odeprob, p = replace(Tunable(), 
