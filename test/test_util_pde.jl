@@ -75,7 +75,7 @@ end
     label_paropt(pset, CA.getdata(paropt))
     @test Symbol("(Y(t))[2]") ∈ symbols_state(pset)   
     @test Symbol("(Y(t))[15]") ∈ symbols_state(pset)   
-    # not simplied to X to be consistent with unknwons(sys)
+    # not simplied to X to be consistent with unknowns(sys)
     @test Symbol("X(t)") ∈ symbols_state(pset)   
     #
     prob2 = remake(prob, paropt, pset)
