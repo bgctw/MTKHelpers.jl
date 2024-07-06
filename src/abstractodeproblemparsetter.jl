@@ -103,12 +103,6 @@ function get_paropt_labeled(pset::AbstractODEProblemParSetter,
         kwargs...)
     paropt = get_paropt(pset, prob; kwargs...)
     label_paropt(pset, paropt)
-end,
-function get_paropt(pset::AbstractODEProblemParSetter, u0, p)
-    error("deprecated: use get_paropt(pset, prob)")
-    # despite pset may not be fully inferred, we can determine return type
-    # T = promote_type(eltype(u0), eltype(p))
-    # getdata(get_paropt_labeled(pset, u0, p))::AbstractVector{T}
 end
 
 function get_state(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem;

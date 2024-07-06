@@ -74,8 +74,6 @@ function ODEProblemParSetter(state_template, par_template, popt_template,
     if !(:state ∈ keys(ax_paropt) || :par ∈ keys(ax_paropt))
         ax_paropt = assign_state_par(ax_state_array, ax_par, ax_paropt)
     end
-    # (ax_state_scalar, ax_paropt_scalar) = scalarize_par_and_paroptstate(ax_state,
-    #     ax_paropt, system)
     scalar_num_map = get_scalar_num_map(system)
     scalar_num_map_sym = Dict(symbol_op(k) => v for (k,v) in scalar_num_map)
     scalar_num_map_symsym = Dict(k => symbol_num_getindex.(v) for (k,v) in scalar_num_map_sym)
@@ -121,13 +119,6 @@ function ODEProblemParSetter(state_template, par_template, popt_template,
 end
 
 "scalarize vector-valued entries in state and paropt.state"
-function scalarize_par_and_paroptstate(ax_state::AbstractAxis,
-    ax_paropt::AbstractAxis,
-    system::AbstractODESystem)
-    @warn("deprecated: use scalarize_par_and_paroptstate(...,get_scalar_num_map(sys))")
-    scalarize_par_and_paroptstate(ax_state, ax_paropt, get_scalar_num_map(system))
-end
-
 function scalarize_par_and_paroptstate(ax_state::AbstractAxis,
     ax_paropt::AbstractAxis,
     scalar_num_map_sym::Dict{<:SymbolicUtils.BasicSymbolic,<:AbstractVector})
@@ -226,106 +217,6 @@ axis_paropt_scalar(ps::ODEProblemParSetterU) = ps.ax_paropt_scalar
 axis_paropt_flat1(ps::ODEProblemParSetterU) = ps.ax_paropt_flat1
 
 classes_paropt(::ODEProblemParSetterU) = (:state, :par)
-
-# # Using unexported interface of ComponentArrays.axis, one place to change
-# "Accessor function for index from ComponentIndex"
-# idx(ci::CA.ComponentIndex) = ci.idx
-
-"""
-    u0new = get_updated_state(pset::ODEProblemParSetter, popt, u0) 
-
-Return an updated state vector where
-values corresponding to positions in `popt` are set.
-"""
-function get_updated_state(pset::ODEProblemParSetterU, popt, u0)
-    poptc = attach_axis(popt, axis_paropt_scalar(pset))
-    u0c = attach_axis(u0, axis_state(pset)) # no need to copy 
-    u0_new = isempty(poptc.state) ?
-             copy(u0c) :
-             _update_cv_top(u0c, poptc.state, pset.is_updated_state_i)
-    # if u0 was not a ComponentVector, return then data inside
-    return (u0 isa ComponentVector) ? u0_new : getfield(u0_new, :data)
-end
-
-# mutating version does not work with derivatives
-# function update_statepar(pset::ODEProblemParSetter, popt, u0, p)
-#     poptc = attach_axis(popt, axis_paropt(pset))
-#     u0c = attach_axis(copy(u0), axis_state(pset))
-#     pc = attach_axis(copy(p), axis_par(pset))
-#     for k in keys(poptc.state)
-#         u0c[k] = poptc.state[k]
-#     end
-#     for k in keys(poptc.par)
-#         pc[k] = poptc.par[k]
-#     end
-#     # if u0 was not a ComponentVector, return then data inside
-#     return (u0 isa ComponentVector) ? u0c : getfield(u0c, :data), 
-#         (p isa ComponentVector) ? pc : getfield(pc, :data)
-# end
-
-# struct ODEVectorCreator <: AbstractVectorCreator; end
-# function (vc::ODEVectorCreator)(pset, u0, p)
-#     ET = promote_type(eltype(u0), eltype(p))
-#     Vector{ET}(undef, count_paropt(pset))
-# end
-
-# struct ODEMVectorCreator <: AbstractVectorCreator; end
-# function (vc::ODEMVectorCreator)(pset, u0, p)
-#     ET = promote_type(eltype(u0), eltype(p))
-#     N = count_paropt(pset)
-#     MVector{N,ET}(undef)
-# end
-
-"""
-    get_paropt_labeled(pset::ODEProblemParSetter, u0, p)
-
-Returns a ComponentVector filled with corresponding entries from u0 and p.
-
-Underlying type corresponds defaults to Vector. 
-It cannot be fully inferred from u0 and p, because their type may hold
-additional structure, such as length or names.
-depr:
-For obtaining a StaticVector instead, pass MTKHelpers.ODEMVectorCreator()
-as the fourth argument. This method should work with any AbstractVectorCreator
-that returns a mutable AbstractVector.
-"""
-function get_paropt_labeled(pset::ODEProblemParSetterU, u0, p;
-    flat1::Val{is_flatten1}=Val(false)
-    #vec_creator::AbstractVectorCreator=ODEVectorCreator()
-) where {is_flatten1}
-    error("deprecated: use get_paropt_labeled(pset, prob)")
-    u0c = attach_axis(u0, axis_state_scalar(pset))
-    pc = attach_axis(p, axis_par(pset))
-    ax = axis_paropt_scalar(pset)
-    k_state = keys(CA.indexmap(ax).state)
-    k_par = keys(CA.indexmap(ax).par)
-    #
-    # axis is attached later - use SVector instead of view into CA to avoid recompiling vcat
-    #Main.@infiltrate_main    
-    gen_state = (getindex_svector(u0c, k) for k in k_state)
-    gen_par = (getindex_svector(pc, k) for k in k_par)
-    # gen_state = (@view(u0c[KeepIndex(k)]) for k in k_state)
-    # gen_par = (@view(pc[KeepIndex(k)]) for k in k_par)
-    #
-    # gen_state = (u0c[k] for k in k_state) # more allocations
-    # gen_par = (pc[k] for k in k_par)
-    # gen_state = (@view(u0c[k]) for k in k_state) # takes long than with KeepIndex
-    # gen_par = (@view(pc[k]) for k in k_par)
-    # Main.@infiltrate_main
-    # tmp = collect(gen_state)
-    # tmp = collect(gen_par)
-    #_data = vcat(gen_state..., gen_par...) # does not work with Julia 1.6
-    _data = vcat(reduce(vcat, gen_state, init=StaticArrays.SA[]),
-        reduce(vcat, gen_par, init=StaticArrays.SA[]))
-    T = promote_type(eltype(u0), eltype(p))
-    paropt = (
-        is_flatten1 ? label_paropt_flat1(pset, _data) : label_paropt(pset, _data)
-    )::ComponentVector{T,AV} where {AV<:AbstractVector{T}}
-    # cv_state = ComponentVector((;zip(k_state,(u0c[k] for k in k_state))...))
-    # cv_par = ComponentVector((;zip(k_par,(pc[k] for k in k_par))...))
-    # paropt = ComponentVector(state = cv_state, par = cv_par)
-    return paropt
-end
 
 function get_paropt(pset::ODEProblemParSetterU, prob::AbstractODEProblem; kwargs...) 
     u0_opt = prob.u0[pset.stateopt_ind]
