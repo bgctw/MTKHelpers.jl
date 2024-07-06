@@ -9,6 +9,17 @@ using MethodOfLines
 
 #include("testset_utils.jl") # @testset_skip
 
+prob = LoggingExtras.withlevel(Logging.Error) do
+    prob = MTKHelpers.example_pde_problem()
+end
+
+tmpf = () -> begin
+    prob.tspan
+    sol = solve(prob, Tsit5())
+    X = getproperty(get_system(prob), :X; namespace = false)
+    sol[X]
+end
+
 @testset "grid_exp" begin
     grid = grid_exp(5, 10, 4.0)
     # regression test
@@ -24,17 +35,6 @@ end;
     @test Dz_lin(0.3, 0.3) ≈ 1 / 0.3
     @test Iz_lin(0.3, 0.3) == 1.0
 end;
-
-prob = LoggingExtras.withlevel(Logging.Error) do
-    prob = MTKHelpers.example_pde_problem()
-end
-
-tmpf = () -> begin
-    prob.tspan
-    sol = solve(prob, Tsit5())
-    X = getproperty(get_system(prob), :X; namespace = false)
-    sol[X]
-end
 
 @testset "get_system" begin
     sys = get_system(prob)
@@ -76,7 +76,9 @@ end
     @test Symbol("(Y(t))[2]") ∈ symbols_state(pset)   
     @test Symbol("(Y(t))[15]") ∈ symbols_state(pset)   
     # not simplied to X to be consistent with unknowns(sys)
-    @test Symbol("X(t)") ∈ symbols_state(pset)   
+    @test Symbol("X(t)") ∈ symbols_state(pset)  
+    #
+    x = get_state_labeled(pset, prob) 
     #
     prob2 = remake(prob, paropt, pset)
     @test get_par_labeled(pset, prob2).Y0 == paropt.par.Y0
