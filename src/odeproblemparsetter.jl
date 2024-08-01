@@ -28,8 +28,6 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
     ax_state::AbstractAxis
     ax_state_scalar::AbstractAxis
     ax_par::AbstractAxis
-    is_updated_state_i::AbstractVector
-    is_updated_par_i::AbstractVector
     ax_paropt_scalar::AbstractAxis
     ax_paropt_flat1::AbstractAxis
     opt_state_nums::VN
@@ -47,14 +45,7 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
         # VN <: AbstractVector{<:SymbolicUtils.BasicSymbolic} || error("expected VN <: AbstractVector{<:SymbolicUtils.BasicSymbolic}, but was $VN")
         keys_paropt_state = keys(CA.indexmap(ax_paropt_scalar)[:state])
         keys_paropt_par = keys(CA.indexmap(ax_paropt)[:par])
-        is_updated_state_i = isempty(keys_paropt_state) ?
-                             SVector{0,Bool}() :
-                             SVector((k ∈ keys_paropt_state for k in keys(ax_state))...)
-        is_updated_par_i = isempty(keys_paropt_par) ?
-                           SVector{0,Bool}() :
-                           SVector((k ∈ keys_paropt_par for k in keys(ax_par))...)
         new(ax_paropt, ax_state, ax_state_scalar, ax_par,
-            is_updated_state_i, is_updated_par_i,
             ax_paropt_scalar, ax_paropt_flat1, 
             opt_state_nums, opt_par_nums,
             par_ind, stateopt_ind, popt_ind, 
