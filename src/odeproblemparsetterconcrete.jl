@@ -29,7 +29,8 @@ struct ODEProblemParSetterConcrete{NS, NP, NPS, POPTA <: AbstractAxis,
     is_updated_par_i::SVector{NP, Bool}
     ax_paropt_scalar::POPTAS
     ax_paropt_flat1::POPTAF
-    par_nums::SVector{NPS, ES} # not isbits because BasicSymbolic{Real} is not isbits
+    # not isbits because ES <: BasicSymbolic{Real} is not isbits
+    # but need symbols to create update-dictionary
     opt_state_nums::SVector{NSO, ES}
     opt_par_nums::SVector{NPO, ES}
     par_ind::SVector{NPS, EIP} # propb.ps -> vector
@@ -39,7 +40,7 @@ struct ODEProblemParSetterConcrete{NS, NP, NPS, POPTA <: AbstractAxis,
             ax_state::AbstractAxis, ax_state_scalar::AbstractAxis,
             ax_par::AbstractAxis, ax_paropt::AbstractAxis, ax_paropt_scalar::AbstractAxis,
             ax_paropt_flat1::AbstractAxis,
-            par_nums::VN, opt_state_nums::VN, opt_par_nums::VN,
+            opt_state_nums::VN, opt_par_nums::VN,
             par_ind, stateopt_ind::AbstractVector, popt_ind::AbstractVector
     )
         keys_paropt_state = keys(CA.indexmap(ax_paropt_scalar)[:state])
@@ -54,7 +55,6 @@ struct ODEProblemParSetterConcrete{NS, NP, NPS, POPTA <: AbstractAxis,
         nstate = length(is_updated_state_i) 
         npar = length(is_updated_par_i) # entries may be vectors
         npar_scalar = axis_length(ax_par)
-        s_par_nums = CA.SVector{npar_scalar, eltype(par_nums)}(par_nums)
         s_opt_state_nums = CA.SVector{
             axis_length(CA.indexmap(ax_paropt)[:state]), eltype(opt_state_nums)}(opt_state_nums)
         s_opt_par_nums = CA.SVector{
@@ -68,13 +68,13 @@ struct ODEProblemParSetterConcrete{NS, NP, NPS, POPTA <: AbstractAxis,
         new{nstate, npar, npar_scalar,
             typeof(ax_paropt), typeof(ax_state), typeof(ax_state_scalar),
             typeof(ax_par), typeof(ax_paropt_scalar),
-            typeof(ax_paropt_flat1), eltype(par_nums),
+            typeof(ax_paropt_flat1), eltype(opt_state_nums),
             length(s_stateopt_ind), eltype(s_stateopt_ind),
             length(s_popt_ind), eltype(s_popt_ind)
         }(ax_paropt,
             ax_state, ax_state_scalar, ax_par, is_updated_state_i,
             is_updated_par_i, ax_paropt_scalar, ax_paropt_flat1,
-            s_par_nums, s_opt_state_nums, s_opt_par_nums,
+            s_opt_state_nums, s_opt_par_nums,
             s_par_ind, s_stateopt_ind, s_popt_ind
         )
     end

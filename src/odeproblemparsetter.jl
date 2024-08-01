@@ -32,7 +32,6 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
     is_updated_par_i::AbstractVector
     ax_paropt_scalar::AbstractAxis
     ax_paropt_flat1::AbstractAxis
-    par_nums::VN
     opt_state_nums::VN
     opt_par_nums::VN
     par_ind::AbstractVector # propb.ps -> vector
@@ -42,7 +41,7 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
     function ODEProblemParSetter(ax_state::AbstractAxis, ax_state_scalar::AbstractAxis,
         ax_par::AbstractAxis, ax_paropt::AbstractAxis, ax_paropt_scalar::AbstractAxis,
         ax_paropt_flat1::AbstractAxis,
-        par_nums::VN, opt_state_nums::VN, opt_par_nums::VN,
+        opt_state_nums::VN, opt_par_nums::VN,
         par_ind, stateopt_ind::AbstractVector, popt_ind::AbstractVector,
     ) 
         # VN <: AbstractVector{<:SymbolicUtils.BasicSymbolic} || error("expected VN <: AbstractVector{<:SymbolicUtils.BasicSymbolic}, but was $VN")
@@ -57,7 +56,7 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
         new(ax_paropt, ax_state, ax_state_scalar, ax_par,
             is_updated_state_i, is_updated_par_i,
             ax_paropt_scalar, ax_paropt_flat1, 
-            par_nums, opt_state_nums, opt_par_nums,
+            opt_state_nums, opt_par_nums,
             par_ind, stateopt_ind, popt_ind, 
             )
     end
@@ -113,7 +112,7 @@ function ODEProblemParSetter(state_template, par_template, popt_template,
     ODEProblemParSetter(
         ax_state, ax_state_scalar,
         ax_par, ax_paropt, ax_paropt_scalar, ax_paropt_flat1,
-        par_nums, opt_state_nums, opt_par_nums,
+        opt_state_nums, opt_par_nums,
         par_ind, stateopt_ind, popt_ind, 
         )
 end
@@ -202,7 +201,7 @@ function get_concrete(pset::ODEProblemParSetter)
         pset.ax_paropt,
         pset.ax_paropt_scalar,
         pset.ax_paropt_flat1,
-        pset.par_nums, pset.opt_state_nums, pset.opt_par_nums,
+        pset.opt_state_nums, pset.opt_par_nums,
         pset.par_ind, pset.stateopt_ind, pset.popt_ind,   
     )
 end
