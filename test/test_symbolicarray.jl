@@ -191,8 +191,8 @@ end;
         CA.ComponentArrays.static_getproperty(paropt.state, Val{:m2₊x}())
     end
     prob_opt = remake(prob, paropt, pset)
-    @test typeof(prob_opt.u0) == typeof(prob.u0)
-    @test typeof(prob_opt.p) == typeof(prob.p)
+    @test typeof(get_state(pset, prob_opt)) == typeof(get_state(pset,prob))
+    @test typeof(get_par(pset, prob_opt)) == typeof(get_par(pset, prob))
     paropt2 = get_paropt_labeled(pset, prob_opt)
     @test paropt2 == paropt
     #
