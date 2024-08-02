@@ -6,7 +6,7 @@ end
 """
     pos_of_base_nums(st)
 
-Collect all occurences of base_nums in a sequence of BasicSymbolics
+Collect all occurrences of base_nums in a sequence of BasicSymbolics
 `st = vcat(unknowns(sys), parameters(sys))`.
 Return a `Dict{SymbolicUtils.BasicSymbolic,Vector{Int}}`.
 """
