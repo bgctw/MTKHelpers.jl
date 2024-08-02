@@ -135,6 +135,12 @@ end
 # label_state(pset::AbstractODEProblemParSetter, u::SVector) = SLVector(label_state(pset, Tuple(u)))
 # label_state(pset::AbstractODEProblemParSetter, u::NTuple) = NamedTuple{symbols_state(pset)}(u)
 
+# MTK9 replaced parameter vector by MTKParameters object. 
+# Inform user to to deal with it.
+function label_par(::AbstractODEProblemParSetter, ::ModelingToolkit.MTKParameters)
+    error("label_par(pset, prob.p) is deprecated. Use instead get_par_labeled(pset, prob)")
+end
+
 """
     name_state(pset, u::AbstractVector) 
     name_par(pset, par::AbstractVector) 

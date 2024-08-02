@@ -30,7 +30,9 @@ label_state(pset, u1c)
 u1s = label_state(psc, SA.SVector{3}(CA.getdata(u1c)))
 p1s = label_par(psc, SA.SVector{5}(CA.getdata(p1c))) # convert to CA.ComponentVector{SA.SVector}
 
-
+@testset "label_par with Parameterobject" begin
+    @test_throws "get_par_labeled" label_par(ps1, prob_sys1.p)
+end;
 
 @testset "_get_axis of ComponentVectors and Strings" begin
     popt_strings_tup = ("L", "k_L", "k_R")
