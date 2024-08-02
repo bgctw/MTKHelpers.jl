@@ -78,6 +78,12 @@ may differ from the consecutive order in the ComponentArray.
 Functions `remake(prob, paropt, pset)` and `get_state(pset, prob)` take care 
 to set and extract the components in correct order.
 
+When updating an ODEProblem, MTKHelpers expects either a ComponentVector
+with sub-vectors `state` and `par` or, alternatively, a ComponentVector with keys of 
+states before keys of parameters.
+Function [`vcat_statesfirst`](@ref) helps to ensure this order when concatenating
+ComponentVectors.
+
 ## API
 
 ```@docs
@@ -85,5 +91,6 @@ system_num_dict
 get_system
 base_num
 get_base_num_dict
+vcat_statesfirst
 ```
 

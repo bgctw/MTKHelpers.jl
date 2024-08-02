@@ -63,7 +63,8 @@ include("util.jl")
 
 #export _get_index_axis, _set_index_axis!, attach_axis, _update_cv, _labels
 export flatten1
-#export vcat_statesfirst, map_keys
+export vcat_statesfirst
+#export map_keys
 include("util_componentarrays.jl")
 
 include("abstractproblemparsetter.jl")

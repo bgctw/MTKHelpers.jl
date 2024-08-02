@@ -411,7 +411,7 @@ end;
     popt1 = CA.ComponentVector(p1=1)
     popt2 = CA.ComponentVector(RHS=2, τ=3)
     popt = vcat(popt1, popt2) # p1 now comes before state RHS
-    popt_ordered = CP.vcat_statesfirst(popt1, popt2; system = m)
+    popt_ordered = vcat_statesfirst(popt1, popt2; system = m)
     @test keys(popt_ordered) == (:RHS, :p1, :τ)
     @test popt_ordered[keys(popt)] == popt
 end;    

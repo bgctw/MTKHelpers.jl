@@ -289,9 +289,9 @@ function validate_keys_state_par(ax_paropt::AbstractAxis,
 end
 
 """
-    vcat_statesfirst(cvs; system)
+    vcat_statesfirst(cvs...; system)
 
-Concatenate ComponentVectors, cvs, but move state entries before parameter entries.   
+Concatenate ComponentVectors, `cvs`, but move state entries before parameter entries.   
 """
 function vcat_statesfirst(cvs...; system::AbstractSystem)
     popt0 = reduce(vcat, cvs)
