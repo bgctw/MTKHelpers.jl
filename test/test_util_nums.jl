@@ -70,7 +70,7 @@ end;
 end;
 
 @testset "componentvector_to_numdict" begin
-    num_dict_par = get_base_num_dict(parameters(sys))
+    num_dict_par = MTKHelpers.get_base_num_dict(parameters(sys))
     cv = CA.ComponentVector(m₊p1 = 10.1)
     ret = MTKHelpers.componentvector_to_numdict(cv, num_dict_par)
     @test ret == Dict(m.p1 => 10.1)

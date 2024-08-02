@@ -1,26 +1,15 @@
-function get_stateindices(system::AbstractODESystem)
-    error("implement get_stateindices")
-    st = unknowns(sys)
-    dpos = pos_of_base_nums(st)
-
-    (num, pos_vec) = first(iterate(dpos))
-    map(iterate(dpos)) do (num, pos_vec)
-        @show num
-        @show pos_vec
-    end
-
-    base_nums = base_num.(unknowns(sys))
-    base_nums_u = unique(base_nums)
-    bnum = first(base_nums)
-    map(base_nums) do bnum
-    end
-end
-
 function is_symbolicarray(s::SymbolicUtils.BasicSymbolic)
     #istree(s) && (operation(s) == getindex) 
     iscall(s) && (operation(s) == getindex)
 end
 
+"""
+    pos_of_base_nums(st)
+
+Collect all occurences of base_nums in a sequence of BasicSymbolics
+`st = vcat(unknowns(sys), parameters(sys))`.
+Return a `Dict{SymbolicUtils.BasicSymbolic,Vector{Int}}`.
+"""
 function pos_of_base_nums(st)
     dpos = Dict{SymbolicUtils.BasicSymbolic,Vector{Int}}()
     #(pos, sti) = first(enumerate(st))
@@ -48,6 +37,34 @@ function base_num(s::SymbolicUtils.BasicSymbolic)
     base_num(first(arguments(s))) : s
 end
 base_num(s) = s
+
+"""
+    get_system_symbol_dict(sys::AbstractODESystem)
+
+Construct a `Dict{Symbol => Num}` for all properties in `sys`.
+"""
+function get_system_symbol_dict(sys::AbstractODESystem)
+    # if there are no observed, return type is Dict(Any,Any) -> need conditional
+    dicts = (
+        get_base_num_dict(unknowns(sys)),
+        get_base_num_dict(parameters(sys)),
+        get_scalarized_num_dict(unknowns(sys)),
+        get_scalarized_num_dict(parameters(sys)),
+        get_base_num_dict(getproperty.(observed(sys), :lhs)),
+        get_scalarized_num_dict(getproperty.(observed(sys), :lhs))
+    )
+    # only merge nonemtpy dictionaries, otherwise the eltype becomes Any
+    dicts_nonempty = filter(d -> !isempty(d), dicts)
+    merge(dicts_nonempty...)
+end
+
+function get_system_symbol_dict(sys, cv;
+    system_symbol_dict=get_system_symbol_dict(sys))
+    ssd = system_symbol_dict
+    pd = vcat((length(cv[k]) == 1 ?
+               ssd[k] => cv[k] :
+               Symbolics.scalarize(ssd[k] .=> collect(cv[k])) for k in keys(cv))...)
+end
 
 """
     get_base_num_dict(nums)
@@ -83,33 +100,7 @@ function get_scalarized_num_dict(nums)
     # end
 end
 
-"""
-    get_system_symbol_dict(sys::AbstractODESystem)
 
-Construct a `Dict{Symbol => Num}` for all properties in `sys`.
-"""
-function get_system_symbol_dict(sys::AbstractODESystem)
-    # if there are no observed, return type is Dict(Any,Any) -> need conditional
-    dicts = (
-        get_base_num_dict(unknowns(sys)),
-        get_base_num_dict(parameters(sys)),
-        get_scalarized_num_dict(unknowns(sys)),
-        get_scalarized_num_dict(parameters(sys)),
-        get_base_num_dict(getproperty.(observed(sys), :lhs)),
-        get_scalarized_num_dict(getproperty.(observed(sys), :lhs))
-    )
-    # only merge nonemtpy dictionaries, otherwise the eltype becomes Any
-    dicts_nonempty = filter(d -> !isempty(d), dicts)
-    merge(dicts_nonempty...)
-end
-
-function get_system_symbol_dict(sys, cv;
-    system_symbol_dict=get_system_symbol_dict(sys))
-    ssd = system_symbol_dict
-    pd = vcat((length(cv[k]) == 1 ?
-               ssd[k] => cv[k] :
-               Symbolics.scalarize(ssd[k] .=> collect(cv[k])) for k in keys(cv))...)
-end
 
 # function get_system_symbol_dict(sys::AbstractSystem,
 #     string_sys::String = string(nameof(sys)))
@@ -125,6 +116,51 @@ end
 # end
 
 @deprecate strip_deriv_num(x) symbol_op(x)
+
+"""
+    remake_cv(prob::AbstractODEProblem, paropt::ComponentVector; 
+        num_dict_state = get_base_num_dict(unknowns(get_system(prob))),
+        num_dict_par = get_base_num_dict(parameters(get_system(prob)))
+    
+Creates a new problem with components in `u0` and `p` begin updated, for problems
+with an associated ODESystem.
+For doing this more efficiently when repeating, pre-compute the `num_dict_state` and `num_dict_par` once,
+and provide it to the function.
+
+For discretized pde systems, some of the scalarized states are computed
+by boundary conditions and are not in the state vector.
+For those, supply argument `state_pos` giving indices of the states,
+as found by [`get_1d_state_pos`](@ref).
+"""
+# function remake_cv(prob::AbstractODEProblem, paropt::ComponentVector;
+#     state_pos=nothing,
+#     num_dict_state=get_base_num_dict(unknowns(get_system(prob))),
+#     num_dict_par=get_base_num_dict(parameters(get_system(prob))))
+#     u0 = componentvector_to_numdict(paropt.state, num_dict_state; indices=state_pos)
+#     p = componentvector_to_numdict(paropt.par, num_dict_par)
+#     SciMLBase.remake(prob, u0=u0, p=p)
+# end
+
+"""
+    system_num_dict(d, sys::AbstractSystem)
+    system_num_dict(d, symbol_dict::AbstractDict)
+
+Create a Dictionary Num=>value from symbolic Dictionary or ComponentVector.
+
+Omit pairs where no Num was found.
+"""
+function system_num_dict(d, sys::AbstractSystem)
+    system_num_dict(d, get_system_symbol_dict(sys))
+end
+# Dictionary or Vector of pairs Symbol -> number
+function system_num_dict(d, symbol_dict::AbstractDict)
+    Dict([get(symbol_dict, k, missing) => v
+          for
+          (k, v) in d if !ismissing(get(symbol_dict, k, missing))])
+end
+function system_num_dict(ca::CA.ComponentVector, symbol_dict::AbstractDict)
+    componentvector_to_numdict(ca, symbol_dict)
+end
 
 function componentvector_to_numdict(cv::ComponentVector{T}, num_dict::Dict{Symbol,S};
     indices=nothing) where {T,S}
@@ -151,54 +187,10 @@ function componentvector_to_numdict(cv::SubArray{T}, num_dict::Dict{Symbol,S}) w
     Dict{SymbolicUtils.BasicSymbolic{Real},T}()
 end
 
-"""
-    remake_cv(prob::AbstractODEProblem, paropt::ComponentVector; 
-        num_dict_state = get_base_num_dict(unknowns(get_system(prob))),
-        num_dict_par = get_base_num_dict(parameters(get_system(prob)))
-    
-Creates a new problem with components in `u0` and `p` begin updated, for problems
-with an associated ODESystem.
-For doing this more efficiently when repeating, pre-compute the `num_dict_state` and `num_dict_par` once,
-and provide it to the function.
 
-For discretized pde systems, some of the scalarized states are computed
-by boundary conditions and are not in the state vector.
-For those, supply argument `state_pos` giving indices of the states,
-as found by [`get_1d_state_pos`](@ref).
-"""
-function remake_cv(prob::AbstractODEProblem, paropt::ComponentVector;
-    state_pos=nothing,
-    num_dict_state=get_base_num_dict(unknowns(get_system(prob))),
-    num_dict_par=get_base_num_dict(parameters(get_system(prob))))
-    u0 = componentvector_to_numdict(paropt.state, num_dict_state; indices=state_pos)
-    p = componentvector_to_numdict(paropt.par, num_dict_par)
-    SciMLBase.remake(prob, u0=u0, p=p)
-end
-
-"""
-    system_num_dict(d, sys::AbstractSystem)
-    system_num_dict(d, symbol_dict::AbstractDict)
-
-Create a Dictionary Num=>value from symbolic Dictionary or ComponentVector.
-
-Omit pairs where no Num was found.
-"""
-function system_num_dict(d, sys::AbstractSystem)
-    system_num_dict(d, get_system_symbol_dict(sys))
-end
-# Dictionary or Vector of pairs Symbol -> number
-function system_num_dict(d, symbol_dict::AbstractDict)
-    Dict([get(symbol_dict, k, missing) => v
-          for
-          (k, v) in d if !ismissing(get(symbol_dict, k, missing))])
-end
-function system_num_dict(ca::CA.ComponentVector, symbol_dict::AbstractDict)
-    componentvector_to_numdict(ca, symbol_dict)
-end
 
 """
     expand_base_num(num, sys::AbstractSystem) 
-    #expand_base_num(num, state_pos::AbstractVector{Int}) 
 
 Return the scalaized symbols for a Num of a PDESystem discretized along one dimension.
 The result is subsetted by argument `state_pos`, which defaults to `get_1d_state_pos(sys)`.
@@ -273,9 +265,10 @@ expand_base_num_axes(cv::UnitRange, scalar_num_map::Dict) = cv
 
 Return a mapping of each uniuqe base_num of the system
 to original scalarized BasicSymbolics Nums used in the System.
-The order of the nums is ascending and differs from the order in the system.
+The order of the nums of symbolic arrarys is ascending and differs 
+from the order in the system.
 The translation in the problem is then taken care of by `remake(Problem, popt, pset)`,
-which uses this map by this function to create the Symbolic mapping or indexing
+which uses this map to create the Symbolic mapping or indexing
 into the state.
 
 In order to get a mapping from symbols use [`get_scalar_num_map_sym`](@ref)
@@ -287,8 +280,7 @@ function get_scalar_num_map(sys::AbstractSystem)
     dpos_sym = Dict(p.first => p.second for p in dpos)
     (; st, dpos_sym)
     scalar_nums_map = Dict(k => getindex.(Ref(st), dpos_sym[k]) for k in keys(dpos_sym))
-end
-
+end,
 function get_scalar_num_map_sym(sys::AbstractSystem)
     scalar_num_map = get_scalar_num_map(sys)
     Dict(symbol_op(k) => v for (k, v) in scalar_num_map)

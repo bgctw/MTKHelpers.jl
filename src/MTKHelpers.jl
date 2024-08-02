@@ -87,7 +87,8 @@ include("problemupdater.jl")
 
 export get_system_symbol_dict, system_num_dict
 export strip_deriv_num
-export base_num, get_base_num_dict
+export base_num
+#export get_base_num_dict
 include("util_nums.jl")
 
 export fit_Dirichlet_std, fit_Dirichlet_mode, simplex_grid

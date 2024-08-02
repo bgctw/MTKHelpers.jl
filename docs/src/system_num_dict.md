@@ -4,7 +4,7 @@ CurrentModule = MTKHelpers
 
 # Translating symbols and Nums
 
-ModelingToolkit constructs and AbstractODEProblem from an ODESystem by supplying 
+ModelingToolkit constructs an AbstractODEProblem from an ODESystem by supplying 
 Dictionaries that map Nums to values. 
 However, it is more convenient to store initial states and parameters
 as ComponentVectors with symbolic keys, instead of Dictionaries with Num keys.
