@@ -176,6 +176,16 @@ end;
     test_label_svectors(psc, u1s, p1s, poptcs, Val(3), Val(5), Val(7))
 end;
 
+@testset "label_paropt_flat1 warning on empty vector" begin
+    emptyvec = Float64[]
+    pset = ODEProblemParSetter(m, Symbol[])
+    label_paropt(pset, emptyvec)
+    res = @test_logs (:warn, r"no flat version") label_paropt_flat1(pset, emptyvec)
+    @test res isa CA.ComponentVector{Float64}
+    res = label_paropt_flat1(pset, emptyvec; omitwarning=true)
+    @test res isa CA.ComponentVector{Float64}
+end
+
 # only allowed for system, not for parameters any more
 # @testset "update ODEProblem optimized parameters" begin
 #     f = (u, p, t) -> p[1] * u

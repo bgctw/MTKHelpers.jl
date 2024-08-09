@@ -145,11 +145,11 @@ The second version omits the highest level of labels, e.g. state and par in
 function label_paropt(pset::AbstractProblemParSetter, popt)
     attach_axis(popt, axis_paropt(pset))
 end,
-function label_paropt_flat1(pset::AbstractProblemParSetter, popt)
+function label_paropt_flat1(pset::AbstractProblemParSetter, popt; omitwarning = false)
     # use stored flat axis to avoid repeated reduce(vcat(ComponentVector 
     # with flatten1
     ax = axis_paropt_flat1(pset)
-    ax isa FlatAxis && 
+    ax isa FlatAxis && !omitwarning &&
     @warn("Called label_paropt_flat1 with a ProblemParSetter that has no flat version.")
     attach_axis(popt, ax)
     #flatten1(label_paropt(pset, popt))

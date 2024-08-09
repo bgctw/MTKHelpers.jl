@@ -296,6 +296,7 @@ Concatenate ComponentVectors, `cvs`, but move state entries before parameter ent
 function vcat_statesfirst(cvs...; system::AbstractSystem)
     popt0 = reduce(vcat, cvs)
     pset = LoggingExtras.withlevel(Logging.Error) do
+        # warning on states not ordered first - ok here
         pset = ODEProblemParSetter(system, popt0)
     end
     popt_template = label_paropt_flat1(pset, 1:count_paropt(pset))
