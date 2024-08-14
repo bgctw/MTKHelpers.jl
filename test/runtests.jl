@@ -33,15 +33,15 @@ const GROUP = get(ENV, "GROUP", "All") # defined in in CI.yml
         #@safetestset "Tests" include("test/test_solution.jl")
         @time @safetestset "test_solution" include("test_solution.jl")
         #@safetestset "Tests" include("test/test_util_nums.jl")
-        #TODO reactivate after fixing bug in MTK/Symbolic/MOL
-        #@time @safetestset "test_util_nums" include("test_util_nums.jl")
+        @time @safetestset "test_util_nums" include("test_util_nums.jl")
     end
 
     if GROUP == "All" || GROUP == "PDE"
-        #@safetestset "Tests" include("test/test_util_pde.jl")
-        @time @safetestset "test_util_pde" include("test_util_pde.jl")
-        #@safetestset "Tests" include("test/test_pde.jl")
-        @time @safetestset "test_pde" include("test_pde.jl")
+        #TODO reactivate after fixing bug in MTK/Symbolic/MOL
+        # #@safetestset "Tests" include("test/test_util_pde.jl")
+        # @time @safetestset "test_util_pde" include("test_util_pde.jl")
+        # #@safetestset "Tests" include("test/test_pde.jl")
+        # @time @safetestset "test_pde" include("test_pde.jl")
     end
 
     if GROUP == "All" || GROUP == "Plot"
