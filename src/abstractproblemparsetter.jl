@@ -47,7 +47,6 @@ function get_paropt_labeled(pset::AbstractProblemParSetter,
         prob::SciMLBase.AbstractSciMLProblem;
         kwargs...) end
 
-
 """
     get_par(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem; kwargs...)
     get_par_labeled(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem; kwargs...)
@@ -60,7 +59,7 @@ function get_par(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLPr
         kwargs...) end,
 function get_par_labeled(pset::AbstractProblemParSetter,
         prob::SciMLBase.AbstractSciMLProblem;
-        kwargs...) 
+        kwargs...)
     p = get_par(pset, prob; kwargs...)
     label_par(pset, p)
 end
@@ -125,7 +124,7 @@ function symbols_paropt(pset::AbstractProblemParSetter)
     #k = first(classes_paropt(pset))
     #x = getproperty(CA.indexmap(ax), k)
     gen = (getproperty(CA.indexmap(ax), k) |> x -> _ax_symbols_tuple(x)
-           for k in classes_paropt(pset))
+    for k in classes_paropt(pset))
     # concatenate the generator of tuples
     tuplejoin(gen...)
 end
@@ -150,7 +149,7 @@ function label_paropt_flat1(pset::AbstractProblemParSetter, popt; omitwarning = 
     # with flatten1
     ax = axis_paropt_flat1(pset)
     ax isa FlatAxis && !omitwarning &&
-    @warn("Called label_paropt_flat1 with a ProblemParSetter that has no flat version.")
+        @warn("Called label_paropt_flat1 with a ProblemParSetter that has no flat version.")
     attach_axis(popt, ax)
     #flatten1(label_paropt(pset, popt))
 end

@@ -74,15 +74,21 @@ end;
     cv = CA.ComponentVector(m₊p1 = 10.1)
     ret = MTKHelpers.componentvector_to_numdict(cv, num_dict_par)
     @test ret == Dict(m.p1 => 10.1)
-end;
+# end;
 
-@testset_skip "componentvector_to_numdict empty subcomponent" begin
+# @testset_skip "componentvector_to_numdict empty subcomponent" begin
     # does not work in CA 13.8 (required to solve for Turing)
     cv2 = CA.ComponentVector(state = [], par = cv)
     ret = MTKHelpers.componentvector_to_numdict(cv2.state, num_dict_par)
     @test ret isa Dict
+    @test valtype(ret) == Float64
     @test isempty(ret)
     #prob = ODEProblem(sys, [m.x => 0.0], (0.0,10.0), [m.τ => 3.0])
+    # 
+    ret = MTKHelpers.componentvector_to_numdict(CA.ComponentVector{Float64}(), num_dict_par)
+    @test ret isa Dict
+    @test valtype(ret) == Float64
+    @test isempty(ret)
 end;
 
 
