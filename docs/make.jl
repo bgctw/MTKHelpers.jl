@@ -25,7 +25,7 @@ makedocs(;
             "ProblemUpdater" => "problemupdater.md",
             "ODEProblem" => "odeproblemparsetter.md",
             "Type inference" => "concrete_parupdater.md",
-            #TODO uncomment after MTK/MOL is fixed
+            #TODO uncomment after MTK/MOL is fixed, moved to /dev
             #"PDE support" => "pde.md",
         ],
         "Translating symbols and Nums" => "system_num_dict.md",
