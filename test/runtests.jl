@@ -18,6 +18,8 @@ const GROUP = get(ENV, "GROUP", "All") # defined in in CI.yml
         @time @safetestset "test_util_componentarrays" include("test_util_componentarrays.jl")
         #@safetestset "Tests" include("test/test_problemparsetter_dummy.jl")
         @time @safetestset "test_problemparsetter_dummy" include("test_problemparsetter_dummy.jl")
+        #@safetestset "Tests" include("test/test_nullodeproblemparsetter.jl")
+        @time @safetestset "test_nullodeproblemparsetter" include("test_nullodeproblemparsetter.jl")
         #@safetestset "Tests" include("test/test_odeproblemparsetter.jl")
         @time @safetestset "test_odeproblemparsetter" include("test_odeproblemparsetter.jl")
         #@safetestset "Tests" include("test/test_odeproblemparsetterconcrete.jl")

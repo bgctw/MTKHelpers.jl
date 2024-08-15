@@ -71,8 +71,13 @@ include("abstractproblemparsetter.jl")
 
 export get_system
 include("abstractodeproblemparsetter.jl")
+
+export NullODEProblemParSetter, NullODEProblemParSetterConcrete
+include("nullodeproblemparsetter.jl")
+
 include("odeproblemparsetterconcrete.jl")
 include("odeproblemparsetter.jl")
+
 
 export smoothstep
 include("smoothstep.jl")
