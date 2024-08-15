@@ -73,6 +73,7 @@ function label_paropt_flat1(pset::NullODEProblemParSetterU, popt; omitwarning = 
 end
 
 # fast version: Problem not modified
+# probably optimized away - not covered by CodeCov
 function remake_pset(prob::AbstractODEProblem, popt, pset::NullODEProblemParSetterU)
     prob
 end
