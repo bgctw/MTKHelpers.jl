@@ -179,7 +179,7 @@ function componentvector_to_numdict(cv::ComponentVector{T}, num_dict::Dict{Symbo
     end
     _pairs_gen = (get_pairs(kcv) for kcv in keys(cv))
     _pairs_all = reduce(vcat, _pairs_gen; init=Vector{T}())
-    isempty(_pairs_all) && return Dict{SymbolicUtils.BasicSymbolic{Real}}()
+    isempty(_pairs_all) && return Dict{SymbolicUtils.BasicSymbolic{Real},eltype(cv)}()
     Dict(_pairs_all...)::Dict{SymbolicUtils.BasicSymbolic{Real}}
 end
 # fallback for empty subvectors of a ComponentArray

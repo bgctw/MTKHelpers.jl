@@ -6,6 +6,7 @@ using ModelingToolkit: t_nounits as t, D_nounits as D
 using OrdinaryDiffEq, ModelingToolkit
 using ComponentArrays: ComponentArrays as CA
 using StaticArrays: StaticArrays as SA
+using SymbolicIndexingInterface: SymbolicIndexingInterface as SII
 
 #include("test/testset_utils.jl") # @testset_skip
 #include("testset_utils.jl") # @testset_skip
@@ -27,15 +28,19 @@ sys_val = get_sys_val()
     p_newp = [2.1, 2.2, 2.3]
     p_new = Symbolics.scalarize(m2.p .=> p_newp)
     prob = ODEProblem(sys, st, (0.0, 10.0), p_new)
-    @test prob.ps[m2.p] == p_newp
+    @test SII.getp(sys, m2.p)(prob) == p_newp
     #
     # setting parameter standard case
     pset = ODEProblemParSetter(sys, (:m2₊i, :m2₊p))
-    prob2 = remake(prob, vcat(1.0, p_newp.*10), pset)
-    @test prob2.ps[m2.p] == p_newp.*10
-    @test prob2.ps[m2.i] == 1.0
-    # @test prob.ps[m2.p] == p_newp # Tuneables are updated also in original
-    prob2.p === prob.p # take care: remake-problem shares same parameter object
+    _newp = vcat(1.0, p_newp.*10)
+    prob2 = remake(prob, _newp, pset)
+    #SII.parameter_values(prob2)
+    @test SII.getp(sys, m2.p)(prob2) == p_newp.*10
+    @test SII.getp(sys, m2.i)(prob2) == 1.0
+    @test all(get_paropt_labeled(pset, prob2) .== vcat(1.0, p_newp.*10))
+    # not updated in original
+    @test all(get_paropt_labeled(pset, prob) .!= vcat(1.0, p_newp.*10))
+        
     #
     sol = solve(prob, Tsit5())
     # first solution state equals the second(i.e. last) entry in the mapping of initial state

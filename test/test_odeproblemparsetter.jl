@@ -178,7 +178,14 @@ end;
 
 @testset "label_paropt_flat1 warning on empty vector" begin
     emptyvec = Float64[]
-    pset = ODEProblemParSetter(m, Symbol[])
+    # now returns a NullProblemParSetter, for testing use different constructor
+    #pset = ODEProblemParSetter(m, Symbol[]) 
+    sys = get_system(prob_sys1)
+    scalar_num_map = CP.get_scalar_num_map(sys)
+    pset = ODEProblemParSetter(
+        CP.axis_of_nums(unknowns(sys)),
+        CP.axis_of_nums(parameters(sys)),
+        Symbol[], sys)
     label_paropt(pset, emptyvec)
     res = @test_logs (:warn, r"no flat version") label_paropt_flat1(pset, emptyvec)
     @test res isa CA.ComponentVector{Float64}
@@ -451,6 +458,11 @@ end;
     ps1c = get_concrete(ps1)
     popt2f = @test_logs (:warn, r"no flat")  label_paropt_flat1(ps1c, CA.getdata(popt1s))
 end;
+
+@testset "empty paropt" begin
+    pset = ODEProblemParSetter(get_system(prob_sys1), CA.ComponentVector())
+    @test pset isa NullODEProblemParSetter
+end
 
 
 

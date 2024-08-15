@@ -1,5 +1,5 @@
 # type alias to save typing
-# already defined in odeproblemparsetterconcrete.jl
+# already defined in odeproblemparsetterconcrete.jl - need to be included before
 #const VN = AbstractVector{<:SymbolicUtils.BasicSymbolic}
 
 """
@@ -173,6 +173,10 @@ function assign_state_par(ax_state, ax_par, ax_paropt)
 end
 
 function ODEProblemParSetter(sys::ODESystem, paropt; is_validating=Val{true}())
+    is_empty_paropt = paropt isa Axis ? axis_length(paropt) == 0 : isempty(paropt)
+    if is_empty_paropt
+        return NullODEProblemParSetter(sys)
+    end
     # ODEProblemParSetter(axis_of_nums(unknowns(sys)), axis_of_nums(parameters(sys)), paropt, sys)
     #ODEProblemParSetter(Axis(Symbol.(unknowns(sys))), axis_of_nums(parameters(sys)), paropt, sys)
     # simplify X(t) to X but keep (Y(t))[i] intact

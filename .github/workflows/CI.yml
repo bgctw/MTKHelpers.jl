@@ -25,8 +25,8 @@ jobs:
           - JET
         version:
           #- '1.6'  # RecursiveArrayTools-SymbolicIndexingInterface_0.3 require 1.10
-          - '1.10'
-          - '1'
+          - '1.10'  # 
+          #- '1' # TODO: uncomment if Julia 1.11 becomes available
         os:
           - ubuntu-latest
         arch:
@@ -37,10 +37,10 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: cjdoris/julia-downgrade-compat-action@v1
-        if: ${{ matrix.version == '1.6' }}
-        with:
-          skip: Pkg,TOML,Statistics
+      # - uses: cjdoris/julia-downgrade-compat-action@v1
+      #   if: ${{ matrix.version == '1.10' }}
+      #   with:
+      #     skip: Pkg,TOML,Statistics
       - uses: julia-actions/cache@v1
         env:
           cache-name: cache-artifacts
