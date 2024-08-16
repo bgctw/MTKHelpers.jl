@@ -8,7 +8,7 @@ to a CSV file.
 Each ComponentArray column is replaced by length(cv) columns,
 and information on the axis is generated as a comment in front of the CSV.
 
-When re-reading the CSV, the respecive ComponentArrays are recreated 
+When re-reading the CSV, the respective ComponentArrays are recreated 
 usingn this information and are replaced for the read plain columns.
 
 Make sure to not duplicate names. If there is a ComponentArray column

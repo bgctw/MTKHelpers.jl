@@ -22,7 +22,7 @@ to a CSV file.
 Each ComponentArray column is replaced by length(cv) columns,
 and information on the axis is generated as a comment in front of the CSV.
 
-When re-reading the CSV, the respecive ComponentArrays are recreated 
+When re-reading the CSV, the respective ComponentArrays are recreated 
 usingn this information and are replaced for the read plain columns.
 
 Make sure to not duplicate names. If there is a ComponentArray column
@@ -42,8 +42,8 @@ end
 
 Get the information on axes of all ComponentArray columns in DataFrame.
 Returns a DataFrame with columns
-- col: Symbol of the column nmae
-- axis: String represenation of the axis    
+- col: Symbol of the column name
+- axis: String representation of the axis    
 """
 function get_cv_info(df::DataFrame)
     cv_info = DataFrame(col = Symbol[], axis = String[])
@@ -142,7 +142,7 @@ end
 
 function gather_cv!(df::DataFrame, col::Symbol, ax)
     oldcols = filter(s -> occursin(Regex("^$(col)_\\d+\$"), s), names(df))
-    # make sure to supply colums in ascending order
+    # make sure to supply columns in ascending order
     ind = map(cn -> match(r"(\d+)$", cn)[1], oldcols)
     oldcols_ord = oldcols[sortperm(ind)]
     _make_cv = (comps...) -> CA.ComponentVector(collect(comps), ax)
