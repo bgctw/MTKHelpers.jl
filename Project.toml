@@ -26,16 +26,21 @@ SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 
 [weakdeps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
 
 [extensions]
 MTKHelpersMakieExt = "CairoMakie"
 MTKHelpersMethodOfLinesExt = "MethodOfLines"
+MTKHelpersCSVExt = ["DataFrames", "CSV"]
 
 [compat]
 CairoMakie = "0.11.4, 0.12"
 Chain = "0.5.0, 0.6"
 ComponentArrays = "0.13.10, 0.14, 0.15"
+CSV = "0.10"
+DataFrames = "1.6.1"
 DiffEqBase = "6.130.0"
 Distributions = "0.25.106"
 DomainSets = "0.6.7, 0.7"
@@ -59,6 +64,8 @@ julia = "1.10"
 [extras]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 
 [workspace]
 projects = ["test", "docs"]

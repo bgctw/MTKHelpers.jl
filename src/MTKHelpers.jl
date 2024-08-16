@@ -110,6 +110,9 @@ include("makie_util.jl")
 #export samplesystem_vec, indices_of_nums
 include("example_systems.jl")
 
+export read_csv_cv, write_csv_cv
+include("cvwriter.jl")
+
 if !isdefined(Base, :get_extension)
     using Requires
 end
@@ -118,6 +121,8 @@ end
     function __init__()
         @require CairoMakie="13f3f980-e62b-5c42-98c6-ff1f3baf88f0" include("../ext/MTKHelpersMakieExt.jl")
         @require MethodOfLines="94925ecb-adb7-4558-8ed8-f975c56a0bf4" include("../ext/MTKHelpersMethodOfLinesExt.jl")
+        @require CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+         include("../ext/MTKHelpersCSVExt.jl")
     end
 end
 

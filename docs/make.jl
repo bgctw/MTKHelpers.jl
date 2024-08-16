@@ -33,6 +33,7 @@ makedocs(;
         "Solution handling" => "solution.md",
         "Smooth steps" => "smoothstep.md",
         "CairoMakie Helpers" => "cairomakie.md",
+        "Writing/Reading ComponentVectors" => "write_csv_cv.md",
         "Developer notes" => [
             "PDE support" => "pde_dev.md",
         ],

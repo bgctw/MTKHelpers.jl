@@ -28,5 +28,5 @@ F(x) &= \frac{1}{e^{-bx_m} - 1} \left( e^{-bx} -1 \right)
 \end{aligned}
 ```
 
-For functions and figures see [Exponential depth distribution of inputs](@ref).
+
 
