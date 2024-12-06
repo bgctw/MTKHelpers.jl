@@ -41,7 +41,7 @@ jobs:
       #   if: ${{ matrix.version == '1.10' }}
       #   with:
       #     skip: Pkg,TOML,Statistics
-      - uses: julia-actions/cache@v1
+      - uses: julia-actions/cache@v2
         env:
           cache-name: cache-artifacts
         with:
