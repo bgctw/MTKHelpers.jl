@@ -265,7 +265,7 @@ expand_base_num_axes(cv::UnitRange, scalar_num_map::Dict) = cv
 
 Return a mapping of each uniuqe base_num of the system
 to original scalarized BasicSymbolics Nums used in the System.
-The order of the nums of symbolic arrarys is ascending and differs 
+The order of the nums of symbolic arrays is ascending and differs 
 from the order in the system.
 The translation in the problem is then taken care of by `remake(Problem, popt, pset)`,
 which uses this map to create the Symbolic mapping or indexing
