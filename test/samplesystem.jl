@@ -1,5 +1,5 @@
 
-using ModelingToolkit: t_nounits as t, D_nounits as D
+using ModelingToolkit: t_nounits as t, D_nounits as D, ModelingToolkit as MTK
 using DomainSets
 using Memoize
 
@@ -9,9 +9,9 @@ using Memoize
 Defines a simple ODESystem of exponential decay to p1/p2 with rate τ
 """
 @memoize function samplesystem(; name, τ = 3.0, i = 0.1, p1 = 1.1, p2 = 1.2)
-    sts = Symbolics.@variables x(t) RHS(t)  # RHS is observed
-    ps = @parameters τ=τ p1=p1 p2=p2 i=i       # parameters
-    ODESystem([
+    sts = MTK.@variables x(t) RHS(t)  # RHS is observed
+    ps = MTK.@parameters τ=τ p1=p1 p2=p2 i=i       # parameters
+    System([
             RHS ~ i - p1 * x^2 + (p2 - x) / τ,
             D(x) ~ RHS
         ], t, sts, ps; name)
@@ -20,8 +20,8 @@ end
 @memoize function samplesystem_const(RHS0; name)
     # demonstrating override_system by setting the RHS to constant first order rate
     m = samplesystem(; name)
-    @unpack RHS, x = m
-    ps = @parameters RHS_0 = RHS0
+    RHS, x = m
+    ps = MTK.@parameters RHS_0 = RHS0
     eqs = [RHS ~ RHS_0 * x]
     sys_ext = override_system(eqs, m; name, ps)
 end
@@ -45,15 +45,15 @@ end
     popt1 = CA.ComponentVector(L = 10.1, k_L = 1.1, k_R = 1 / 20.1)
     popt1s = CA.ComponentVector(state = (L = 10.1,), par = (k_L = 1.1, k_R = 1 / 20.1))
     function get_sys1()
-        sts = @variables L(t)
-        ps = @parameters k_L, k_R, m
+        sts = MTK.@variables L(t)
+        ps = MTK.@parameters k_L, k_R, m
         eq = [D(L) ~ 0]
         sys1 = ODESystem(eq, t, sts, vcat(ps...); name = :sys1)
     end
     sys1 = structural_simplify(get_sys1())
     prob_sys1 = ODEProblem(
-        sys1, get_system_symbol_dict(sys1, u1), (0.0, 1.0),
-        get_system_symbol_dict(sys1, p1))
+        sys1, vcat(get_system_symbol_dict(sys1, u1), get_system_symbol_dict(sys1, p1)), 
+        (0.0, 1.0))
     (; u0 = u1, p = p1, popt = popt1s, prob = prob_sys1)
 end
 
@@ -69,9 +69,9 @@ end
     poptc = vcat(u1c[CA.KeepIndex(:a)], p1c[(:b, :c)])
     poptcs = CA.ComponentVector(state = u1c[CA.KeepIndex(:a)], par = p1c[(:b, :c)])
     function get_sys2()
-        @variables a(..)[1:3]
+        MTK.@variables a(..)[1:3]
         sts = vcat([a(t)[i] for i in 1:3])
-        ps = @parameters b[1:2], c[1:2], d
+        ps = MTK.@parameters b[1:2], c[1:2], d
         eq = vcat([D(a(t)[i]) ~ 0 for i in 1:3])
         sys2 = ODESystem(eq, t, sts, vcat(ps...); name = :sys2)
     end
@@ -83,7 +83,7 @@ end
 end
 
 @memoize function get_sys_ex_pde()
-    @parameters t z
+    MTK.@parameters t z
     z_m = +0.3 # maximum depth in m, change to positive depth
     n_z = 16
     #z_grid = collect(range(0,z_m, length=n_z))
@@ -92,8 +92,8 @@ end
     discretization = MOLFiniteDifference([z => z_grid], t;
         advection_scheme = UpwindScheme(), approx_order = 2)
 
-    @parameters k_Y Y0 i_Y ω i_Y_agr[1:2]
-    @variables Y(..) i_Yo(..) adv_Yo(..) dec_Y(..) Y_t(..) Y_zz(..) Yi(..) i_Yi(..) Y_z(..) adv_Yi(..)
+    MTK.@parameters k_Y Y0 i_Y ω i_Y_agr[1:2]
+    MTK.@variables Y(..) i_Yo(..) adv_Yo(..) dec_Y(..) Y_t(..) Y_zz(..) Yi(..) i_Yi(..) Y_z(..) adv_Yi(..)
     ∂_t = Differential(t)
     ∂_z = Differential(z)
 
@@ -165,7 +165,7 @@ end
         i_Y_agr[1] => 10.0, # base input
         i_Y_agr[2] => 50.0 # pulse at t=80       
     ]
-    @named pdesys = PDESystem(eqs, bcs, domains, [t, z], state_vars, params)
+    MTK.@named pdesys = PDESystem(eqs, bcs, domains, [t, z], state_vars, params)
     prob = discretize(pdesys, discretization)
 
     p = CA.ComponentVector(k_Y = 1/10, Y0 = 80.0, i_Y = 10.0,  i_Y_agr = [2.0, 50.0]) 

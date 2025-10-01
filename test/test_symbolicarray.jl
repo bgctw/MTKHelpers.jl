@@ -27,7 +27,7 @@ sys_val = get_sys_val()
     st = Symbolics.scalarize(m2.x .=> [1.0, 2.0])
     p_newp = [2.1, 2.2, 2.3]
     p_new = Symbolics.scalarize(m2.p .=> p_newp)
-    prob = ODEProblem(sys, st, (0.0, 10.0), p_new)
+    prob = ODEProblem(sys, vcat(st, p_new), (0.0, 10.0))
     @test SII.getp(sys, m2.p)(prob) == p_newp
     #
     # setting parameter standard case

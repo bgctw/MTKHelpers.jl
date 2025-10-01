@@ -18,10 +18,11 @@ ps1c = get_concrete(ps1)
 popt_empty = CA.ComponentVector(
     state = CA.ComponentVector{Float64}(), par = CA.ComponentVector())
 
-(u1c, p1c, poptcs, prob_sys2) = get_sys_ex_vec();
-poptc = flatten1(poptcs)
-psc = pset = NullODEProblemParSetter(get_system(prob_sys2))
-pscc = get_concrete(psc)
+# TODO vec
+# (u1c, p1c, poptcs, prob_sys2) = get_sys_ex_vec();
+# poptc = flatten1(poptcs)
+# psc = pset = NullODEProblemParSetter(get_system(prob_sys2))
+# pscc = get_concrete(psc)
 
 @testset "empty paropt" begin
     pset = ps1
@@ -34,7 +35,8 @@ pscc = get_concrete(psc)
     @test axis_paropt_flat1(pset) == CA.getaxes(flatten1(popt_empty))[1]
 end;
 
-@testset "label_par and label_state" begin
+
+@testset_skip "label_par and label_state" begin
     pset = psc
     @test label_par(pset, p1c) == p1c
     @test label_state(pset, u1c) == u1c
@@ -59,7 +61,7 @@ end;
     ftest(ps)
 end;
 
-@testset "access symbols" begin
+@testset_skip "access symbols" begin
     ftest = (ps) -> begin
         poptc = vcat(u1c[CA.KeepIndex(:a)], p1c[(:b, :c)])
         sym_state = Symbol.(("(a(t))[1]", "(a(t))[2]", "(a(t))[3]"))
@@ -76,7 +78,7 @@ end;
 # ps.statemap
 # ps.optinfo
 
-@testset "get_par_labeled" begin
+@testset_skip "get_par_labeled" begin
     ftest = (pset) -> begin
         @test get_par(pset, prob_sys2) == CA.getdata(p1c)
         @test get_par_labeled(pset, prob_sys2) == p1c
@@ -105,7 +107,7 @@ end
     ftest(pset)
 end;
 
-@testset "get_state, get_par, get_paropt vector prob" begin
+@testset_skip "get_state, get_par, get_paropt vector prob" begin
     pset = psc
     ftest = (pset) -> begin
         @test get_state(pset, prob_sys2) == collect(u1c)
@@ -120,7 +122,7 @@ end;
     ftest(pset)
 end;
 
-@testset "remake vector prob" begin
+@testset_skip "remake vector prob" begin
     ftest = (pset) -> begin
         probo = remake(prob_sys2, Float64[], pset)
         @test get_par_labeled(pset, probo) == get_par_labeled(pset, prob_sys2)

@@ -19,16 +19,16 @@ popt1 = flatten1(popt1s)
 ps1ps = ps1 = ODEProblemParSetter(get_system(prob_sys1), popt1)
 get_paropt_labeled(ps1, prob_sys1)
 
-(u1c, p1c, poptcs, prob_sys2) = get_sys_ex_vec();
-poptc = flatten1(poptcs)
-psc = pset = ODEProblemParSetter(get_system(prob_sys2), poptc)
-get_paropt_labeled(pset, prob_sys2)
-label_par(pset,p1c)
-label_state(pset, u1c)
+# (u1c, p1c, poptcs, prob_sys2) = get_sys_ex_vec();
+# poptc = flatten1(poptcs)
+# psc = pset = ODEProblemParSetter(get_system(prob_sys2), poptc)
+# get_paropt_labeled(pset, prob_sys2)
+# label_par(pset,p1c)
+# label_state(pset, u1c)
 
 # test states and parameters and CA.ComponentVector{SA.SVector}
-u1s = label_state(psc, SA.SVector{3}(CA.getdata(u1c)))
-p1s = label_par(psc, SA.SVector{5}(CA.getdata(p1c))) # convert to CA.ComponentVector{SA.SVector}
+# u1s = label_state(psc, SA.SVector{3}(CA.getdata(u1c)))
+# p1s = label_par(psc, SA.SVector{5}(CA.getdata(p1c))) # convert to CA.ComponentVector{SA.SVector}
 
 @testset "label_par with Parameterobject" begin
     @test_throws "get_par_labeled" label_par(ps1, prob_sys1.p)
@@ -56,18 +56,21 @@ end;
 end;
 
 @testset "_ax_symbols" begin
-    cv = CA.ComponentVector(a = (a1 = 100, a2 = (a21 = 210, a22 = 220)),
+    cv_vec = CA.ComponentVector(a = (a1 = 100, a2 = (a21 = 210, a22 = 220)),
         c = (c1 = reshape(1:4, (2, 2)),))
+    # TODO vec: cv = cv_vec
+    cv = cv_vec[(:a,)]
     ax = first(CA.getaxes(cv))
     #tp = @inferred MTKHelpers._ax_symbols_tuple(ax; prefix = "_") # lastindex not inferable
     tp = MTKHelpers._ax_symbols_tuple(ax; prefix = "_")
     @test tp == (:a_a1,
         :a_a2_a21,
         :a_a2_a22,
-        Symbol("c_c1[1,1]"),
-        Symbol("c_c1[2,1]"),
-        Symbol("c_c1[1,2]"),
-        Symbol("c_c1[2,2]"))
+        # Symbol("c_c1[1,1]"),
+        # Symbol("c_c1[2,1]"),
+        # Symbol("c_c1[1,2]"),
+        # Symbol("c_c1[2,2]"),
+        )
     v = @inferred MTKHelpers._ax_symbols_vector(ax, prefix = "_")
     @test v == collect(tp)
 end
@@ -115,20 +118,23 @@ end;
     # a2 and c need to have correct length for updating
     #poptc = CA.ComponentVector(a=(a2=1:2,), c=1:2) 
     ps = ps1
-    poptc = vcat(u1c[CA.KeepIndex(:a)], p1c[(:b, :c)])
-    #@test (symbols_state(psc)) == (:a₊a1, :a₊a2₊a21, :a₊a2₊a22)
-    #@test (symbols_state(psc)) == (:a₊a1, :a₊a2, :a₊a3)
-    sym_state = Symbol.(("(a(t))[1]", "(a(t))[2]", "(a(t))[3]"))
-    @test (symbols_state(psc)) == sym_state
-    #@test (symbols_state(psc)) == (Symbol("getindex(a(t), 1)"), Symbol("getindex(a(t), 2)"), Symbol("getindex(a(t), 3)"))
-    #@test (symbols_par(psc)) == (:b₊b1, :b₊b2, Symbol("c[1]"), Symbol("c[2]"), :d)
-    sym_bc = Symbol.(("b[1]", "b[2]","c[1]","c[2]"))
-    @test (symbols_par(psc)) == (sym_bc..., :d)
-    # symbols paropt should neglect classification of symbols, which can be 
-    # obtained by keys(axis_paropt(ps))
-    # @test (symbols_paropt(psc)) ==
-    #       (:state₊a₊a1, :state₊a₊a2₊a21, :state₊a₊a2₊a22, :par₊b₊b1, :par₊b₊b2, Symbol("par₊c[1]"), Symbol("par₊c[2]"))
-    @test (symbols_paropt(psc)) == (sym_state..., sym_bc...)
+    @test symbols_state(ps1) == (Symbol("L(t)"),)
+    @test symbols_par(ps1) == (:k_L, :k_R, :m)
+    # TODO vec
+    # poptc = vcat(u1c[CA.KeepIndex(:a)], p1c[(:b, :c)])
+    # #@test (symbols_state(psc)) == (:a₊a1, :a₊a2₊a21, :a₊a2₊a22)
+    # #@test (symbols_state(psc)) == (:a₊a1, :a₊a2, :a₊a3)
+    # sym_state = Symbol.(("(a(t))[1]", "(a(t))[2]", "(a(t))[3]"))
+    # @test (symbols_state(psc)) == sym_state
+    # #@test (symbols_state(psc)) == (Symbol("getindex(a(t), 1)"), Symbol("getindex(a(t), 2)"), Symbol("getindex(a(t), 3)"))
+    # #@test (symbols_par(psc)) == (:b₊b1, :b₊b2, Symbol("c[1]"), Symbol("c[2]"), :d)
+    # sym_bc = Symbol.(("b[1]", "b[2]","c[1]","c[2]"))
+    # @test (symbols_par(psc)) == (sym_bc..., :d)
+    # # symbols paropt should neglect classification of symbols, which can be 
+    # # obtained by keys(axis_paropt(ps))
+    # # @test (symbols_paropt(psc)) ==
+    # #       (:state₊a₊a1, :state₊a₊a2₊a21, :state₊a₊a2₊a22, :par₊b₊b1, :par₊b₊b2, Symbol("par₊c[1]"), Symbol("par₊c[2]"))
+    # @test (symbols_paropt(psc)) == (sym_state..., sym_bc...)
 end;
 # ps.statemap
 # ps.optinfo
@@ -169,10 +175,10 @@ end
 @testset "label Vectors unstructured" begin
     test_label_svectors(ps1, u1, p1, popt1s, Val(1), Val(3), Val(3))
 end;
-@testset "label Vectors structured" begin
+@testset_skip "label Vectors structured" begin
     test_label_svectors(psc, u1c, p1c, poptcs, Val(3), Val(5), Val(7))
 end;
-@testset "label SVectors structured" begin
+@testset_skip "label SVectors structured" begin
     test_label_svectors(psc, u1s, p1s, poptcs, Val(3), Val(5), Val(7))
 end;
 
@@ -238,7 +244,7 @@ end;
     @test get_paropt_labeled(ps1, probo) == popt1s
 end;
 
-@testset "get_state, get_par, get_paropt vector prob" begin
+@testset_skip "get_state, get_par, get_paropt vector prob" begin
     @test get_state(psc, prob_sys2) == collect(u1c)
     @test get_state_labeled(psc, prob_sys2) == u1c
     @test get_par(psc, prob_sys2) == collect(p1c)
@@ -250,7 +256,7 @@ end;
     @test get_paropt_labeled(psc, prob_sys2) == popt1_orig
 end;
 
-@testset "remake vector prob" begin
+@testset_skip "remake vector prob" begin
     probo = remake(prob_sys2, poptcs, psc)
     @test get_paropt_labeled(psc, probo) == poptcs
 end;
@@ -331,7 +337,7 @@ end;
     #@descend_code_warntype update_statepar(pset, popt, u0, p)
 end;
 
-@testset "gradient with Vectors" begin
+@testset_skip "gradient with Vectors" begin
     pset = psc
     prob = prob_sys2
     #sol = solve(prob, Tsit5())

@@ -51,12 +51,12 @@ ProblemUpdaterU = Union{ProblemUpdater, ProblemUpdaterConcrete}
 
 """
     get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0, p)
-    get_ode_problemupdater(par_getter::AbstractProblemParGetter, sys::AbstractODESystem)
+    get_ode_problemupdater(par_getter::AbstractProblemParGetter, sys::AbstractSystem)
 
 Construct a `ProblemUpdater` based on an constructed `ODEProblemParSetterConcrete`.     
 """
 function get_ode_problemupdater(par_getter::AbstractProblemParGetter,
-        sys::AbstractODESystem)
+        sys::AbstractSystem)
     ProblemUpdater(par_getter, ODEProblemParSetter(sys, keys(par_getter)))
 end,
 function get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0, p)
