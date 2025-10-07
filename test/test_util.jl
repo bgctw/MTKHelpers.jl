@@ -50,14 +50,14 @@ end;
 @testset "embed with name different than m" begin
     @named m2 = samplesystem()
     @named sys = embed_system(m2)
-    prob = ODEProblem(sys, [m2.x => 0.0], (0.0, 10.0), [m2.τ => 3.0])
+    prob = ODEProblem(sys, vcat([m2.x => 0.0], [m2.τ => 3.0]), (0.0, 10.0))
     sol = solve(prob, Tsit5())
     @test first(sol[m2.x]) == 0.0
     #plot(sol, vars=[m2.x,m2.RHS])    
     #
     # specify by symbol_op instead of num
     _dict_nums = get_system_symbol_dict(sys)
-    prob = ODEProblem(sys, [_dict_nums[:m2₊x] => 0.0], (0.0, 10.0), [m2.τ => 3.0])
+    prob = ODEProblem(sys, vcat([_dict_nums[:m2₊x] => 0.0], [m2.τ => 3.0]), (0.0, 10.0))
 end;
 
 @testset "override_system" begin

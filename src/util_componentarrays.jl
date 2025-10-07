@@ -1,9 +1,13 @@
 import ComponentArrays as CA
 #import ComponentArrays: _get_index_axis
 
-axis_length(ax::AbstractAxis) = lastindex(ax) - firstindex(ax) + 1
+function axis_length(ax::AbstractAxis) 
+    lastindex(ax) - firstindex(ax) + 1
+end
 axis_length(::FlatAxis) = 0
 axis_length(::UnitRange) = 0
+axis_length(ax::ViewAxis) = axis_length(ax.ax)
+axis_length(::Shaped1DAxis{(0,)}) = 0
 
 # function _get_axis(x::AbstractArray) 
 #     @info("Providing Parameters as Array was deprecated for performance?")
@@ -110,7 +114,7 @@ attach_x_axis(x::ComponentMatrix, ax::AbstractAxis) = ComponentArray(x, (ax, Fla
 #     if !all(g) 
 #         ks_missing = keys(first(getaxes(s)))[.! g]
 #         error(
-#             "updating keys $(ks_missing) not found in updated compoenent vector with keys $ax")
+#             "updating keys $(ks_missing) not found in updated component vector with keys $ax")
 #     end
 #     tmp = map(keys_ax) do k
 #         cvs = getproperty(cv, k)

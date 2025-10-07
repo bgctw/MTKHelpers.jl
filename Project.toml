@@ -16,6 +16,7 @@ LoggingExtras = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 NamedArrays = "86f7a689-2022-50b4-a561-43c23ac3c673"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+PreallocationTools = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
 RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
@@ -25,21 +26,21 @@ SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
 SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 
 [weakdeps]
-CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
 
 [extensions]
+MTKHelpersCSVExt = ["DataFrames", "CSV"]
 MTKHelpersMakieExt = "CairoMakie"
 MTKHelpersMethodOfLinesExt = "MethodOfLines"
-MTKHelpersCSVExt = ["DataFrames", "CSV"]
 
 [compat]
-CairoMakie = "0.11.4, 0.12"
-Chain = "0.5.0, 0.6"
-ComponentArrays = "0.13.10, 0.14, 0.15"
 CSV = "0.10"
+CairoMakie = "0.11.4, 0.12 - 0.15"
+Chain = "0.5.0, 0.6, 1"
+ComponentArrays = "0.13.10, 0.14, 0.15"
 DataFrames = "1.6.1"
 DiffEqBase = "6.130.0"
 Distributions = "0.25.106"
@@ -48,24 +49,25 @@ InlineStrings = "1.4.0"
 LabelledArrays = "1.15.0"
 Logging = "1.10"
 LoggingExtras = "1.0"
-MethodOfLines = "0.10.4, 0.11" # fails with 0.11.2 but cannot downgrade to 0.11
-ModelingToolkit = "9.5"
+MethodOfLines = "0.10.4, 0.11"
+ModelingToolkit = "10"
 NamedArrays = "0.9.8, 0.10"
 OrdinaryDiffEq = "6.58.2"
+PreallocationTools = "0.4.34"
 RecursiveArrayTools = "2.38.10, 3.0"
 Requires = "1.3.0"
 SciMLBase = "1.98.1, 2.0"
 SciMLStructures = "1.1.0"
 StaticArrays = "1.9.0"
 SymbolicIndexingInterface = "0.2, 0.3"
-SymbolicUtils = "2.0, 3.0"
+SymbolicUtils = "2.0, 3.0, 4.0"
 julia = "1.10"
 
 [extras]
-CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+MethodOfLines = "94925ecb-adb7-4558-8ed8-f975c56a0bf4"
 
 [workspace]
 projects = ["test", "docs"]

@@ -24,7 +24,7 @@ function get_concrete(pset::NullODEProblemParSetter)
 end
 
 
-function NullODEProblemParSetter(state_template, par_template, system::AbstractODESystem)
+function NullODEProblemParSetter(state_template, par_template, system::AbstractSystem)
     ax_state = _get_axis(state_template)
     ax_par = _get_axis(par_template)
     scalar_num_map = get_scalar_num_map(system)
@@ -37,7 +37,7 @@ function NullODEProblemParSetter(state_template, par_template, system::AbstractO
     NullODEProblemParSetter(ax_state, ax_state_scalar, ax_par, par_ind)
 end
 
-function NullODEProblemParSetter(sys::AbstractODESystem)
+function NullODEProblemParSetter(sys::AbstractSystem)
     NullODEProblemParSetter(
         #Axis(symbol_op_scalar.(unknowns(sys))),
         axis_of_nums(unknowns(sys)),

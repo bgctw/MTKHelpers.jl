@@ -39,11 +39,11 @@ end
 base_num(s) = s
 
 """
-    get_system_symbol_dict(sys::AbstractODESystem)
+    get_system_symbol_dict(sys::AbstractSystem)
 
 Construct a `Dict{Symbol => Num}` for all properties in `sys`.
 """
-function get_system_symbol_dict(sys::AbstractODESystem)
+function get_system_symbol_dict(sys::AbstractSystem)
     # if there are no observed, return type is Dict(Any,Any) -> need conditional
     dicts = (
         get_base_num_dict(unknowns(sys)),
@@ -263,7 +263,7 @@ expand_base_num_axes(cv::UnitRange, scalar_num_map::Dict) = cv
 """
     get_scalar_num_map(sys::AbstractSystem)
 
-Return a mapping of each uniuqe base_num of the system
+Return a mapping of each unique base_num of the system
 to original scalarized BasicSymbolics Nums used in the System.
 The order of the nums of symbolic arrays is ascending and differs 
 from the order in the system.

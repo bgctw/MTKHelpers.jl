@@ -7,6 +7,7 @@ using SymbolicIndexingInterface: SymbolicIndexingInterface as SII
 #using StaticArrays: StaticArrays as SA
 
 pkg_dir = dirname(dirname(pathof(MTKHelpers)))
+include(joinpath(pkg_dir, "test", "testset_utils.jl"))
 include(joinpath(pkg_dir, "test", "samplesystem.jl"))
 
 
@@ -39,7 +40,7 @@ end;
     @test puc === pu
 end;
 
-@testset "KeysProblemParGetter_arr" begin
+@testset_skip "KeysProblemParGetter_arr" begin
     (u0, p, poptcs, prob) = get_sys_ex_vec();
     poptc = flatten1(poptcs)
     # f = (u, p, t) -> p[1] * u
@@ -120,7 +121,7 @@ end;
     @test res == m_getter(prob2)
 end;
 
-@testset "ProblemParUpdater from ODESystem" begin
+@testset_skip "ProblemParUpdater from ODESystem" begin
     @named m = MTKHelpers.samplesystem_vec()
     @named sys = embed_system(m)
     pset = ODEProblemParSetter(sys, (:m₊p,))

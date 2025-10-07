@@ -1,9 +1,3 @@
-tmp_f = function ()
-    push!(LOAD_PATH, joinpath(pwd(), "test"))
-    push!(LOAD_PATH, expanduser("~/twutz/julia/makietools"))
-    push!(LOAD_PATH, expanduser("~/twutz/julia/18_tools/makietools"))
-end
-
 using Test
 using MTKHelpers
 using MTKHelpers: MTKHelpers as CP
@@ -17,7 +11,7 @@ include(joinpath(pkgdir,"test","samplesystem.jl"))
 @testset "series_sol" begin
     @named m = samplesystem()
     @named me = embed_system(m)
-    prob = ODEProblem(me, [m.x => 1.1], (0.0, 1.0), [])
+    prob = ODEProblem(me, vcat([m.x => 1.1]), (0.0, 1.0))
     sol = solve(prob, Tsit5())
     fig = Figure()
     ax = CairoMakie.Axis(fig[1, 1]; xlabel = "time (yr)")

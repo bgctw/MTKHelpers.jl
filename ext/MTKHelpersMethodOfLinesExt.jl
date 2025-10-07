@@ -8,7 +8,7 @@ isdefined(Base, :get_extension) ? (using MethodOfLines) : (using ..MethodOfLines
 using MTKHelpers
 
 using ModelingToolkit
-using ModelingToolkit: AbstractODESystem, AbstractSystem
+using ModelingToolkit: AbstractSystem
 using SciMLBase: SciMLBase, AbstractODEProblem
 using Chain
 using DomainSets # for the example system

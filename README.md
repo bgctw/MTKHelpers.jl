@@ -8,4 +8,10 @@
 Utilities that ease the development using [ModelingToolkit.jl](https://mtk.sciml.ai/dev/).
 Hopefully, these will become obsolete with further development in `ModelingToolkit`.
 
+With the introduction of MTKParameters object in ModelingToolkit 9, the 
+indexing into vectors by position is not supported any more. Hence, MTKHelpers need
+to be adapted to use the provided setters, but those are currently difficult to
+use with Parameter optimization using ForwardDiff and Zygote.
+In the meantime, MTKHelpers does not support non-scalar states or parameters.
+
 See subpages of the [package help](https://bgctw.github.io/MTKHelpers.jl/dev)

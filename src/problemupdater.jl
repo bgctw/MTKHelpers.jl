@@ -51,12 +51,12 @@ ProblemUpdaterU = Union{ProblemUpdater, ProblemUpdaterConcrete}
 
 """
     get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0, p)
-    get_ode_problemupdater(par_getter::AbstractProblemParGetter, sys::AbstractODESystem)
+    get_ode_problemupdater(par_getter::AbstractProblemParGetter, sys::AbstractSystem)
 
 Construct a `ProblemUpdater` based on an constructed `ODEProblemParSetterConcrete`.     
 """
 function get_ode_problemupdater(par_getter::AbstractProblemParGetter,
-        sys::AbstractODESystem)
+        sys::AbstractSystem)
     ProblemUpdater(par_getter, ODEProblemParSetter(sys, keys(par_getter)))
 end,
 function get_ode_problemupdater(par_getter::AbstractProblemParGetter, u0, p)
@@ -86,7 +86,7 @@ isconcrete(::NullProblemUpdater) = true
 """
     KeysProblemParGetter(mapping::NTuple{N,Pair{Symbol, Symbol}, keys_state)
 
-Provices callable `(pg::KeysProblemParGetter)(pu::ProblemUpdater, prob), keys_state]`.    
+Provides callable `(pg::KeysProblemParGetter)(pu::ProblemUpdater, prob), keys_state]`.    
 To be used to get the parameters/state vector to be set by `ProblemUpdater`.
 
 Initialize with an mapping of NTuples of symbols (source -> target) that index into 

@@ -43,8 +43,10 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
         par_ind, stateopt_ind::AbstractVector, popt_ind::AbstractVector,
     ) 
         # VN <: AbstractVector{<:SymbolicUtils.BasicSymbolic} || error("expected VN <: AbstractVector{<:SymbolicUtils.BasicSymbolic}, but was $VN")
-        keys_paropt_state = keys(CA.indexmap(ax_paropt_scalar)[:state])
-        keys_paropt_par = keys(CA.indexmap(ax_paropt)[:par])
+        ax_paropt_state = CA.indexmap(ax_paropt_scalar)[:state]
+        keys_paropt_state = length(ax_paropt_state) == 0 ? () : keys(ax_paropt_state)
+        ax_paropt_par = CA.indexmap(ax_paropt)[:par]
+        keys_paropt_par = length(ax_paropt_par) == 0 ? () : keys(ax_paropt_par)
         new(ax_paropt, ax_state, ax_state_scalar, ax_par,
             ax_paropt_scalar, ax_paropt_flat1, 
             opt_state_nums, opt_par_nums,
@@ -54,7 +56,7 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
 end
 
 function ODEProblemParSetter(state_template, par_template, popt_template,
-    system::AbstractODESystem;
+    system::AbstractSystem;
     is_validating::Val{isval}=Val{true}()) where {isval}
     ax_paropt = _get_axis(popt_template)
     ax_state = _get_axis(state_template)
@@ -85,12 +87,12 @@ function ODEProblemParSetter(state_template, par_template, popt_template,
         Symbolics.scalarize.(
             getindex.(Ref(_dict_nums), keys(ax_par)))...)
     T = eltype(par_nums)
-    sym_paropt_par = keys(ax_paropt[:par].ax)
+    sym_paropt_par = length(ax_paropt[:par]) == 0 ? () : keys(ax_paropt[:par].ax)
     opt_par_nums = (length(sym_paropt_par) == 0 ?
                     T[] :
                     vcat(
         getindex.(Ref(scalar_num_map_sym), sym_paropt_par)...))::Vector{T}
-    sym_paropt_state = keys(ax_paropt[:state].ax)
+    sym_paropt_state = length(ax_paropt[:state]) == 0 ? () : keys(ax_paropt[:state].ax)
     opt_state_nums = length(sym_paropt_state) == 0 ?
                      T[] :
                      vcat(
@@ -125,7 +127,7 @@ end
 
 function ODEProblemParSetter(state_template,
     par_template, popt_template::Union{NTuple{N,Symbol},AbstractVector{Symbol}},
-    system::AbstractODESystem;
+    system::AbstractSystem;
     is_validating=Val{true}()) where {N}
     ax_par = _get_axis(par_template)
     ax_state_array = isnothing(system) ?
@@ -180,7 +182,7 @@ function ODEProblemParSetter(sys::ODESystem, paropt; is_validating=Val{true}())
     # ODEProblemParSetter(axis_of_nums(unknowns(sys)), axis_of_nums(parameters(sys)), paropt, sys)
     #ODEProblemParSetter(Axis(Symbol.(unknowns(sys))), axis_of_nums(parameters(sys)), paropt, sys)
     # simplify X(t) to X but keep (Y(t))[i] intact
-    scalar_num_map = get_scalar_num_map(sys)
+    #scalar_num_map = get_scalar_num_map(sys)
     ODEProblemParSetter(
         #Axis(symbol_op_scalar.(unknowns(sys))),
         axis_of_nums(unknowns(sys)),

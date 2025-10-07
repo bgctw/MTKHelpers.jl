@@ -25,7 +25,7 @@ fit_Dirichlet_mode(mode, M) = mode .* length(mode) .* (M - 1) .+ 1
 """
     simplex_grid(m,n=3)
 
-Create a grid across the n-dimesional unit simplex with m points on each dimension.
+Create a grid across the n-dimensional unit simplex with m points on each dimension.
 If `unit=false` then return an Integer grid ranging from 0 to (m-1).
 
 """

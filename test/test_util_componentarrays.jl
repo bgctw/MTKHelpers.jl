@@ -5,8 +5,7 @@ using OrdinaryDiffEq, ModelingToolkit
 using ComponentArrays: ComponentArrays as CA
 #using StaticArrays: StaticArrays as SA
 
-#include("test/testset_utils.jl") 
-include("testset_utils.jl") # @testset_skip, get_pkg_version
+include(joinpath(pkgdir, "test", "testset_utils.jl"))
 
 @testset "_get_axis" begin
     p1 = CA.ComponentVector(CA.ComponentVector(x = [1, 2, 3]),
