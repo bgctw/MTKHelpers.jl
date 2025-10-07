@@ -34,7 +34,7 @@ tmpf = () -> begin
     #
     x = range(0, 1, length = 500)
     #grid = reverse(collect(Iterators.product(x,x)), dims=1) # flip for heatmap
-    # matrix rows have initial at top, headmap has 0 at bottom -> ok
+    # matrix rows have initial at top, heatmap has 0 at bottom -> ok
     # but change x and y coordinates
     grid = map(x -> SA.SA[x[2], x[1]], collect(Iterators.product(x, x)))
     replace_zero(x) = x == 0 ? missing : x

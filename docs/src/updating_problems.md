@@ -99,7 +99,7 @@ nothing # hide
 ```
 
 
-Note that produced labeled CompoenentArrays are not fully type-inferred, unless
+Note that produced labeled ComponentArrays are not fully type-inferred, unless
 a concrete versions of the ParameterSetter and function barriers are used as described 
 in [Concrete ProblemUpdater](@ref).
 

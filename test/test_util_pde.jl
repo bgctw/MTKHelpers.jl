@@ -75,7 +75,7 @@ end
     label_paropt(pset, CA.getdata(paropt))
     @test Symbol("(Y(t))[2]") ∈ symbols_state(pset)   
     @test Symbol("(Y(t))[15]") ∈ symbols_state(pset)   
-    # not simplied to X to be consistent with unknowns(sys)
+    # not simplified to X to be consistent with unknowns(sys)
     @test Symbol("X(t)") ∈ symbols_state(pset)  
     #
     x = get_state_labeled(pset, prob) 
@@ -159,7 +159,7 @@ tmp_f = () -> begin
         identity.(z_grid[state_pos])
     prob3 = remake(proba, u0 = tmp2)
     #
-    # translating ComponentVector(vector) to CompoenentVector(scalars...)
+    # translating ComponentVector(vector) to ComponentVector(scalars...)
     tmp = CP.expand_base_num(sd[Symbol("Y[1]")], state_pos)
     tmp = CP.expand_base_num(sd[Symbol("Y[1]")], sys)
     ax_scalar = CA.Axis(Symbol.(tmp)...)

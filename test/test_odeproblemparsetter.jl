@@ -401,8 +401,8 @@ end;
     # as long as Axis argument is passed, all the type is inferred
     #psr = @inferred ODEProblemParSetter(Axis(keys(u1)),Axis(keys(p1)),Axis(frandsym()))
     ftmp = (poptnames) -> ODEProblemParSetter(keys(u1), keys(p1), poptnames, get_system(prob_sys1))
-    #psr = @inferred ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
-    psr = ftmp(frandsym()) # not inferable: Axis is constructed from unknow syms
+    #psr = @inferred ftmp(frandsym()) # not inferable: Axis is constructed from unknown syms
+    psr = ftmp(frandsym()) # not inferable: Axis is constructed from unknown syms
     # use Parsetter either with explicit Axis or inside function barrier
     xl = label_paropt(psr, collect(1:count_paropt(psr))) # ok?
     xn = @inferred name_paropt(psr, collect(1:count_paropt(psr)))

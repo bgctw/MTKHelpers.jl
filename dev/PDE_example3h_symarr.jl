@@ -151,7 +151,7 @@ solp = solo = solve(probo, TRBDF2());
 # z_m:dz:0 (top is displayed last)
 hcat(sol[Y(t, z)][end, :], solo[Y(t, z)][end, :]) # z_m:dz:0 (top is displayed last)
 
-# last time derivates
+# last time derivatives
 solp[t][(end .- 5):end, :]
 solp[Y_t(t, z)][(end .- 5):end, :]
 # should be near zero at the end, except for top -balanced by agr input

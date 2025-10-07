@@ -86,7 +86,7 @@ isconcrete(::NullProblemUpdater) = true
 """
     KeysProblemParGetter(mapping::NTuple{N,Pair{Symbol, Symbol}, keys_state)
 
-Provices callable `(pg::KeysProblemParGetter)(pu::ProblemUpdater, prob), keys_state]`.    
+Provides callable `(pg::KeysProblemParGetter)(pu::ProblemUpdater, prob), keys_state]`.    
 To be used to get the parameters/state vector to be set by `ProblemUpdater`.
 
 Initialize with an mapping of NTuples of symbols (source -> target) that index into 

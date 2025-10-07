@@ -263,7 +263,7 @@ expand_base_num_axes(cv::UnitRange, scalar_num_map::Dict) = cv
 """
     get_scalar_num_map(sys::AbstractSystem)
 
-Return a mapping of each uniuqe base_num of the system
+Return a mapping of each unique base_num of the system
 to original scalarized BasicSymbolics Nums used in the System.
 The order of the nums of symbolic arrays is ascending and differs 
 from the order in the system.

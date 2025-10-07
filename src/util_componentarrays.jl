@@ -114,7 +114,7 @@ attach_x_axis(x::ComponentMatrix, ax::AbstractAxis) = ComponentArray(x, (ax, Fla
 #     if !all(g) 
 #         ks_missing = keys(first(getaxes(s)))[.! g]
 #         error(
-#             "updating keys $(ks_missing) not found in updated compoenent vector with keys $ax")
+#             "updating keys $(ks_missing) not found in updated component vector with keys $ax")
 #     end
 #     tmp = map(keys_ax) do k
 #         cvs = getproperty(cv, k)

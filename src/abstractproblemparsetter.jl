@@ -69,7 +69,7 @@ end
     axis_paropt_scalar(pset::AbstractProblemParSetter)
     axis_paropt_flat1(pset::AbstractProblemParSetter)
 
-Report the Axis of a CompoenentVector of parameters.
+Report the Axis of a ComponentVector of parameters.
 The second version has a scalarized entry for state for each subvector of state. The third version provides an axis corresponding to 
 `flatten1(paropt)`.
 """
