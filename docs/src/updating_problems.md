@@ -76,7 +76,7 @@ There are three  [suggested ways in MTK10](https://docs.sciml.ai/ModelingToolkit
 - using a SciMLStructures.jl to replace all tunable parameters
 
 The first two, currently, do not work with AD systems.
-The third requires chaning the system definition to adpat the parameters.
+The third requires changing the system definition to adapt the parameters.
 
 ```@example doc
 #prob2 = remake(prob, [m.p2 => 3.2]) # would be nice, but not supported

@@ -57,8 +57,8 @@ p0n = nest_structure(p0, parstateopt_sym)
 setter! = SII.setp(simpsys, paropt)
 setter!(probo, nest_structure(p0, paropt_sym)) 
 function loss(p)
-    local p_struc = nest_structure(p, paropt_sym) #  omit u0
-    setter!(probo, p_struc)
+    local p_struct = nest_structure(p, paropt_sym) #  omit u0
+    setter!(probo, p_struct)
     local sol = ODE.solve(probo, ODE.Tsit5(), saveat = tsteps)
     local loss = sum(abs2, sol .- sol_true)
     return loss
@@ -137,12 +137,12 @@ function compute_sol(p, probo)
     pvt = eltype(buf) == ET ? pvt : SS.replace(SS.Tunable(), pvt, ET.(buf)) 
     pvt = eltype(bufx) == ET ? pvt : SS.replace(SS.Initials(), pvt, ET.(bufx)) 
     #local psetter! = SII.setp(probo, paropt)
-    local p_struc = nest_structure(p, paropt_sym) 
-    psetter!(pvt, p_struc)
+    local p_struct = nest_structure(p, paropt_sym) 
+    psetter!(pvt, p_struct)
     #local ssetter! = SII.setu(probo, stateopt)
-    local s_struc = nest_structure(p, stateopt_sym) 
-    #ssetter!(pvt, s_struc)   # state_values(MTKParameters) not implemented
-    ssetter!(probon2, s_struc)
+    local s_struct = nest_structure(p, stateopt_sym) 
+    #ssetter!(pvt, s_struct)   # state_values(MTKParameters) not implemented
+    ssetter!(probon2, s_struct)
     #local sol = ODE.solve(probon2, ODE.Tsit5(), saveat = tsteps)
     # need another remake to update probon2.p.initial to probon2.u0
     local probon3 = remake(probon2, u0=probon2.u0)
