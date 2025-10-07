@@ -124,7 +124,7 @@ tmp_f = () -> begin
     # get the ODESystem to construct ProbParameterSetter
     odesys_full, tspan = symbolic_discretize(pdesys, discretization)
     #odesys_full, tspan = symbolic_discretize(pdesys2, discretization);
-    odesys = structural_simplify(odesys_full)
+    odesys = mtkcompile(odesys_full)
     observed(odesys)
     equations(odesys)
     parameters(odesys)

@@ -448,7 +448,7 @@ end;
         eq = [D(m) ~ 0, ]
         sysd = ODESystem(eq, t, sts, vcat(ps...); name=:sysd)
     end
-    #sysd = structural_simplify(get_sys_dup())
+    #sysd = mtkcompile(get_sys_dup())
     sysd = complete(get_sys_dup(); split=true)
     #
     u1 = CA.ComponentVector(m = 10.0)

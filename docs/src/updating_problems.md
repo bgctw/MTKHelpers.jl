@@ -127,7 +127,7 @@ function get_sys1()
     eq = [D(L) ~ 0]
     sys1 = ODESystem(eq, t, sts, vcat(ps...); name = :sys1)
 end
-sys1 = structural_simplify(get_sys1())
+sys1 = mtkcompile(get_sys1())
 u0 = ComponentVector(L = 10.0)
 p = ComponentVector(k_L = 1.0, k_R = 1 / 20, k_P = 2.0)
 prob = ODEProblem(sys1,

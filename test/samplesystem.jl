@@ -20,7 +20,8 @@ end
 @memoize function samplesystem_const(RHS0; name)
     # demonstrating override_system by setting the RHS to constant first order rate
     m = samplesystem(; name)
-    RHS, x = m
+    @unpack RHS,x = m
+    #RHS, x = getproperty.(Ref(m), (:RHS, :x); namespace=false)
     ps = MTK.@parameters RHS_0 = RHS0
     eqs = [RHS ~ RHS_0 * x]
     sys_ext = override_system(eqs, m; name, ps)
@@ -50,7 +51,7 @@ end
         eq = [D(L) ~ 0]
         sys1 = ODESystem(eq, t, sts, vcat(ps...); name = :sys1)
     end
-    sys1 = structural_simplify(get_sys1())
+    sys1 = mtkcompile(get_sys1())
     prob_sys1 = ODEProblem(
         sys1, vcat(get_system_symbol_dict(sys1, u1), get_system_symbol_dict(sys1, p1)), 
         (0.0, 1.0))
@@ -75,7 +76,7 @@ end
         eq = vcat([D(a(t)[i]) ~ 0 for i in 1:3])
         sys2 = ODESystem(eq, t, sts, vcat(ps...); name = :sys2)
     end
-    sys2 = structural_simplify(get_sys2())
+    sys2 = mtkcompile(get_sys2())
     prob_sys2 = ODEProblem(
         sys2, get_system_symbol_dict(sys2, u1c), (0.0, 1.0),
         get_system_symbol_dict(sys2, p1c))

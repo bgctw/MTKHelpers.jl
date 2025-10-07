@@ -24,7 +24,7 @@ function get_sys1()
     eq = [D(L) ~ 0, ]
     ODESystem(eq, t, sts, vcat(ps...); name=:sys1)
 end
-sys1 = structural_simplify(get_sys1())
+sys1 = mtkcompile(get_sys1())
 
 _pmap = Dict( keys(p1) .=> collect(values(p1)) )
 prob = ODEProblem(sys1, collect(u1), (0.0,1.1), _pmap)

@@ -28,7 +28,8 @@ makedocs(;
             #TODO uncomment after MTK/MOL is fixed, moved to /dev
             #"PDE support" => "pde.md",
         ],
-        "Translating symbols and Nums" => "system_num_dict.md",
+        #TODO fix vector parameters "Translating symbols and Nums" => "system_num_dict.md",
+        "Translating symbols and Nums" => "system_num_dict_scalar.md",
         "Embedding a system" => "embed_system.md",
         "Solution handling" => "solution.md",
         "Smooth steps" => "smoothstep.md",

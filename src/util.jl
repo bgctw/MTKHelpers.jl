@@ -37,7 +37,7 @@ function embed_system(m; name, simplify = true)
     @named _sys_embed = ODESystem(Equation[], ModelingToolkit.get_iv(m))
     sys = compose(_sys_embed, [m]; name)
     if simplify
-        sys = structural_simplify(sys)
+        sys = mtkcompile(sys)
     end
     sys
 end
