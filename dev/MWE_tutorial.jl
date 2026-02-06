@@ -21,7 +21,7 @@ using OptimizationOptimJL
 @variables x(t) y(t)
 eqs = [D(x) ~ (α - β * y) * x
        D(y) ~ (δ * x - γ) * y]
-@mtkbuild odesys = ODESystem(eqs, t)
+@mtkbuild odesys = System(eqs, t)
 
 
 odeprob = ODEProblem(

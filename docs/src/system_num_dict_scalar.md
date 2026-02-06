@@ -25,7 +25,7 @@ function samplesystem_scalar(; name, τ = 3.0, i=0.1, p1 = 1.1, p2 = 1.2, p3 = 1
         D(x1) ~ i - p1 * x1 + (p2 - x1^2) / τ, 
         D(x2) ~ i - p3 * x2, 
      ]
-     ODESystem(eq, t, sts, vcat(ps...); name)
+     System(eq, t, sts, vcat(ps...); name)
 end
 @named m = samplesystem_scalar()
 @named sys = embed_system(m)

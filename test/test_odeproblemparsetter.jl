@@ -49,7 +49,7 @@ end;
     sts = @variables L(t)
     ps = Num[]
     eq = [D(L) ~ 0, ]
-    sys_flat = ODESystem(eq, t, sts, vcat(ps...); name=:sys_flat)
+    sys_flat = System(eq, t, sts, vcat(ps...); name=:sys_flat)
     popt1_flat = CA.ComponentVector(L = 10.1,)
     ps = ODEProblemParSetter(u1, p1_flat, popt1_flat, sys_flat)
     @test count_par(ps) == 0
@@ -80,6 +80,7 @@ end
     par_syms = keys(p1)
     popt_syms = (:L, :k_L, :M1, :M2)
     sys1 = get_system(prob_sys1)
+    # TODO when raising version requirement > 1.11 change for FieldError
     @test_throws ErrorException ODEProblemParSetter(state_syms, par_syms, popt_syms, sys1)
     psw = @test_logs (:warn, r"M1.+M2") (:warn,) ODEProblemParSetter(CA.Axis(state_syms),
         CA.Axis(par_syms), CA.Axis(popt_syms), sys1)
@@ -241,6 +242,8 @@ end;
 
 @testset "remake scalars" begin
     probo = remake(prob_sys1, popt1s, ps1)
+    #@usingany Cthulhu
+    #@descend_code_warntype remake(prob_sys1, popt1s, ps1)
     @test get_paropt_labeled(ps1, probo) == popt1s
 end;
 
@@ -446,7 +449,7 @@ end;
         sts = @variables m(t)
         ps = @parameters k_L, k_R, m 
         eq = [D(m) ~ 0, ]
-        sysd = ODESystem(eq, t, sts, vcat(ps...); name=:sysd)
+        sysd = System(eq, t, sts, vcat(ps...); name=:sysd)
     end
     #sysd = mtkcompile(get_sys_dup())
     sysd = complete(get_sys_dup(); split=true)

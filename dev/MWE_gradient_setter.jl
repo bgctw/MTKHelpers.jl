@@ -22,7 +22,7 @@ function get_sys1()
     sts = @variables L(t)
     ps = @parameters k_L, k_R, m 
     eq = [D(L) ~ 0, ]
-    ODESystem(eq, t, sts, vcat(ps...); name=:sys1)
+    System(eq, t, sts, vcat(ps...); name=:sys1)
 end
 sys1 = mtkcompile(get_sys1())
 

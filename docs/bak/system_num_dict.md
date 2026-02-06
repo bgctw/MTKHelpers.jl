@@ -26,7 +26,7 @@ function samplesystem_vec(; name, τ = 3.0, i=0.1, p = [1.1, 1.2, 1.3])
         D(x(t)[1]) ~ i - p[1] * x(t)[1] + (p[2] - x(t)[1]^2) / τ, 
         D(x(t)[2]) ~ i - p[3] * x(t)[2], 
      ]
-     ODESystem(eq, t, sts, vcat(ps...); name)
+     System(eq, t, sts, vcat(ps...); name)
 end
 @named m = samplesystem_vec()
 @named sys = embed_system(m)
