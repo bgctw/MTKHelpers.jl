@@ -5,7 +5,7 @@ exluding = "excluding"
 
 [default]
 extend-ignore-identifiers-re = [
-    "EIS", "setp"
+    "EIS", "setp", "Iz"
 ]
 
 
