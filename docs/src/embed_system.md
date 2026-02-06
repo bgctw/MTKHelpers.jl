@@ -25,7 +25,7 @@ using ModelingToolkit: t_nounits as t, D_nounits as D
 function samplesystem(;name,τ = 3.0, p1=1.1, p2=1.2) 
     sts = @variables x(t) RHS(t)             # RHS is observed
     ps = @parameters τ=τ p1=p1 p2=p2       # parameters
-    ODESystem([ RHS  ~ p1/p2 * (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)
+    System([ RHS  ~ p1/p2 * (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)
 end                     
 
 # simplify the system by setting RHS ~ RHS_0 * x

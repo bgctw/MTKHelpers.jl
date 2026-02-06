@@ -20,7 +20,7 @@ must have different names.
 # function samplesystem(;name,τ = 3.0, p=[1.1, 1.2]) 
 #     sts = @variables x(t) RHS(t)        # RHS is observed
 #     ps = @parameters τ=τ p[1:2] = p 
-#     ODESystem([ RHS  ~ p[1] + -p[2]*x + (1 - x)/τ, D(x) ~ RHS ], t, sts, vcat(ps...); name)
+#     System([ RHS  ~ p[1] + -p[2]*x + (1 - x)/τ, D(x) ~ RHS ], t, sts, vcat(ps...); name)
 # end                     
 # @named m = samplesystem()
 # @named sys = embed_system(m)
@@ -80,7 +80,8 @@ The third requires changing the system definition to adapt the parameters.
 
 ```@example doc
 #prob2 = remake(prob, [m.p2 => 3.2]) # would be nice, but not supported
-ip2 = MTK.parameter_index(sys, MTK.parse_variable(sys, "m₊p2"))
+using SymbolicIndexingInterface: SymbolicIndexingInterface as SII
+ip2 = SII.parameter_index(sys, MTK.parse_variable(sys, "m₊p2"))
 setindex!(prob.ps, 3.2, ip2)
 prob.ps[m.p2] == 3.2
 nothing # hide
@@ -91,8 +92,7 @@ from [SymbolicIndexingInterface.jl](https://docs.sciml.ai/SymbolicIndexingInterf
 But this currently does not work with AD systems in Optimization.
 
 ```@example doc
-using SymbolicIndexingInterface
-setter! = setp(sys, [m.p2])
+setter! = SII.setp(sys, [m.p2])
 setter!(prob, 4.2)
 prob.ps[m.p2] == 4.2
 nothing # hide
@@ -103,7 +103,7 @@ Note that produced labeled ComponentArrays are not fully type-inferred, unless
 a concrete versions of the ParameterSetter and function barriers are used as described 
 in [Concrete ProblemUpdater](@ref).
 
-## ProblemUpdater
+## using ProblemUpdater
 A [`ODEProblemParSetterConcrete`](@ref) can be combined with a [`KeysProblemParGetter`](@ref)
 or another specific implementation of [`AbstractProblemParGetter`](@ref) to 
 update an AbstractODEProblem based on information already present in the AbstractODEProblem.
@@ -125,14 +125,13 @@ function get_sys1()
     sts = @variables L(t)
     ps = @parameters k_L, k_R, k_P
     eq = [D(L) ~ 0]
-    sys1 = ODESystem(eq, t, sts, vcat(ps...); name = :sys1)
+    sys1 = System(eq, t, sts, vcat(ps...); name = :sys1)
 end
 sys1 = mtkcompile(get_sys1())
 u0 = ComponentVector(L = 10.0)
 p = ComponentVector(k_L = 1.0, k_R = 1 / 20, k_P = 2.0)
 prob = ODEProblem(sys1,
-    get_system_symbol_dict(sys1, u0), (0.0, 1.0),
-    get_system_symbol_dict(sys1, p))
+    get_system_symbol_dict(sys1, vcat(u0, p)), (0.0, 1.0))
 nothing # hide
 ```
 

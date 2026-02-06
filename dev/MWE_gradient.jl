@@ -15,7 +15,7 @@ function lotka_volterra(;name)
         D(y) ~ (δ * x - γ) * y # predator
     ]
     tspan = (0.0, 10.0)
-    sys = ODESystem(eqs, t, vars, pars; tspan = tspan, name = name)
+    sys = System(eqs, t, vars, pars; tspan = tspan, name = name)
     return sys
 end
 

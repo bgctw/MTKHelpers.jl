@@ -12,7 +12,7 @@ using ModelingToolkit: t_nounits as t, D_nounits as D
 function samplesystem(;name) 
     sts = @variables x(t) RHS(t)  # RHS is observed
     ps = @parameters τ       # parameters
-    ODESystem([ RHS  ~ (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)
+    System([ RHS  ~ (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)
 end                     
 @named m = samplesystem()
 @named sys = embed_system(m)

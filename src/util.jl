@@ -12,7 +12,7 @@ using ModelingToolkit: t_nounits as t, D_nounits as D
 function samplesystem(;name) 
     sts = @variables x(t) RHS(t)  # RHS is observed
     ps = @parameters τ       # parameters
-    ODESystem([ RHS  ~ (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)
+    System([ RHS  ~ (1 - x)/τ, D(x) ~ RHS ], t, sts, ps; name)
 end                     
 @named m = samplesystem()
 @named sys = embed_system(m)
@@ -34,7 +34,7 @@ true
 ```
 """
 function embed_system(m; name, simplify = true)
-    @named _sys_embed = ODESystem(Equation[], ModelingToolkit.get_iv(m))
+    @named _sys_embed = System(Equation[], ModelingToolkit.get_iv(m))
     sys = compose(_sys_embed, [m]; name)
     if simplify
         sys = mtkcompile(sys)

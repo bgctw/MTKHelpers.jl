@@ -31,7 +31,7 @@ end
 #     ncomp = 2
 #     sts = @variables x(t)[1:2] dx(t)[1:2]  # observed dx now can be accessed
 #     ps = @parameters τ=τ p p2=p[2] i=i       # parameters
-#     ODESystem([
+#     System([
 #             dx₁(t) ~ i - p1 * x₁(t)^2 + (p2 - x₁(t)) / τ,
 #             dx₂(t) ~ i - p1 * x₂(t)^2 + (p2 - x₂(t)) / τ,
 #             D(x₁) ~ dx₁(t),
@@ -49,7 +49,7 @@ end
         sts = MTK.@variables L(t)
         ps = MTK.@parameters k_L, k_R, m
         eq = [D(L) ~ 0]
-        sys1 = ODESystem(eq, t, sts, vcat(ps...); name = :sys1)
+        sys1 = System(eq, t, sts, vcat(ps...); name = :sys1)
     end
     sys1 = mtkcompile(get_sys1())
     prob_sys1 = ODEProblem(
@@ -74,7 +74,7 @@ end
         sts = vcat([a(t)[i] for i in 1:3])
         ps = MTK.@parameters b[1:2], c[1:2], d
         eq = vcat([D(a(t)[i]) ~ 0 for i in 1:3])
-        sys2 = ODESystem(eq, t, sts, vcat(ps...); name = :sys2)
+        sys2 = System(eq, t, sts, vcat(ps...); name = :sys2)
     end
     sys2 = mtkcompile(get_sys2())
     prob_sys2 = ODEProblem(

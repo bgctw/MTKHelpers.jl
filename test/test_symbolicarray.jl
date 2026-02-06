@@ -19,7 +19,7 @@ function get_sys_val()
     ps = @parameters a, b[1:2], c 
     sts = vcat(x(t), [y(t)[i] for i in 1:2])
     eq = vcat(D(x(t)) ~ 0, [D(y(t)[i]) ~ 0 for i in 1:2])
-    sys_val = ODESystem(eq, t, sts, vcat(ps...); name=:sys_val)
+    sys_val = System(eq, t, sts, vcat(ps...); name=:sys_val)
 end
 sys_val = get_sys_val()
 
@@ -217,7 +217,7 @@ end;
     ps = @parameters a, b[1:2], c 
     sts = vcat(x(t), [y(t)[i] for i in 1:2])
     eq = vcat(D(x(t)) ~ 0, [D(y(t)[i]) ~ 0 for i in 1:2])
-    sys_val = ODESystem(eq, t, sts, vcat(ps...); name=:sys_val)
+    sys_val = System(eq, t, sts, vcat(ps...); name=:sys_val)
     # valid case, different ordering in par
     #pset = get_concrete(ODEProblemParSetter(u1, p1, paropt, sys_val))
     pset = get_concrete(ODEProblemParSetter(sys_val, paropt))
