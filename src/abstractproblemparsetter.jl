@@ -29,8 +29,8 @@ Return an updated problem given the parameters.
 Subtypes need to implement method `remake_pset(prob, popt, pset)`
 """
 function SciMLBase.remake(prob::SciMLBase.AbstractSciMLProblem,
-        popt, pset::AbstractProblemParSetter)
-    remake_pset(prob, popt, pset)
+        popt, pset::AbstractProblemParSetter, args...)
+    remake_pset(prob, popt, pset, args...)
 end
 
 """

@@ -35,12 +35,19 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
     par_ind::AbstractVector # propb.ps -> vector
     stateopt_ind::AbstractVector # to directly index into prob.u0
     popt_ind::AbstractVector # to directly index into prop.ps
+    setter_p::SII.AbstractSetIndexer
+    setter_u::SII.AbstractSetIndexer 
+    diffcache_p::PreallocationTools.DiffCache
+    diffcache_u::PreallocationTools.DiffCache
+
     #state_scalars::AbstractDict{Symbol, AbstractVector}
     function ODEProblemParSetter(ax_state::AbstractAxis, ax_state_scalar::AbstractAxis,
         ax_par::AbstractAxis, ax_paropt::AbstractAxis, ax_paropt_scalar::AbstractAxis,
         ax_paropt_flat1::AbstractAxis,
         opt_state_nums::VN, opt_par_nums::VN,
         par_ind, stateopt_ind::AbstractVector, popt_ind::AbstractVector,
+        setter_p::SII.AbstractSetIndexer,  setter_u::SII.AbstractSetIndexer, 
+        diffcache_p::PreallocationTools.DiffCache, diffcache_u::PreallocationTools.DiffCache,
     ) 
         # VN <: AbstractVector{<:SymbolicUtils.BasicSymbolic} || error("expected VN <: AbstractVector{<:SymbolicUtils.BasicSymbolic}, but was $VN")
         ax_paropt_state = CA.indexmap(ax_paropt_scalar)[:state]
@@ -51,6 +58,8 @@ struct ODEProblemParSetter <: AbstractODEProblemParSetter
             ax_paropt_scalar, ax_paropt_flat1, 
             opt_state_nums, opt_par_nums,
             par_ind, stateopt_ind, popt_ind, 
+            setter_p,  setter_u, 
+            diffcache_p, diffcache_u,
             )
     end
 end
@@ -102,11 +111,26 @@ function ODEProblemParSetter(state_template, par_template, popt_template,
     popt_ind = SII.parameter_index.(Ref(system), opt_par_nums)
     # provide ax_state_scalar instead of ax_state to match it to ax_paropt.state
     #   where only a subset of the vector indices can be referenced
+    #
+    # remakte_pset for ForwardDiff
+    setter_p = SII.setp(system, opt_par_nums)
+    setter_u = SII.setu(system, opt_state_nums)
+    #not available yet: ps = parameter_values(popt)
+    #diffcache_p = PreallocationTools.DiffCache(copy(SS.canonicalize(SS.Tunable(), ps)[1]))
+    ET = eltype(popt_template) <: AbstractFloat ? eltype(popt_template) : Float64
+    # Dual numbers have derivatives for all optimized parameters, 
+    #   need to reserve this amount of space differing from default DefaultCache
+    N = PreallocationTools.forwarddiff_compat_chunk_size(axis_length(ax_paropt))
+    diffcache_u = PreallocationTools.DiffCache(Vector{ET}(undef, axis_length(ax_state)), N)
+    diffcache_p = PreallocationTools.DiffCache(Vector{ET}(undef, axis_length(ax_par)), N)
+    #
     ODEProblemParSetter(
         ax_state, ax_state_scalar,
         ax_par, ax_paropt, ax_paropt_scalar, ax_paropt_flat1,
         opt_state_nums, opt_par_nums,
         par_ind, stateopt_ind, popt_ind, 
+        setter_p,  setter_u, 
+        diffcache_p, diffcache_u,
         )
 end
 
@@ -123,7 +147,6 @@ function scalarize_par_and_paroptstate(ax_state::AbstractAxis,
     ax_paropt_scalar = first(getaxes(cvs))
     (ax_state_scalar, ax_paropt_scalar)
 end
-
 
 function ODEProblemParSetter(state_template,
     par_template, popt_template::Union{NTuple{N,Symbol},AbstractVector{Symbol}},
@@ -143,6 +166,54 @@ function ODEProblemParSetter(state_template,
     end
     ODEProblemParSetter(state_template, ax_par, popt_template_new, system; is_validating)
 end
+
+
+# # deprecated: variant with replaceing ps.Initials - does not correspond to u09
+# function remake_pset(prob::AbstractODEProblem, popt, pset::ODEProblemParSetter, adtype=ADTypes.AutoForwardDiff())
+#     SS = SciMLStructures
+#     popta = attach_axis(popt, axis_paropt(pset))
+#     #
+#     ps = SII.parameter_values(prob)
+#     ps_typed = if isempty(popta.par)
+#         ps
+#     else        
+#         # size of diffcatch, typoe of popta.par
+#         #diffcache_p = PreallocationTools.DiffCache(copy(SS.canonicalize(SS.Tunable(), ps)[1]))
+#         # when pset is constructed without popt_template <: ComponentVector diffcache has eltype Float64
+#         ps_flat = SS.canonicalize(SS.Tunable(), ps)[1]
+#         @assert eltype(ps_flat) == eltype(pset.diffcache_p.du)
+#         # TODO remove check after debugging
+#         diffcache_p = PreallocationTools.DiffCache(copy(SS.canonicalize(SS.Tunable(), ps)[1]))
+#         @assert typeof(diffcache_p) == typeof(pset.diffcache_p)
+#         @assert length(diffcache_p.du) == length(pset.diffcache_p.du)
+#         @assert length(diffcache_p.dual_du) == length(pset.diffcache_p.dual_du)
+
+
+#         buffer = PreallocationTools.get_tmp(pset.diffcache_p, popta.par) 
+#         copyto!(buffer, ps_flat)
+#         ps_typed = SS.replace(SS.Tunable(), ps, buffer)
+#         pset.setter_p(ps_typed, popta.par)
+#         ps_typed
+#     end
+#     ps_typed2 = if(isempty(popta.state))
+#         ps_typed
+#     else
+#         #us = SII.state_values(prob)
+#         # TODO remove check after debugging
+#         diffcache_u = PreallocationTools.DiffCache(copy(SS.canonicalize(SS.Initials(), ps)[1]))
+#         Main.@infiltrate_main
+#         @assert typeof(diffcache_u) == typeof(pset.diffcache_u)
+#         @assert length(diffcache_u.du) == length(pset.diffcache_u.du)
+#         @assert length(diffcache_u.dual_du) == length(pset.diffcache_u.dual_du)
+#         #
+#         us_typed = PreallocationTools.get_tmp(pset.diffcache_u, popta.state)
+#         pset.setter_u(us_typed, popta.state)
+#         ps_typed2 = SS.replace(SS.Initials(), ps_typed, us_typed)
+#     end
+#     #
+#     probu = remake(prob; p=ps_typed2) 
+#     probu
+# end
 
 function assign_state_par(ax_state, ax_par, ax_paropt)
     state_keys = Vector{Symbol}()
@@ -200,10 +271,47 @@ function get_concrete(pset::ODEProblemParSetter)
         pset.ax_paropt_flat1,
         pset.opt_state_nums, pset.opt_par_nums,
         pset.par_ind, pset.stateopt_ind, pset.popt_ind,   
+        pset.setter_p, pset.setter_u, 
+        pset.diffcache_p, pset.diffcache_u,
     )
 end
 
 ODEProblemParSetterU = Union{ODEProblemParSetter,ODEProblemParSetterConcrete}
+
+function remake_pset(prob::AbstractODEProblem, popt, pset::ODEProblemParSetterU, adtype=ADTypes.AutoForwardDiff())
+    SS = SciMLStructures
+    popta = attach_axis(popt, axis_paropt(pset))
+    #
+    ps = SII.parameter_values(prob)
+    ps_flat = SS.canonicalize(SS.Tunable(), ps)[1]
+    prob_p = if isempty(popta.par)
+        prob
+    else        
+        # size of diffcatch, typoe of popta.par
+        #diffcache_p = PreallocationTools.DiffCache(copy(SS.canonicalize(SS.Tunable(), ps)[1]))
+        # when pset is constructed without popt_template <: ComponentVector diffcache has eltype Float64
+        # debugging pset.diffcache.p
+        # @assert eltype(ps_flat) == eltype(pset.diffcache_p.du)
+        # diffcache_p = PreallocationTools.DiffCache(copy(SS.canonicalize(SS.Tunable(), ps)[1]))
+        # @assert typeof(diffcache_p) == typeof(pset.diffcache_p)
+        # @assert length(diffcache_p.du) == length(pset.diffcache_p.du)
+        # @assert length(diffcache_p.dual_du) == length(pset.diffcache_p.dual_du)
+        buffer = PreallocationTools.get_tmp(pset.diffcache_p, popta.par) 
+        copyto!(buffer, ps_flat)
+        ps_typed = SS.replace(SS.Tunable(), ps, buffer)
+        pset.setter_p(ps_typed, popta.par)
+        remake(prob; p=ps_typed) 
+    end
+    prob_pu = if(isempty(popta.state))
+        prob_p
+    else
+        us_typed = PreallocationTools.get_tmp(pset.diffcache_u, popta.state)
+        copyto!(us_typed, prob.u0)
+        pset.setter_u(us_typed, popta.state)
+        remake(prob_p; u0=us_typed) 
+    end
+    prob_pu
+end
 
 axis_state(ps::ODEProblemParSetterU) = ps.ax_state
 axis_state_scalar(ps::ODEProblemParSetterU) = ps.ax_state_scalar

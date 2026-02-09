@@ -17,7 +17,7 @@ include(joinpath(pkgdir,"test","testset_utils.jl"))
 (u1, p1, popt1s, prob_sys1) = get_sys_ex_scalar();
 popt1 = flatten1(popt1s)
 ps1ps = ps1 = ODEProblemParSetter(get_system(prob_sys1), popt1)
-get_paropt_labeled(ps1, prob_sys1)
+popt0 = get_paropt_labeled(ps1, prob_sys1)
 
 # (u1c, p1c, poptcs, prob_sys2) = get_sys_ex_vec();
 # poptc = flatten1(poptcs)
@@ -80,8 +80,11 @@ end
     par_syms = keys(p1)
     popt_syms = (:L, :k_L, :M1, :M2)
     sys1 = get_system(prob_sys1)
-    # TODO when raising version requirement > 1.11 change for FieldError
-    @test_throws ErrorException ODEProblemParSetter(state_syms, par_syms, popt_syms, sys1)
+    if VERSION < v"1.12"
+        @test_throws ErrorException ODEProblemParSetter(state_syms, par_syms, popt_syms, sys1)
+    else
+        @test_throws FieldError ODEProblemParSetter(state_syms, par_syms, popt_syms, sys1)
+    end
     psw = @test_logs (:warn, r"M1.+M2") (:warn,) ODEProblemParSetter(CA.Axis(state_syms),
         CA.Axis(par_syms), CA.Axis(popt_syms), sys1)
     #get_paropt(psw, u1, p1) # error, because Missing not allowed
@@ -143,7 +146,7 @@ end;
 function test_label_svectors(pset,
         u0,
         p,
-        popt,
+        popt,fForward
         ::Val{NU0},
         ::Val{NP},
         ::Val{NOPT}) where {NOPT, NU0, NP}
@@ -243,8 +246,10 @@ end;
 @testset "remake scalars" begin
     probo = remake(prob_sys1, popt1s, ps1)
     #@usingany Cthulhu
-    #@descend_code_warntype remake(prob_sys1, popt1s, ps1)
+    #@descend_code_warntype
     @test get_paropt_labeled(ps1, probo) == popt1s
+    # test that original problem has not been modified
+    @test get_paropt_labeled(ps1, prob_sys1) == popt0
 end;
 
 @testset_skip "get_state, get_par, get_paropt vector prob" begin
@@ -444,29 +449,30 @@ end;
     @test popt_ordered[keys(popt)] == popt
 end;    
 
-@testset "warning when not flat version can be setup" begin
-    function get_sys_dup()
-        sts = @variables m(t)
-        ps = @parameters k_L, k_R, m 
-        eq = [D(m) ~ 0, ]
-        sysd = System(eq, t, sts, vcat(ps...); name=:sysd)
-    end
-    #sysd = mtkcompile(get_sys_dup())
-    sysd = complete(get_sys_dup(); split=true)
-    #
-    u1 = CA.ComponentVector(m = 10.0)
-    p1 = CA.ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
-    popt1s = CA.ComponentVector(state = u1, par = p1[(:k_L,:m)])
-    ps1 = @test_logs (:warn, r"flat") ODEProblemParSetter(sysd, popt1s)
-    @test (popt2 = label_paropt(ps1, CA.getdata(popt1s))) == popt1s
-    # flat axis has no names, here
-    @test axis_paropt_flat1(ps1) isa CA.FlatAxis
-    popt2f = @test_logs (:warn, r"no flat")  label_paropt_flat1(ps1, CA.getdata(popt1s))
-    @test all(popt2f .== CA.getdata(popt1s))
-    #
-    ps1c = get_concrete(ps1)
-    popt2f = @test_logs (:warn, r"no flat")  label_paropt_flat1(ps1c, CA.getdata(popt1s))
-end;
+# with MTK11 already error in completing the system
+# @testset "warning when not flat version can be setup" begin
+#     function get_sys_dup()
+#         sts = @variables m(t)
+#         ps = @parameters k_L, k_R, m 
+#         eq = [D(m) ~ 0, ]
+#         sysd = System(eq, t, sts, vcat(ps...); name=:sysd)
+#     end
+#     #sysd = mtkcompile(get_sys_dup())
+#     sysd = complete(get_sys_dup(); split=true)
+#     #
+#     u1 = CA.ComponentVector(m = 10.0)
+#     p1 = CA.ComponentVector(k_L = 1.0, k_R = 1 / 20, m = 2.0)
+#     popt1s = CA.ComponentVector(state = u1, par = p1[(:k_L,:m)])
+#     ps1 = @test_logs (:warn, r"flat") ODEProblemParSetter(sysd, popt1s)
+#     @test (popt2 = label_paropt(ps1, CA.getdata(popt1s))) == popt1s
+#     # flat axis has no names, here
+#     @test axis_paropt_flat1(ps1) isa CA.FlatAxis
+#     popt2f = @test_logs (:warn, r"no flat")  label_paropt_flat1(ps1, CA.getdata(popt1s))
+#     @test all(popt2f .== CA.getdata(popt1s))
+#     #
+#     ps1c = get_concrete(ps1)
+#     popt2f = @test_logs (:warn, r"no flat")  label_paropt_flat1(ps1c, CA.getdata(popt1s))
+# end;
 
 @testset "empty paropt" begin
     pset = ODEProblemParSetter(get_system(prob_sys1), CA.ComponentVector())

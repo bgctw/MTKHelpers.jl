@@ -1,8 +1,8 @@
 module MTKHelpersMethodOfLinesExt
 
-function __init__()
-    @info "MTKHelpers: loading MTKHelpersMethodOfLinesExt"
-end
+# function __init__()
+#     @info "MTKHelpers: loading MTKHelpersMethodOfLinesExt"
+# end
 
 isdefined(Base, :get_extension) ? (using MethodOfLines) : (using ..MethodOfLines)
 using MTKHelpers

@@ -131,7 +131,7 @@ using ModelingToolkit:
     get_ps,
     get_observed,
     get_continuous_events,
-    get_defaults,
+    initial_conditions, #get_defaults,
     get_systems
 
 """
@@ -169,14 +169,20 @@ function override_system(eqs, basesys::AbstractSystem;
     ps_ext = union(get_ps(basesys), ps)
     obs_ext = union(get_observed(basesys), obs)
     evs_ext = union(get_continuous_events(basesys), evs)
-    defs_ext = merge(get_defaults(basesys), defs) # prefer new defs 
+
+    #defs_ext = merge(get_defaults(basesys), defs) # prefer new defs 
+    defs_ext = merge(initial_conditions(basesys), defs) # prefer new defs 
     syss = get_systems(basesys)
     #
     if length(ivs) == 0
-        T(eqs_ext, sts, ps_ext, observed = obs_ext, defaults = defs_ext, name = name,
+        # T(eqs_ext, sts, ps_ext, observed = obs_ext, defaults = defs_ext, name = name,
+        #     systems = syss, continuous_events = evs_ext)
+        T(eqs_ext, sts, ps_ext, observed = obs_ext, initial_conditions = defs_ext, name = name,
             systems = syss, continuous_events = evs_ext)
     elseif length(ivs) == 1
-        T(eqs_ext, ivs[1], sts, ps_ext, observed = obs_ext, defaults = defs_ext,
+        T(eqs_ext, ivs[1], sts, ps_ext, observed = obs_ext, initial_conditions = Dict(basesys.p2 => 1.1),
+            name = name, systems = syss, continuous_events = evs_ext)
+        T(eqs_ext, ivs[1], sts, ps_ext, observed = obs_ext, initial_conditions = defs_ext,
             name = name, systems = syss, continuous_events = evs_ext)
     end
 end

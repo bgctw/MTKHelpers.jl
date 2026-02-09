@@ -17,9 +17,10 @@ struct ODEProblemParSetterConcrete{NPS, POPTA <: AbstractAxis,
     PA <: AbstractAxis,
     POPTAS <: AbstractAxis,
     POPTAF <: AbstractAxis,
-    ES <:SymbolicUtils.Symbolic,
+    ES <: SymbolicUtils.BasicSymbolic{SymReal},
     NSO, EIS, 
-    NPO, EIP
+    NPO, EIP,
+    SETP, SETU, DC
 } <: AbstractODEProblemParSetter
     ax_paropt::POPTA
     ax_state::SA
@@ -27,19 +28,25 @@ struct ODEProblemParSetterConcrete{NPS, POPTA <: AbstractAxis,
     ax_par::PA
     ax_paropt_scalar::POPTAS
     ax_paropt_flat1::POPTAF
-    # not isbits because ES <: BasicSymbolic{Real} is not isbits
+    # not isbits because ES <: BasicSymbolic{SymReal} is not isbits
     # but need symbols to create update-dictionary
     opt_state_nums::SVector{NSO, ES}
     opt_par_nums::SVector{NPO, ES}
     par_ind::SVector{NPS, EIP} # propb.ps -> vector
     stateopt_ind::SVector{NSO, EIS}
     popt_ind::SVector{NPO, EIP}
+    setter_p::SETP
+    setter_u::SETU
+    diffcache_p::DC
+    diffcache_u::DC
     function ODEProblemParSetterConcrete(
             ax_state::AbstractAxis, ax_state_scalar::AbstractAxis,
             ax_par::AbstractAxis, ax_paropt::AbstractAxis, ax_paropt_scalar::AbstractAxis,
             ax_paropt_flat1::AbstractAxis,
             opt_state_nums::VN, opt_par_nums::VN,
-            par_ind, stateopt_ind::AbstractVector, popt_ind::AbstractVector
+            par_ind, stateopt_ind::AbstractVector, popt_ind::AbstractVector,
+            setter_p::SII.AbstractSetIndexer, setter_u::SII.AbstractSetIndexer,
+            diffcache_p::PreallocationTools.DiffCache, diffcache_u::PreallocationTools.DiffCache
     )
         npar_scalar = axis_length(ax_par)
         s_opt_state_nums = CA.SVector{
@@ -57,15 +64,21 @@ struct ODEProblemParSetterConcrete{NPS, POPTA <: AbstractAxis,
             typeof(ax_par), typeof(ax_paropt_scalar),
             typeof(ax_paropt_flat1), eltype(opt_state_nums),
             length(s_stateopt_ind), eltype(s_stateopt_ind),
-            length(s_popt_ind), eltype(s_popt_ind)
+            length(s_popt_ind), eltype(s_popt_ind),
+            typeof(setter_p), typeof(setter_u), typeof(diffcache_p)
         }(ax_paropt,
             ax_state, ax_state_scalar, ax_par, 
             ax_paropt_scalar, ax_paropt_flat1,
             s_opt_state_nums, s_opt_par_nums,
-            s_par_ind, s_stateopt_ind, s_popt_ind
+            s_par_ind, s_stateopt_ind, s_popt_ind,
+            setter_p,  setter_u, 
+            diffcache_p, diffcache_u,
         )
     end
 end
 
 isconcrete(::ODEProblemParSetterConcrete) = true
+
+    
+
 

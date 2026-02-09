@@ -184,6 +184,61 @@ end
 #     @test popt3.k_R == popt.k_R
 # end;
 
+@testset "gradient prob simple" begin
+    prob = prob_sys1
+    sys1 = get_system(prob_sys1)
+    #sol = solve(prob, Tsit5())
+    #sol[end]
+    pset = get_concrete(ODEProblemParSetter(sys1, (:L, :m)))
+    popt = CA.ComponentVector(state = u1[(:L,)]*2, par = p1[(:m,)]*2)
+    #
+    # update_statepar
+    #prob2 = @inferred remake(prob, popt, pset)
+    prob2 = remake(prob, popt, pset)
+
+    # setter does not work with gradient
+    # setter! = SymbolicIndexingInterface.setp(sys1, [sys1.m])
+    # setter!(prob2, [popt.par.m])
+    # tmp = (popt) -> begin
+    #     setter!(prob, popt)
+    #     prob.ps[sys1.m]
+    # end
+    # tmp([popt.par.m])
+    # res = ForwardDiff.gradient(tmp, [popt.par.m])
+
+
+    u0 = u1
+    p = p1
+    fcost = let pset = pset, u0 = u0, p = p
+        (popt) -> begin
+            #local u0o, po = @inferred update_statepar(pset, popt, u0, p)
+            # not inferred: run-time dispatch on computations based on u0o and po
+            #   because popt.state -> Any after attach_axis
+            #probo = @inferred remake(prob, popt, pset) # 
+            probo = remake(prob, popt, pset)
+            #local u0o, po = update_statepar(pset, popt, u0, p)
+            paropt = get_paropt(pset, probo)
+            #E = eltype(typeof(u0)) # u0o not inferred
+            d = sum(paropt)
+            d * d
+        end
+    end
+    # not inferred -> see concrete version pset = get_concrete(pset)
+    #@inferred fcost(popt)  
+    fcost(popt.*3)
+    #using Cthulhu
+    #@descend_code_warntype fcost(popt)
+    #@descend_code_warntype update_statepar(pset, popt, u0, p)
+    # ForwardDiff.gradient not inferred
+    res = ForwardDiff.gradient(fcost, popt)
+    @test typeof(res) == typeof(popt)
+    #@inferred remake(prob, popt, pset)
+    #using Cthulhu
+    #@descend_code_warntype remake(prob, popt, pset)
+    #@descend_code_warntype update_statepar(pset, popt, u0, p)
+end;
+
+
 @testset_skip "gradient with Vector" begin
     pset = psc
     u0 = u1c

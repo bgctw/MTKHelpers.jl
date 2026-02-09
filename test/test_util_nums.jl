@@ -24,7 +24,7 @@ include(joinpath(pkgdir,"test","testset_utils.jl"))
     @test eltype(values(symd)) <: SymbolicUtils.BasicSymbolic
     @test all((:x, :RHS, :τ) .∈ Ref(keys(symd)))
     cv = CA.ComponentVector(x = 1.2)
-    ret = system_num_dict(cv, symd)
+    ret = @inferred system_num_dict(cv, symd)
     @test all(values(ret) .== [1.2]) # cannot test for x, because only defined in m
     #
     p1 = CA.ComponentVector(x = 1.0, τ = 2.0)

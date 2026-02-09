@@ -1,13 +1,56 @@
 ```@meta
 CurrentModule = MTKHelpers
 ```
+# Translating between parameters and Problem
+```@docs
+remake(::SciMLBase.AbstractSciMLProblem, popt, pset::AbstractProblemParSetter)
+get_paropt(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem)
+```
+
+# Helper functions to access optimized parameters
+```@docs
+axis_paropt(::AbstractProblemParSetter)
+classes_paropt(::AbstractProblemParSetter)
+count_paropt(pset::AbstractProblemParSetter) 
+keys_paropt(ps::AbstractProblemParSetter) 
+symbols_paropt(pset::AbstractProblemParSetter)
+```
+
+# Labeling parameter vectors
+```@docs
+label_paropt(pset::AbstractProblemParSetter, popt)
+name_paropt(pset::AbstractProblemParSetter, paropt::AbstractVector)
+```
+
 # ProblemUpdater
 
 The functioonality of ProblemUpdater can be better modeled since MTK11
 suing bindings.
 
+## Bindings
+First, create an example system and example problem.
+```@example doc
+using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
+using ModelingToolkit: ModelingToolkit as MTK
+using MTKHelpers
+using ModelingToolkit: t_nounits as t, D_nounits as D
+function get_sys1()
+    sts = @variables L(t)
+    ps = @parameters k_L, k_R, k_P
+    eq = [D(L) ~ 0]
+    sys1 = System(eq, t, sts, vcat(ps...); name = :sys1)
+end
+sys1 = mtkcompile(get_sys1())
+u0 = ComponentVector(L = 10.0)
+p = ComponentVector(k_L = 1.0, k_R = 1 / 20, k_P = 2.0)
+prob = ODEProblem(sys1,
+    get_system_symbol_dict(sys1, vcat(u0, p)), (0.0, 1.0))
+nothing # hide
+```
 
+TODO 
 
+## Alternative: Problemupdater
 
 A [`ODEProblemParSetterConcrete`](@ref) can be combined with a [`KeysProblemParGetter`](@ref)
 or another specific implementation of [`AbstractProblemParGetter`](@ref) to 
@@ -22,23 +65,6 @@ the source keys to provide its destination keys. It should implement the keys me
 so that when constructing the ProblemUpdater, consistent keys are used,
 as in the example below.
 
-First, create an example system and example problem.
-```@example doc
-using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
-using MTKHelpers
-function get_sys1()
-    sts = @variables L(t)
-    ps = @parameters k_L, k_R, k_P
-    eq = [D(L) ~ 0]
-    sys1 = System(eq, t, sts, vcat(ps...); name = :sys1)
-end
-sys1 = mtkcompile(get_sys1())
-u0 = ComponentVector(L = 10.0)
-p = ComponentVector(k_L = 1.0, k_R = 1 / 20, k_P = 2.0)
-prob = ODEProblem(sys1,
-    get_system_symbol_dict(sys1, vcat(u0, p)), (0.0, 1.0))
-nothing # hide
-```
 
 Next, setup a ProblemUpdater, `pu`, and apply it to the problem via `prob2 = pu(prob)`.
 ```@example doc
@@ -78,31 +104,10 @@ another parameter of the problem.
 KeysProblemParGetter
 ```
 
-
-
 # ProblemParSetter
+Abstract supertype of [`ODEProblemParSetter`](@ref)
+
 ```@docs
 AbstractProblemParSetter
-```
-
-## Translating between parameters and Problem
-```@docs
-remake(::SciMLBase.AbstractSciMLProblem, popt, pset::AbstractProblemParSetter)
-get_paropt(pset::AbstractProblemParSetter, prob::SciMLBase.AbstractSciMLProblem)
-```
-
-# Helper functions to access optimized parameters
-```@docs
-axis_paropt(::AbstractProblemParSetter)
-classes_paropt(::AbstractProblemParSetter)
-count_paropt(pset::AbstractProblemParSetter) 
-keys_paropt(ps::AbstractProblemParSetter) 
-symbols_paropt(pset::AbstractProblemParSetter)
-```
-
-# Labeling parameter vectors
-```@docs
-label_paropt(pset::AbstractProblemParSetter, popt)
-name_paropt(pset::AbstractProblemParSetter, paropt::AbstractVector)
 ```
 

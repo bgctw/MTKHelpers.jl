@@ -1,8 +1,8 @@
 module MTKHelpersCSVExt
 
-function __init__()
-    @info "MTKHelpers: loading MTKHelpersCSVExt"
-end
+# function __init__()
+#     @info "MTKHelpers: loading MTKHelpersCSVExt"
+# end
 
 isdefined(Base, :get_extension) ? (using CSV) : (using ..CSV)
 using MTKHelpers
