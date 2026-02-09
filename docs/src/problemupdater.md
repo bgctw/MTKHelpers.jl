@@ -2,6 +2,55 @@
 CurrentModule = MTKHelpers
 ```
 # ProblemUpdater
+
+The functioonality of ProblemUpdater can be better modeled since MTK11
+suing bindings.
+
+
+
+
+A [`ODEProblemParSetterConcrete`](@ref) can be combined with a [`KeysProblemParGetter`](@ref)
+or another specific implementation of [`AbstractProblemParGetter`](@ref) to 
+update an AbstractODEProblem based on information already present in the AbstractODEProblem.
+
+The following example updates parameters `k_R` and `k_P` in the AbstractODEProblem
+to the value of `k_L`. This can be useful to ensure that these parameters
+are also changed when optimizing parameter `k_L`.
+
+An implementations of `AbstractProblemParGetter` can use any computation of
+the source keys to provide its destination keys. It should implement the keys method,
+so that when constructing the ProblemUpdater, consistent keys are used,
+as in the example below.
+
+First, create an example system and example problem.
+```@example doc
+using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
+using MTKHelpers
+function get_sys1()
+    sts = @variables L(t)
+    ps = @parameters k_L, k_R, k_P
+    eq = [D(L) ~ 0]
+    sys1 = System(eq, t, sts, vcat(ps...); name = :sys1)
+end
+sys1 = mtkcompile(get_sys1())
+u0 = ComponentVector(L = 10.0)
+p = ComponentVector(k_L = 1.0, k_R = 1 / 20, k_P = 2.0)
+prob = ODEProblem(sys1,
+    get_system_symbol_dict(sys1, vcat(u0, p)), (0.0, 1.0))
+nothing # hide
+```
+
+Next, setup a ProblemUpdater, `pu`, and apply it to the problem via `prob2 = pu(prob)`.
+```@example doc
+mapping = (:k_L => :k_R, :k_L => :k_P)
+pu = get_ode_problemupdater(KeysProblemParGetter(mapping, keys(u0)), get_system(prob))
+prob2 = pu(prob)
+p2 = get_par_labeled(par_setter(pu), prob2)
+p2.k_P == p.k_L
+p2.k_R == p.k_L
+nothing # hide
+```
+
 ```@docs
 ProblemUpdater
 get_ode_problemupdater
