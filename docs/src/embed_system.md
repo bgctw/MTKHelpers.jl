@@ -36,10 +36,10 @@ function samplesystem_const(RHS0; name)
     @parameters t 
     ps = @parameters RHS_0=RHS0
     D = Differential(t)
-    eqs = [
+    eqs_new = [
         RHS ~ RHS_0 * x,
     ]
-    sys_ext = override_system(eqs, m; name, ps) 
+    sys_ext = override_system(m; name, eqs_new, ps) 
 end  
 
 @named mc = samplesystem_const(-0.1)

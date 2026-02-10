@@ -22,7 +22,7 @@ makedocs(;
         "Home" => "index.md",
         "Update parameters" => [
             "Updating problems" => "updating_problems.md",
-            "ProblemUpdater" => "problemupdater.md",
+            "Helpers" => "helpers.md",
             "ODEProblem" => "odeproblemparsetter.md",
             "Type inference" => "concrete_parupdater.md",
             #TODO uncomment after MTK/MOL is fixed, moved to /dev

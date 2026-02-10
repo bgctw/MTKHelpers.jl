@@ -74,8 +74,9 @@ end;
     m = samplesystem(; name)
     @unpack p1, x = m
     ps = @parameters RHS_0 = -0.1
-    eqs = [
+    eqs_new = [
         p1 ~ RHS_0 * x,  # but p1 is not a right-hand-side item
     ]
-    @test_throws ErrorException sys_ext=override_system(eqs, m; name, ps)
+    #@test_throws ErrorException sys_ext=override_system(eqs, m; name, ps)
+    @test_throws ErrorException sys_ext=override_system(m; name, eqs_new, ps)
 end;
