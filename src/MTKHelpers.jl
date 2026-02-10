@@ -15,6 +15,8 @@ using Logging: Logging
 using SciMLStructures
 using SymbolicIndexingInterface: setp, SymbolicIndexingInterface as SII
 #using Infiltrator
+using ADTypes: ADTypes
+using PreallocationTools: PreallocationTools, DiffCache
 
 export AbstractProblemParSetter,
     AbstractODEProblemParSetter,
@@ -111,10 +113,6 @@ include("example_systems.jl")
 
 export read_csv_cv, write_csv_cv
 include("cvwriter.jl")
-
-if !isdefined(Base, :get_extension)
-    using Requires
-end
 
 @static if !isdefined(Base, :get_extension)
     function __init__()

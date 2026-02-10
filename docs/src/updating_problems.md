@@ -2,7 +2,7 @@
 CurrentModule = MTKHelpers
 ```
 
-# Setting Initial state and Parameters of a problem
+# Setting parts of initial state and Parameters of a problem
 
 Often one wants to change a subset of the initial
 states,`u0`, and a subset of parameters,`p`, of an AbstractODEProblem during an optimization.
@@ -29,7 +29,7 @@ nothing # hide
 ```
 
 ```@example doc
-#The following example system employs a scalar and a vector-valued parameter.
+#The following example system employs a scalar-valued parameter.
 using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
 using ModelingToolkit: ModelingToolkit as MTK
 using MTKHelpers
@@ -49,34 +49,54 @@ nothing # hide
 An [`ODEProblemParSetter`](@ref) then can be used to update a subset of states
 and parameters in the derived problem.
 Because the state of the problem can reorder components of a symbolic array
-and the parameter object of the problem is complex, use functions
-`get_par(pset, prob)` and `get_state(pset, prob)` or their labeled versions to 
-inspect state and parameters of a problem.
+the parameter object of the problem is complex.
 
 ```@example doc
 # setup position matching, note τ is not in parameters optimized
 popt = ComponentVector(state=(m₊x=0.1,), par=(m₊p1=2.1,m₊p2=2.2)) 
 pset = ODEProblemParSetter(sys, popt) 
 
-# extract optimized 
+# extract optimized state and parameters
 get_paropt(pset, prob)          # plain vector
 get_paropt_labeled(pset, prob)  # ComponentVector
 name_paropt(pset, prob)         # NamedVector 
 
 # update states and parameters
 prob2 = remake(prob, popt, pset)
-get_par_labeled(pset, prob2).m₊p2 == popt.par.m₊p2 # attach labels and access properties
-get_state_labeled(pset, prob2).m₊x == popt.state.m₊x # attach labels and access properties
+
+# check that parameters have been updated
+get_paropt_labeled(pset, prob2) == popt
+# alternatively MTK access
+using SymbolicIndexingInterface: SymbolicIndexingInterface as SII
+prob2.u0[SII.variable_index(sys, m.x)] == popt.state.m₊x
+prob2.ps[m.p1] == popt.par.m₊p1
+prob2.ps[:m₊p2] == popt.par.m₊p2
+
+# Further, check that other parameters did not change
+prob2.ps[m.τ] == initial_conditions(get_system(prob2))[m.τ]
+nothing # hide
+```
+
+`MTKHelper` offers some convenience to access parameters, states, and optimized parts
+as a ComponentVector. `pset` stores the MTK indices so that they do not need to be recreated.
+
+```@example doc
+get_state_labeled(pset, prob2).m₊x == popt.state.m₊x 
+get_par_labeled(pset, prob2).m₊p2 == popt.par.m₊p2 
 get_paropt_labeled(pset, prob2) == popt
 nothing # hide
 ```
-There are three  [suggested ways in MTK10](https://docs.sciml.ai/ModelingToolkit/stable/basics/FAQ/#Why-are-my-parameters-some-obscure-object?) is to
-- using an index object
-- using a setter object
+There are three  [suggested ways since MTK10](https://docs.sciml.ai/ModelingToolkit/stable/basics/FAQ/#Why-are-my-parameters-some-obscure-object?) is to
+- using an index object from [SymbolicIndexingInterface.jl](https://docs.sciml.ai/SymbolicIndexingInterface/stable/)
+- using a setter object 
 - using a SciMLStructures.jl to replace all tunable parameters
+- using the Dictionary interface
 
-The first two, currently, do not work with AD systems.
-The third requires changing the system definition to adapt the parameters.
+Currently only the 4th variant works without problems with AD systems, but it is
+not efficient.
+The third variant requires changing the system definition to determine which parameters are optimized.
+The first two need quite complex [integration with PreallocationTools](https://docs.sciml.ai/ModelingToolkit/stable/basics/FAQ/#Using-ModelingToolkit-with-Optimization-/-Automatic-Differentiation) 
+to be used with AD-systems.
 
 ```@example doc
 #prob2 = remake(prob, [m.p2 => 3.2]) # would be nice, but not supported
@@ -87,61 +107,22 @@ prob.ps[m.p2] == 3.2
 nothing # hide
 ```
 
-Alternatively, [use setter!](https://docs.sciml.ai/ModelingToolkit/stable/basics/FAQ/#Using-ModelingToolkit-with-Optimization-/-Automatic-Differentiation) 
-from [SymbolicIndexingInterface.jl](https://docs.sciml.ai/SymbolicIndexingInterface/stable/)
-But this currently does not work with AD systems in Optimization.
-
 ```@example doc
+probc = remake(prob)
 setter! = SII.setp(sys, [m.p2])
-setter!(prob, 4.2)
-prob.ps[m.p2] == 4.2
+setter!(probc, popt.par.m₊p2)
+probc.ps[m.p2] == popt.par.m₊p2
 nothing # hide
 ```
 
+This package currently in the background relies on the integration of setter objects with `PreallocationTools.jl`
+for supporting `ForwardDiff` and falls back on the Dictionary approach for other AD systems.
 
-Note that produced labeled ComponentArrays are not fully type-inferred, unless
-a concrete versions of the ParameterSetter and function barriers are used as described 
-in [Concrete ProblemUpdater](@ref).
-
-## using ProblemUpdater
-A [`ODEProblemParSetterConcrete`](@ref) can be combined with a [`KeysProblemParGetter`](@ref)
-or another specific implementation of [`AbstractProblemParGetter`](@ref) to 
-update an AbstractODEProblem based on information already present in the AbstractODEProblem.
-
-The following example updates parameters `k_R` and `k_P` in the AbstractODEProblem
-to the value of `k_L`. This can be useful to ensure that these parameters
-are also changed when optimizing parameter `k_L`.
-
-An implementations of `AbstractProblemParGetter` can use any computation of
-the source keys to provide its destination keys. It should implement the keys method,
-so that when constructing the ProblemUpdater, consistent keys are used,
-as in the example below.
-
-First, create an example system and example problem.
 ```@example doc
-using ModelingToolkit, OrdinaryDiffEq, ComponentArrays
-using MTKHelpers
-function get_sys1()
-    sts = @variables L(t)
-    ps = @parameters k_L, k_R, k_P
-    eq = [D(L) ~ 0]
-    sys1 = System(eq, t, sts, vcat(ps...); name = :sys1)
-end
-sys1 = mtkcompile(get_sys1())
-u0 = ComponentVector(L = 10.0)
-p = ComponentVector(k_L = 1.0, k_R = 1 / 20, k_P = 2.0)
-prob = ODEProblem(sys1,
-    get_system_symbol_dict(sys1, vcat(u0, p)), (0.0, 1.0))
-nothing # hide
-```
-
-Next, setup a ProblemUpdater, `pu`, and apply it to the problem via `prob2 = pu(prob)`.
-```@example doc
-mapping = (:k_L => :k_R, :k_L => :k_P)
-pu = get_ode_problemupdater(KeysProblemParGetter(mapping, keys(u0)), get_system(prob))
-prob2 = pu(prob)
-p2 = get_par_labeled(par_setter(pu), prob2)
-p2.k_P == p.k_L
-p2.k_R == p.k_L
+using ForwardDiff
+gr = ForwardDiff.gradient(
+    popt -> remake(prob, popt, pset).ps[m.p1], 
+    getdata(popt))
+gr == [0.0, 1.0, 0.0]
 nothing # hide
 ```

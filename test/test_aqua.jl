@@ -6,7 +6,9 @@ using Aqua
     Aqua.test_all(MTKHelpers;
         unbound_args = false, # does not recognize Union{NTuple{N, Symbol}
         stale_deps = (ignore = [:Requires],),
-        ambiguities = false,)
+        ambiguities = false,
+        persistent_tasks = false, # fails on CI with PreallocationTools
+        )
 end;
 
 @testset "ambiguities package" begin

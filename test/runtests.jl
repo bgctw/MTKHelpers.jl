@@ -6,6 +6,18 @@ using Test, SafeTestsets
 const GROUP = get(ENV, "GROUP", "All") # defined in in CI.yml
 @show GROUP
 
+# using LoggingExtras
+# () -> begin
+#     warn2error_logger = TransformerLogger(global_logger()) do log
+#         return log.level === Logging.Warn ?  merge(log, (; level=Logging.Error)) : log
+#     end
+#     #global_logger(warn2error_logger)
+#     with_logger(warn2error_logger) do
+#         #include("test/mytest.jl")
+#         @safetestset "Tests" include("test/test_odeproblemparsetter.jl")    
+#     end
+# end
+
 @time begin
     if GROUP == "All" || GROUP == "Basic"
         #join_path(test_path, ...) does not work, because test_path is unknown in new module

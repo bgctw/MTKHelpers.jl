@@ -23,8 +23,8 @@ end
     @unpack RHS,x = m
     #RHS, x = getproperty.(Ref(m), (:RHS, :x); namespace=false)
     ps = MTK.@parameters RHS_0 = RHS0
-    eqs = [RHS ~ RHS_0 * x]
-    sys_ext = override_system(eqs, m; name, ps)
+    eqs_new = [RHS ~ RHS_0 * x]
+    sys_ext = override_system(m; eqs_new, name, ps)
 end
 
 # function samplesystem_vec(; name, τ = 3.0, i=0.1, p = [1.1, 1.2])

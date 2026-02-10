@@ -4,6 +4,11 @@ CurrentModule = MTKHelpers
 
 # PDE support developer notes
 
+Since MTK version 10 the handling of parameters and initial values has become
+complex.
+Support for PDE has currently been dropped from MTKHelpers to support
+MKT >= version 10.
+
 ## Depth distributions
 The inputs to the system have to be described by a differential across depth.
 The following derivation provides an exponential function ``f(z;b) = a e^{bz}``,

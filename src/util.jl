@@ -131,11 +131,12 @@ using ModelingToolkit:
     get_ps,
     get_observed,
     get_continuous_events,
-    get_defaults,
+    initial_conditions, #get_defaults,
     get_systems
 
 """
-    override_system(eqs, basesys::AbstractSystem; 
+    override_system(basesys::AbstractSystem; 
+        eqs_new, 
         name::Symbol=Symbol(string(nameof(basesys))*"_ext"), 
         ps=Term[], 
         obs=Equation[], 
@@ -146,17 +147,19 @@ using ModelingToolkit:
 Modify `basesys` by replacing some equations matched by their left-hand-side.
 The keyword argument correspond to ODESystem.
 """
-function override_system(eqs, basesys::AbstractSystem;
+function override_system(basesys::AbstractSystem;
         name::Symbol = Symbol(string(nameof(basesys)) * "_ext"),
+        eqs_new = Equation[],
         ps = Term[],
         obs = Equation[],
         evs = ModelingToolkit.SymbolicContinuousCallback[],
+        bindings = bindings(basesys),
         defs = Dict())
     T = SciMLBase.parameterless_type(basesys)
     ivs = independent_variables(basesys)
     length(ivs) > 1 && error("Extending multivariate systems is not supported")
     eqs_base_dict = Dict(eq.lhs => eq for eq in get_eqs(basesys))
-    eqs_new_keys = [eq.lhs for eq in eqs]
+    eqs_new_keys = [eq.lhs for eq in eqs_new]
     is_key_present = eqs_new_keys .∈ Ref(keys(eqs_base_dict))
     !all(is_key_present) &&
         error("Expected all lhs of new equations to be present in basesys. " *
@@ -164,20 +167,26 @@ function override_system(eqs, basesys::AbstractSystem;
               $(string.(eqs_new_keys[.!is_key_present]))")
     eqs_base_keys = setdiff(keys(eqs_base_dict), eqs_new_keys)
     eqs_base_no_overwrite = get.(Ref(eqs_base_dict), eqs_base_keys, missing)
-    eqs_ext = union(eqs_base_no_overwrite, eqs)
+    eqs_ext = union(eqs_base_no_overwrite, eqs_new)
     sts = get_unknowns(basesys)
     ps_ext = union(get_ps(basesys), ps)
     obs_ext = union(get_observed(basesys), obs)
     evs_ext = union(get_continuous_events(basesys), evs)
-    defs_ext = merge(get_defaults(basesys), defs) # prefer new defs 
+
+    #defs_ext = merge(get_defaults(basesys), defs) # prefer new defs 
+    defs_ext = merge(initial_conditions(basesys), defs) # prefer new defs 
     syss = get_systems(basesys)
     #
     if length(ivs) == 0
-        T(eqs_ext, sts, ps_ext, observed = obs_ext, defaults = defs_ext, name = name,
-            systems = syss, continuous_events = evs_ext)
+        # T(eqs_ext, sts, ps_ext, observed = obs_ext, defaults = defs_ext, name = name,
+        #     systems = syss, continuous_events = evs_ext)
+        T(eqs_ext, sts, ps_ext; observed = obs_ext, initial_conditions = defs_ext, name = name,
+            systems = syss, continuous_events = evs_ext, bindings)
     elseif length(ivs) == 1
-        T(eqs_ext, ivs[1], sts, ps_ext, observed = obs_ext, defaults = defs_ext,
-            name = name, systems = syss, continuous_events = evs_ext)
+        # T(eqs_ext, ivs[1], sts, ps_ext; observed = obs_ext, initial_conditions = Dict(basesys.p2 => 1.1),
+        #     name = name, systems = syss, continuous_events = evs_ext, bindings)
+        T(eqs_ext, ivs[1], sts, ps_ext; observed = obs_ext, initial_conditions = defs_ext,
+            name = name, systems = syss, continuous_events = evs_ext, bindings)
     end
 end
 

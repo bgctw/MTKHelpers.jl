@@ -44,8 +44,8 @@ sys1 = mtkcompile(get_sys1())
 u0 = ComponentVector(L = 10.0)
 p = ComponentVector(k_L = 1.0, k_R = 1 / 20, k_P = 2.0)
 prob = ODEProblem(sys1,
-    get_system_symbol_dict(sys1, u0), (0.0, 1.0),
-    get_system_symbol_dict(sys1, p))
+    vcat(get_system_symbol_dict(sys1, u0), get_system_symbol_dict(sys1, p)), 
+    (0.0, 1.0))
 nothing # hide
 ```
 
@@ -62,8 +62,7 @@ nothing # hide
 But we can use `get_concrete` to obtain a type-inferred version. 
 ```@example doc
 puc1 = get_concrete(pu)
-#prob3 = @inferred puc1(prob) # currently not working because remake not type-stable
-prob3 = puc1(prob)
+prob3 = @inferred puc1(prob) # currently not working because remake not type-stable
 nothing # hide
 ```
 
@@ -80,8 +79,7 @@ get_fopt = (puc=get_concrete(pu)) -> let puc=puc
     end # fopt function
 end # let, get_fopt
 fopt = get_fopt()
-#prob4 = @inferred fopt(prob) # TODO inferred
-prob4 = fopt(prob)
+prob4 = @inferred fopt(prob) # TODO inferred
 nothing # hide
 ```
 

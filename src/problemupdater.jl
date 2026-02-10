@@ -101,6 +101,16 @@ struct KeysProblemParGetter{N} <: AbstractProblemParGetter
     # type parameter already enfources same length
 end
 
+function KeysProblemParGetter(mapping::NTuple{N, Pair{Symbol, Symbol}}, prob::AbstractODEProblem) where {N}
+    sys = get_system(prob)
+    KeysProblemParGetter(mapping, sys)
+end
+
+function KeysProblemParGetter(mapping::NTuple{N, Pair{Symbol, Symbol}}, sys::AbstractSystem) where {N}
+    keys_state = symbol_op.(unknowns(sys))
+    KeysProblemParGetter(mapping, keys_state)
+end
+
 function KeysProblemParGetter(mapping::NTuple{N, Pair{Symbol, Symbol}},
         keys_state::Union{AbstractVector{Symbol}, NTuple{NU, Symbol}}) where {N, NU}
     source_keys = ntuple(i -> first(mapping[i]), N)

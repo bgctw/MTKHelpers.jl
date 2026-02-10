@@ -1,8 +1,8 @@
 module MTKHelpersMakieExt
 
-function __init__()
-    @info "MTKHelpers: loading MTKHelpersMakieExt"
-end
+# function __init__()
+#     @info "MTKHelpers: loading MTKHelpersMakieExt"
+# end
 
 isdefined(Base, :get_extension) ? (using CairoMakie) : (using ..CairoMakie)
 using DiffEqBase: AbstractODESolution
