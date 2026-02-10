@@ -168,7 +168,7 @@ function ODEProblemParSetter(state_template,
 end
 
 
-# # deprecated: variant with replaceing ps.Initials - does not correspond to u09
+# # deprecated: variant with replacing ps.Initials - does not correspond to u09
 # function remake_pset(prob::AbstractODEProblem, popt, pset::ODEProblemParSetter, adtype=ADTypes.AutoForwardDiff())
 #     SS = SciMLStructures
 #     popta = attach_axis(popt, axis_paropt(pset))
@@ -177,7 +177,7 @@ end
 #     ps_typed = if isempty(popta.par)
 #         ps
 #     else        
-#         # size of diffcatch, typoe of popta.par
+#         # size of diffcatch, type of popta.par
 #         #diffcache_p = PreallocationTools.DiffCache(copy(SS.canonicalize(SS.Tunable(), ps)[1]))
 #         # when pset is constructed without popt_template <: ComponentVector diffcache has eltype Float64
 #         ps_flat = SS.canonicalize(SS.Tunable(), ps)[1]
@@ -287,7 +287,7 @@ function remake_pset(prob::AbstractODEProblem, popt, pset::ODEProblemParSetterU,
     prob_p = if isempty(popta.par)
         prob
     else        
-        # size of diffcatch, typoe of popta.par
+        # size of diffcatch, type of popta.par
         #diffcache_p = PreallocationTools.DiffCache(copy(SS.canonicalize(SS.Tunable(), ps)[1]))
         # when pset is constructed without popt_template <: ComponentVector diffcache has eltype Float64
         # debugging pset.diffcache.p

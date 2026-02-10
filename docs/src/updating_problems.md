@@ -72,12 +72,12 @@ prob2.u0[SII.variable_index(sys, m.x)] == popt.state.m₊x
 prob2.ps[m.p1] == popt.par.m₊p1
 prob2.ps[:m₊p2] == popt.par.m₊p2
 
-# Fruther, check that other parameters did not change
+# Further, check that other parameters did not change
 prob2.ps[m.τ] == initial_conditions(get_system(prob2))[m.τ]
 nothing # hide
 ```
 
-`MTKHelper` offers some convenience to acces paramters, states, and optimized parts
+`MTKHelper` offers some convenience to access parameters, states, and optimized parts
 as a ComponentVector. `pset` stores the MTK indices so that they do not need to be recreated.
 
 ```@example doc
@@ -94,7 +94,7 @@ There are three  [suggested ways since MTK10](https://docs.sciml.ai/ModelingTool
 
 Currently only the 4th variant works without problems with AD systems, but it is
 not efficient.
-The third variant requires changing the system definition to deterine which parameters are optimized.
+The third variant requires changing the system definition to determine which parameters are optimized.
 The first two need quite complex [integration with PreallocationTools](https://docs.sciml.ai/ModelingToolkit/stable/basics/FAQ/#Using-ModelingToolkit-with-Optimization-/-Automatic-Differentiation) 
 to be used with AD-systems.
 
@@ -115,7 +115,7 @@ probc.ps[m.p2] == popt.par.m₊p2
 nothing # hide
 ```
 
-This package currently in the backround relies on the integration of setter objects with `PreallocationTools.jl`
+This package currently in the background relies on the integration of setter objects with `PreallocationTools.jl`
 for supporting `ForwardDiff` and falls back on the Dictionary approach for other AD systems.
 
 ```@example doc
